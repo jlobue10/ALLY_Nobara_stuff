@@ -9,7 +9,7 @@ I highly recommend using this [repo's utility](https://github.com/Maclay74/steam
 
 If you experience crackling with the audio, the potential fix is to edit the `/usr/share/wireplumber/main.lua.d/50-alsa-config.lua` file line with `--["api.alsa.headroom"]` to be `--["api.alsa.headroom"] = 1024,`.
 
-In time, this repo will likely become obsolete once all fixes are absorbed into later Linux kernel versions by default.\
+In time, this repo will likely become obsolete once all fixes are absorbed into later Linux kernel versions by default.
 
 ## **References**
 
