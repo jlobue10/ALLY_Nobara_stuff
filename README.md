@@ -1,5 +1,5 @@
 # ALLY_Nobara_fixes
-Compilation of fixes for the ROG ALLY when using Nobara. Download the release tarball.
+Compilation of fixes for the ROG ALLY when using Nobara (side buttons, volume buttons and audio). Download the release tarball.
 
 All credit should go to the original authors and developers. I'm mainly recreating the same fixes that the ChimeraOS devs have done for ChimeraOS and Arch, but for Nobara (Fedora) and packaging them together in one place.
 
