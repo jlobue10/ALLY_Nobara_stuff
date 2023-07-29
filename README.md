@@ -15,5 +15,6 @@ In time, this repo will likely become obsolete once all fixes are absorbed into 
 
 [ACPI patch info for audio](https://asus-linux.org/wiki/cirrus-amps/)
 
-[Info to compile custom kernel and modules for Fedora](https://fedoraproject.org/wiki/Building_a_custom_kernel) 
+[Info to compile custom kernel and modules for Fedora](https://fedoraproject.org/wiki/Building_a_custom_kernel)
+
 Hopefully this isn't necessary for people to do for too long, if the fixes are included in future Nobara kernel releases.
