@@ -17,4 +17,6 @@ In time, this repo will likely become obsolete once all fixes are absorbed into 
 
 [Info to compile custom kernel and modules for Fedora](https://fedoraproject.org/wiki/Building_a_custom_kernel)
 
+[Buildinf kernel from src RPM](https://fedoraproject.org/wiki/Building_a_custom_kernel/Source_RPM)
+
 Hopefully this isn't necessary for people to do for too long, if the fixes are included in future Nobara kernel releases.
