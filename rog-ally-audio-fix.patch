@@ -1,7 +1,8 @@
-diff -Naur /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38.x86_64/sound/pci/hda/patch_realtek.c /home/jlobue/ALLY_Nobara_fixes/sound/pci/hda/patch_realtek.c
---- /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38.x86_64/sound/pci/hda/patch_realtek.c	2023-07-29 11:29:03.007661096 -0700
-+++ /home/jlobue/ALLY_Nobara_fixes/sound/pci/hda/patch_realtek.c	2023-07-29 10:31:03.767030356 -0700
-@@ -7120,6 +7120,10 @@
+diff --git a/sound/pci/hda/patch_realtek.c b/sound/pci/hda/patch_realtek.c
+index 3fc66c4..c44ff30 100644
+--- a/sound/pci/hda/patch_realtek.c
++++ b/sound/pci/hda/patch_realtek.c
+@@ -7120,6 +7120,10 @@ enum {
  	ALC294_FIXUP_ASUS_DUAL_SPK,
  	ALC285_FIXUP_THINKPAD_X1_GEN7,
  	ALC285_FIXUP_THINKPAD_HEADSET_JACK,
@@ -12,7 +13,7 @@ diff -Naur /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38
  	ALC294_FIXUP_ASUS_HPE,
  	ALC294_FIXUP_ASUS_COEF_1B,
  	ALC294_FIXUP_ASUS_GX502_HP,
-@@ -8419,6 +8423,47 @@
+@@ -8419,6 +8423,47 @@ static const struct hda_fixup alc269_fixups[] = {
  		.chained = true,
  		.chain_id = ALC289_FIXUP_DELL_SPK2
  	},
@@ -60,7 +61,7 @@ diff -Naur /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38
  	[ALC294_FIXUP_SPK2_TO_DAC1] = {
  		.type = HDA_FIXUP_FUNC,
  		.v.func = alc285_fixup_speaker2_to_dac1,
-@@ -9596,6 +9641,7 @@
+@@ -9596,6 +9641,7 @@ static const struct snd_pci_quirk alc269_fixup_tbl[] = {
  	SND_PCI_QUIRK(0x10ec, 0x1254, "Intel Reference board", ALC295_FIXUP_CHROME_BOOK),
  	SND_PCI_QUIRK(0x10ec, 0x12cc, "Intel Reference board", ALC225_FIXUP_HEADSET_JACK),
  	SND_PCI_QUIRK(0x10f7, 0x8338, "Panasonic CF-SZ6", ALC269_FIXUP_HEADSET_MODE),

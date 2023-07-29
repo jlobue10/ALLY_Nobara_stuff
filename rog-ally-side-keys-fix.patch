@@ -1,7 +1,8 @@
-diff -Naur /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38.x86_64/drivers/hid/hid-asus.c /home/jlobue/ALLY_Nobara_fixes/drivers/hid/hid-asus.c
---- /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38.x86_64/drivers/hid/hid-asus.c	2023-07-29 10:41:13.312321355 -0700
-+++ /home/jlobue/ALLY_Nobara_fixes/drivers/hid/hid-asus.c	2023-07-29 10:31:03.764030424 -0700
-@@ -897,6 +897,10 @@
+diff --git a/drivers/hid/hid-asus.c b/drivers/hid/hid-asus.c
+index 2bc14e0..e76b8a7 100644
+--- a/drivers/hid/hid-asus.c
++++ b/drivers/hid/hid-asus.c
+@@ -897,6 +897,10 @@ static int asus_input_mapping(struct hid_device *hdev,
  		case 0x6a: asus_map_key_clear(KEY_F13);		break; /* Screenpad toggle */
  		case 0x4b: asus_map_key_clear(KEY_F14);		break; /* Arrows/Pg-Up/Dn toggle */
  
@@ -12,26 +13,27 @@ diff -Naur /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38
  
  		default:
  			/* ASUS lazily declares 256 usages, ignore the rest,
-@@ -1258,6 +1262,9 @@
+@@ -1257,6 +1261,9 @@ static const struct hid_device_id asus_devices[] = {
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_ASUSTEK,
  	    USB_DEVICE_ID_ASUSTEK_ROG_NKEY_KEYBOARD3),
  	  QUIRK_USE_KBD_BACKLIGHT | QUIRK_ROG_NKEY_KEYBOARD },
- 	{ HID_USB_DEVICE(USB_VENDOR_ID_ASUSTEK,
++	{ HID_USB_DEVICE(USB_VENDOR_ID_ASUSTEK,
 +	    USB_DEVICE_ID_ASUSTEK_ROG_NKEY_ALLY),
 +	  QUIRK_USE_KBD_BACKLIGHT | QUIRK_ROG_NKEY_KEYBOARD },
-+	{ HID_USB_DEVICE(USB_VENDOR_ID_ASUSTEK,
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_ASUSTEK,
  	    USB_DEVICE_ID_ASUSTEK_ROG_CLAYMORE_II_KEYBOARD),
  	  QUIRK_ROG_CLAYMORE_II_KEYBOARD },
- 	{ HID_USB_DEVICE(USB_VENDOR_ID_ASUSTEK,
-@@ -1299,4 +1306,4 @@
+@@ -1299,4 +1306,4 @@ static struct hid_driver asus_driver = {
  };
  module_hid_driver(asus_driver);
  
 -MODULE_LICENSE("GPL");
 \ No newline at end of file
 +MODULE_LICENSE("GPL");
-diff -Naur /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38.x86_64/drivers/hid/hid-ids.h /home/jlobue/ALLY_Nobara_fixes/drivers/hid/hid-ids.h
---- /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38.x86_64/drivers/hid/hid-ids.h	2023-07-29 10:41:13.353320433 -0700
-+++ /home/jlobue/ALLY_Nobara_fixes/drivers/hid/hid-ids.h	2023-07-29 10:31:03.764030424 -0700
+diff --git a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
+index c1fe424..1508848 100644
+--- a/drivers/hid/hid-ids.h
++++ b/drivers/hid/hid-ids.h
 @@ -208,6 +208,7 @@
  #define USB_DEVICE_ID_ASUSTEK_ROG_NKEY_KEYBOARD	0x1866
  #define USB_DEVICE_ID_ASUSTEK_ROG_NKEY_KEYBOARD2	0x19b6
@@ -40,3 +42,19 @@ diff -Naur /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38
  #define USB_DEVICE_ID_ASUSTEK_ROG_CLAYMORE_II_KEYBOARD	0x196b
  #define USB_DEVICE_ID_ASUSTEK_FX503VD_KEYBOARD	0x1869
  
+@@ -929,6 +930,8 @@
+ #define USB_DEVICE_ID_MS_POWER_COVER     0x07da
+ #define USB_DEVICE_ID_MS_SURFACE3_COVER		0x07de
+ #define USB_DEVICE_ID_MS_XBOX_ONE_S_CONTROLLER	0x02fd
++#define USB_DEVICE_ID_MS_XBOX_ONE_S_2021_FIRMWARE 0x0b20
++#define USB_DEVICE_ID_MS_XBOX_WIRELESS_CONTROLLER 0x0b13
+ #define USB_DEVICE_ID_MS_PIXART_MOUSE    0x00cb
+ #define USB_DEVICE_ID_8BITDO_SN30_PRO_PLUS      0x02e0
+ #define USB_DEVICE_ID_MS_MOUSE_0783      0x0783
+diff --git a/drivers/hid/temp b/drivers/hid/temp
+deleted file mode 100644
+index 5c1ed42..0000000
+--- a/drivers/hid/temp
++++ /dev/null
+@@ -1 +0,0 @@
+-Patch path folder

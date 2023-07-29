@@ -1,7 +1,8 @@
-diff -Naur /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38.x86_64/drivers/acpi/resource.c /home/jlobue/ALLY_Nobara_fixes/drivers/acpi/resource.c
---- /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38.x86_64/drivers/acpi/resource.c	2023-07-29 10:41:13.311321377 -0700
-+++ /home/jlobue/ALLY_Nobara_fixes/drivers/acpi/resource.c	2023-07-29 10:31:03.764030424 -0700
-@@ -484,52 +484,6 @@
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 065e55e..8eaf7fb 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -484,52 +484,6 @@ static const struct dmi_system_id asus_laptop[] = {
  	{ }
  };
  
@@ -54,7 +55,7 @@ diff -Naur /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38
  static const struct dmi_system_id lg_laptop[] = {
  	{
  		.ident = "LG Electronics 17U70P",
-@@ -541,7 +495,7 @@
+@@ -541,7 +495,7 @@ static const struct dmi_system_id lg_laptop[] = {
  	{ }
  };
  
@@ -63,7 +64,7 @@ diff -Naur /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38
  	const struct dmi_system_id *system;
  	unsigned char irq;
  	unsigned char triggering;
-@@ -550,50 +504,85 @@
+@@ -550,50 +504,85 @@ struct irq_override_cmp {
  	bool override;
  };
  
@@ -175,7 +176,7 @@ diff -Naur /home/jlobue/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.fc38
  
  	if (!valid_IRQ(gsi)) {
  		irqresource_disabled(res, gsi);
-@@ -606,26 +595,12 @@
+@@ -606,26 +595,12 @@ static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
  	 * 2. BIOS uses IO-APIC mode Interrupt Source Override
  	 *
  	 * We do this only if we are dealing with IRQ() or IRQNoFlags()
