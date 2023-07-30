@@ -14,8 +14,9 @@ sudo cp patched_cirrus_acpi.cpio /boot/patched_cirrus_acpi.cpio
 sudo cp $CURRENT_WD/etc/default/grub /etc/default/grub-bkp
 sudo cp $CURRENT_WD/grub /etc/default/grub
 sudo cp $CURRENT_WD/50-alsa-config.lua /usr/share/wireplumber/main.lua.d/50-alsa-config.lua
-tar xvf $CURRENT_WD/cirrus.tar.gz
-sudo cp -rf $CURRENT_WD/cirrus/ /lib/firmware/
+cd $CURRENT_WD
+tar xvf cirrus.tar.gz
+sudo cp -rf cirrus/ /lib/firmware/
 
 ANS=$?
 if [[ $ANS == 0 ]]; then
