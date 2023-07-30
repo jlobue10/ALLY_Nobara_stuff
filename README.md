@@ -32,7 +32,7 @@ cd RPM
 sudo dnf install *.rpm
 ```
 
-Only do either of these two installation methods if you simply must try out these fixes for the ROG ALLY running Nobara. GloriousEggroll is aware of the patches and will hopefully incorporate into the next kernel release. The audio fix will likely still need to be run from here.
+Only do either of these two installation methods if you simply must try out these fixes for the ROG ALLY running Nobara, sooner rather than later. GloriousEggroll is aware of the patches and will hopefully incorporate them into the next kernel release. The audio fix will likely still need to be run from here or elsewhere though.
 
 ## **Audio Fix**
 
