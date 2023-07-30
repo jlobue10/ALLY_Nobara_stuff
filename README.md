@@ -11,6 +11,40 @@ If you experience crackling with the audio, the potential fix is to edit the `/u
 
 In time, this repo will likely become obsolete once all fixes are absorbed into later Linux kernel versions by default.
 
+## **Installation**
+
+An automated kernel installer has been added. As is, it downloads the latest source kernel from Nobara copr, unpacks it, adds the ROG ALLY patches and compiles the kernel, the kernel modules and installs them (both kernel and modules).
+
+Steps to perform the custom kernel compile and installation.
+
+```
+git clone https://github.com/jlobue10/ALLY_Nobara_fixes
+cd ALLY_Nobara_fixes
+chmod +x install-custom-kernel.sh
+./install-custom-kernel.sh
+```
+
+RPMs have been provided on the release page as an alternative to the local compile. If you download the tarball with the kernel RPMs, this would be the install procedure after changing into the directory where that tarball was downloaded.
+
+```
+tar xvf kernel-6.3.12-205.fsync.ally.fc38.x86_64.tar.gz
+cd RPM
+sudo dnf install *.rpm
+```
+
+Only do either of these two installation methods if you simply must try out these fixes for the ROG ALLY running Nobara. GloriousEggroll is aware of the patches and will hopefully incorporate into the next kernel release. The audio fix will likely still need to be run from here.
+
+## **Audio Fix**
+
+From within the cloned directory, make the `install-audio-fix.sh` file executable and run it.
+
+```
+chmod +x install-audio-fix.sh
+./install-audio-fix.sh
+```
+
+This will install the necessary files for the ACPI override that is currently necessary to get audio working on ROG ALLY in Linux. This installation also updates GRUB with the proper init variable to use the ACPI override, and it updates the Cirrus firmware files loaded by Nobara.
+
 ## **References**
 
 [ACPI patch info for audio](https://asus-linux.org/wiki/cirrus-amps/)
