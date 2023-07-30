@@ -940,6 +940,7 @@ Patch304: rog-ally-mediatek-fix.patch
 Patch305: rog-ally-audio-fix.patch
 Patch306: rog-ally-side-keys-fix.patch
 Patch307: rog-ally-volume-keys-fix.patch
+Patch307: rog-ally-i2c-fix.patch
 
 # temporary patches
 Patch401: 0001-Revert-PCI-Add-a-REBAR-size-quirk-for-Sapphire-RX-56.patch
@@ -1636,6 +1637,7 @@ ApplyOptionalPatch rog-ally-mediatek-fix.patch
 ApplyOptionalPatch rog-ally-audio-fix.patch
 ApplyOptionalPatch rog-ally-side-keys-fix.patch
 ApplyOptionalPatch rog-ally-volume-keys-fix.patch
+ApplyOptionalPatch rog-ally-i2c-fix.patch
 
 # temporary patches
 ApplyOptionalPatch 0001-Revert-PCI-Add-a-REBAR-size-quirk-for-Sapphire-RX-56.patch
