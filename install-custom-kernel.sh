@@ -14,7 +14,7 @@ wget https://download.copr.fedorainfracloud.org/results/gloriouseggroll/nobara/f
 rm -rf $HOME/rpmbuild/
 rpm -Uvh kernel-6.3.12-205.fsync.fc38.src.rpm
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
-cp $CURRENT_WD/{rog-ally-audio-fix.patch,rog-ally-side-keys-fix.patch,rog-ally-volume-keys-fix.patch} $HOME/rpmbuild/SOURCES/
+cp $CURRENT_WD/{rog-ally-audio-fix.patch,rog-ally-side-keys-fix.patch,rog-ally-volume-keys-fix.patch,rog-ally-i2c-fix.patch} $HOME/rpmbuild/SOURCES/
 cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS/
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
 cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.ally.fc38.x86_64/
