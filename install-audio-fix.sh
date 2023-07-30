@@ -5,6 +5,7 @@
 # running Nobara.
 
 CURRENT_WD=$(pwd)
+sudo dnf install acpica-tools
 iasl -tc cirrus_sddt_patch.dsl
 mkdir -p $HOME/.local/ROG-ALLY-fixes/kernel/firmware/acpi
 cp cirrus_sddt_patch.aml $HOME/.local/ROG-ALLY-fixes/kernel/firmware/acpi
