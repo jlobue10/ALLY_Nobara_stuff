@@ -33,7 +33,7 @@ cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.1
 cd $HOME/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.ally.fc38.x86_64/
 time make bzImage -j8
 time make modules -j8
-sudo make modules_install
+sudo make modules_install -j8
 sudo make install
 
 ANS=$?
