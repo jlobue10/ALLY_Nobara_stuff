@@ -6,14 +6,15 @@
 
 CURRENT_WD=$(pwd)
 iasl -tc cirrus_sddt_patch.dsl
-mkdir -p kernel/firmware/acpi
-cp cirrus_sddt_patch.aml kernel/firmware/acpi
+mkdir -p $HOME/.local/ROG-ALLY-fixes/kernel/firmware/acpi
+cp cirrus_sddt_patch.aml $HOME/.local/ROG-ALLY-fixes/kernel/firmware/acpi
+cd $HOME/.local/ROG-ALLY-fixes
 find kernel | cpio -H newc --create > patched_cirrus_acpi.cpio
 sudo cp patched_cirrus_acpi.cpio /boot/patched_cirrus_acpi.cpio
-sudo cp /etc/default/grub /etc/default/grub-bkp
+sudo cp $CURRENT_WD/etc/default/grub /etc/default/grub-bkp
 sudo cp $CURRENT_WD/grub /etc/default/grub
 sudo cp $CURRENT_WD/50-alsa-config.lua /usr/share/wireplumber/main.lua.d/50-alsa-config.lua
-tar czvf cirrus.tar.gz
+tar czvf $CURRENT_WD/cirrus.tar.gz
 sudo cp -rf $CURRENT_WD/cirrus/ /lib/firmware/
 
 ANS=$?
