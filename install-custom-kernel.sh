@@ -9,7 +9,7 @@
 # from a separate script.
 
 CURRENT_WD=$(pwd)
-sudo dnf install fedpkg fedora-packager rpmdevtools rpmlint ncurses-devel pesign grubby qt5-qtbase-devel libXi-devel gcc-c++\
+dnf install fedpkg fedora-packager rpmdevtools rpmlint ncurses-devel pesign grubby qt5-qtbase-devel libXi-devel gcc-c++\
  bpftool dwarves elfutils-devel gcc-plugin-devel glibc-static kernel-rpm-macros perl-devel perl-generators python3-devel systemd-boot-unsigned
 wget https://download.copr.fedorainfracloud.org/results/gloriouseggroll/nobara/fedora-38-x86_64/06219566-kernel/kernel-6.3.12-205.fsync.fc38.src.rpm
 rm -rf $HOME/rpmbuild/
@@ -34,8 +34,8 @@ cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.1
 cd $HOME/rpmbuild/BUILD/kernel-6.3.12/linux-6.3.12-205.fsync.ally.fc38.x86_64/
 time make bzImage -j8
 time make modules -j8
-sudo make modules_install -j8
-sudo make install
+make modules_install -j8
+make install
 
 ANS=$?
 if [[ $ANS == 0 ]]; then
