@@ -1,15 +1,13 @@
 # ALLY_Nobara_fixes
 Compilation of fixes for the ROG ALLY when using Nobara (side buttons, volume buttons and audio).
 
-All credit should go to the original authors and developers. I'm mainly recreating the same fixes that the ChimeraOS devs have done for ChimeraOS and Arch, but for Nobara (Fedora) and packaging them together in one place.
+All credit should go to the original authors and developers. Many of these original fixes were done by ChimeraOS devs. I'm mainly recreating the same fixes that the ChimeraOS devs have done for ChimeraOS and Arch, but for Nobara (Fedora) and packaging them together in one place.
 
 I highly recommend using this [repo's utility](https://github.com/Maclay74/steam-patch) so that the side buttons function like they would on the Steam Deck in a `gamescope-session` or big picture mode in desktop view.
 
 If you experience crackling with the audio, the potential fix is to edit the `/usr/share/wireplumber/main.lua.d/50-alsa-config.lua` file line with `--["api.alsa.headroom"]` to be `--["api.alsa.headroom"] = 1024,` (installed with `install-audio-fix.sh`)
 
-In time, this repo will likely become obsolete once all fixes are absorbed into later Linux kernel versions by default.
-
-## **Installation**
+## **Installation (no longer recommended... use official 6.4.8 kernel or later instead)**
 
 An automated kernel installer has been added. As is, it downloads the latest source kernel from Nobara copr, unpacks it, adds the ROG ALLY patches and compiles the kernel, the kernel modules and installs them (both kernel and modules).
 
@@ -32,7 +30,7 @@ sudo dnf install *.rpm
 
 Only do either of these two installation methods if you simply must try out these fixes for the ROG ALLY running Nobara, sooner rather than later. GloriousEggroll is aware of the patches and will hopefully incorporate them into the next kernel release. The audio fix will likely still need to be run from here or elsewhere though.
 
-## **Audio Fix**
+## **Audio Fix (still required with kernel 6.4.8+)**
 
 From within the cloned directory, make the `install-audio-fix.sh` file executable and run it.
 
