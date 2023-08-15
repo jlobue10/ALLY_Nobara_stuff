@@ -467,18 +467,50 @@ static const struct dmi_system_id asus_laptop[] = {
 			DMI_MATCH(DMI_BOARD_NAME, "B2502CBA"),
 		},
 	},
+	{ }
+};
+
+static const struct dmi_system_id lenovo_laptop[] = {
 	{
-		.ident = "Asus TUF Gaming A15 FA507NV",
+		.ident = "LENOVO IdeaPad Flex 5 14ALC7",
 		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "ASUSTeK COMPUTER INC."),
-			DMI_MATCH(DMI_BOARD_NAME, "FA507NV"),
+			DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+			DMI_MATCH(DMI_PRODUCT_NAME, "82R9"),
 		},
 	},
 	{
-		.ident = "ASUS TUF Gaming A16 FA617NS",
+		.ident = "LENOVO IdeaPad Flex 5 16ALC7",
 		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "ASUSTeK COMPUTER INC."),
-			DMI_MATCH(DMI_BOARD_NAME, "FA617NS"),
+			DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+			DMI_MATCH(DMI_PRODUCT_NAME, "82RA"),
+		},
+	},
+	{ }
+};
+
+static const struct dmi_system_id tongfang_gm_rg[] = {
+	{
+		.ident = "TongFang GMxRGxx/XMG CORE 15 (M22)/TUXEDO Stellaris 15 Gen4 AMD",
+		.matches = {
+			DMI_MATCH(DMI_BOARD_NAME, "GMxRGxx"),
+		},
+	},
+	{ }
+};
+
+static const struct dmi_system_id maingear_laptop[] = {
+	{
+		.ident = "MAINGEAR Vector Pro 2 15",
+		.matches = {
+			DMI_MATCH(DMI_SYS_VENDOR, "Micro Electronics Inc"),
+			DMI_MATCH(DMI_PRODUCT_NAME, "MG-VCP2-15A3070T"),
+		}
+	},
+	{
+		.ident = "MAINGEAR Vector Pro 2 17",
+		.matches = {
+			DMI_MATCH(DMI_SYS_VENDOR, "Micro Electronics Inc"),
+			DMI_MATCH(DMI_PRODUCT_NAME, "MG-VCP2-17A3070T"),
 		},
 	},
 	{ }
@@ -495,7 +527,7 @@ static const struct dmi_system_id lg_laptop[] = {
 	{ }
 };
 
-struct irq_override_dmi_cmp {
+struct irq_override_cmp {
 	const struct dmi_system_id *system;
 	unsigned char irq;
 	unsigned char triggering;
@@ -504,85 +536,50 @@ struct irq_override_dmi_cmp {
 	bool override;
 };
 
-struct irq_override_acpi_cmp {
-	const char *id;
-	unsigned char irq;
-	unsigned char triggering;
-	unsigned char polarity;
-};
-
-static const struct irq_override_dmi_cmp dmi_override_table[] = {
+static const struct irq_override_cmp override_table[] = {
 	{ medion_laptop, 1, ACPI_LEVEL_SENSITIVE, ACPI_ACTIVE_LOW, 0, false },
 	{ asus_laptop, 1, ACPI_LEVEL_SENSITIVE, ACPI_ACTIVE_LOW, 0, false },
+	{ lenovo_laptop, 6, ACPI_LEVEL_SENSITIVE, ACPI_ACTIVE_LOW, 0, true },
+	{ lenovo_laptop, 10, ACPI_LEVEL_SENSITIVE, ACPI_ACTIVE_LOW, 0, true },
+	{ tongfang_gm_rg, 1, ACPI_EDGE_SENSITIVE, ACPI_ACTIVE_LOW, 1, true },
+	{ maingear_laptop, 1, ACPI_EDGE_SENSITIVE, ACPI_ACTIVE_LOW, 1, true },
+	{ lg_laptop, 1, ACPI_LEVEL_SENSITIVE, ACPI_ACTIVE_LOW, 0, false },
 };
 
-/*
- * Ryzen 6000 requires ActiveLow for keyboard, but a number of machines
- * seem to get it wrong in DSDT or don't have an Interrupt Source
- * Override.
- */
-static const struct irq_override_acpi_cmp acpi_override_table[] = {
-	{ "AMDI0007", 1, ACPI_EDGE_SENSITIVE, ACPI_ACTIVE_LOW },
-};
-
-static void acpi_dev_irq_override(u32 gsi, u8 *triggering, u8 *polarity,
-								  u8 *shareable)
+static bool acpi_dev_irq_override(u32 gsi, u8 triggering, u8 polarity,
+				  u8 shareable)
 {
-	int i, p, t;
-	int check_override = true;
+	int i;
 
-	for (i = 0; i < ARRAY_SIZE(dmi_override_table); i++) {
-		const struct irq_override_dmi_cmp *entry = &dmi_override_table[i];
+	for (i = 0; i < ARRAY_SIZE(override_table); i++) {
+		const struct irq_override_cmp *entry = &override_table[i];
 
 		if (dmi_check_system(entry->system) &&
 		    entry->irq == gsi &&
-		    entry->triggering == *triggering &&
-		    entry->polarity == *polarity &&
-		    entry->shareable == *shareable)
-			check_override = entry->override;
+		    entry->triggering == triggering &&
+		    entry->polarity == polarity &&
+		    entry->shareable == shareable)
+			return entry->override;
 	}
 
-	if (!check_override)
-			return;
+#ifdef CONFIG_X86
+	/*
+	 * IRQ override isn't needed on modern AMD Zen systems and
+	 * this override breaks active low IRQs on AMD Ryzen 6000 and
+	 * newer systems. Skip it.
+	 */
+	if (boot_cpu_has(X86_FEATURE_ZEN))
+		return false;
+#endif
 
-	if (!acpi_get_override_irq(gsi, &t, &p)) {
-			u8 trig = t ? ACPI_LEVEL_SENSITIVE : ACPI_EDGE_SENSITIVE;
-			u8 pol = p ? ACPI_ACTIVE_LOW : ACPI_ACTIVE_HIGH;
-
-			if (*triggering != trig || *polarity != pol) {
-				pr_warn("ACPI: IRQ %d override to %s%s, %s%s\n", gsi,
-					t ? "level" : "edge",
-					trig == *triggering ? "" : "(!)",
-					p ? "low" : "high",
-					pol == *polarity ? "" : "(!)");
-				*triggering = trig;
-				*polarity = pol;
-			}
-		}
-
-	for (i = 0; i < ARRAY_SIZE(acpi_override_table); i++) {
-		const struct irq_override_acpi_cmp *entry = &acpi_override_table[i];
-
-		if (acpi_dev_found(entry->id) && gsi == entry->irq &&
-		   (*polarity != entry->polarity || *triggering != entry->triggering)) {
-			pr_warn("ACPI: IRQ %d override to %s%s, %s%s due to %s\n",
-				gsi,
-				entry->triggering ? "level" : "edge",
-				entry->triggering == *triggering ? "" : "(!)",
-				entry->polarity ? "low" : "high",
-				entry->polarity == *polarity ? "" : "(!)",
-				entry->id);
-			*polarity = entry->polarity;
-			*triggering = entry->triggering;
-		}
-	}
+	return true;
 }
 
 static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
 				     u8 triggering, u8 polarity, u8 shareable,
 				     u8 wake_capable, bool check_override)
 {
-	int irq;
+	int irq, p, t;
 
 	if (!valid_IRQ(gsi)) {
 		irqresource_disabled(res, gsi);
@@ -595,12 +592,26 @@ static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
 	 * 2. BIOS uses IO-APIC mode Interrupt Source Override
 	 *
 	 * We do this only if we are dealing with IRQ() or IRQNoFlags()
-	 * resource (the legacy ISA resources). With ACPI devices
+	 * resource (the legacy ISA resources). With modern ACPI 5 devices
 	 * using extended IRQ descriptors we take the IRQ configuration
 	 * from _CRS directly.
 	 */
-	if (check_override)
-		acpi_dev_irq_override(gsi, &triggering, &polarity, &shareable);
+	if (check_override &&
+	    acpi_dev_irq_override(gsi, triggering, polarity, shareable) &&
+	    !acpi_get_override_irq(gsi, &t, &p)) {
+		u8 trig = t ? ACPI_LEVEL_SENSITIVE : ACPI_EDGE_SENSITIVE;
+		u8 pol = p ? ACPI_ACTIVE_LOW : ACPI_ACTIVE_HIGH;
+
+		if (triggering != trig || polarity != pol) {
+			pr_warn("ACPI: IRQ %d override to %s%s, %s%s\n", gsi,
+				t ? "level" : "edge",
+				trig == triggering ? "" : "(!)",
+				p ? "low" : "high",
+				pol == polarity ? "" : "(!)");
+			triggering = trig;
+			polarity = pol;
+		}
+	}
 
 	res->flags = acpi_dev_irq_flags(triggering, polarity, shareable, wake_capable);
 	irq = acpi_register_gsi(NULL, gsi, triggering, polarity);
