@@ -1,0 +1,149 @@
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 0800a9d..a0160b0 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -527,7 +527,7 @@ static const struct dmi_system_id lg_laptop[] = {
+ 	{ }
+ };
+ 
+-struct irq_override_cmp {
+++struct irq_override_dmi_cmp {
+ 	const struct dmi_system_id *system;
+ 	unsigned char irq;
+ 	unsigned char triggering;
+@@ -536,7 +536,14 @@ struct irq_override_cmp {
+ 	bool override;
+ };
+ 
+-static const struct irq_override_cmp override_table[] = {
++struct irq_override_acpi_cmp {
++	const char *id;
++	unsigned char irq;
++	unsigned char triggering;
++	unsigned char polarity;
++};
++
++static const struct irq_override_dmi_cmp dmi_override_table[] = {
+ 	{ medion_laptop, 1, ACPI_LEVEL_SENSITIVE, ACPI_ACTIVE_LOW, 0, false },
+ 	{ asus_laptop, 1, ACPI_LEVEL_SENSITIVE, ACPI_ACTIVE_LOW, 0, false },
+ 	{ lenovo_laptop, 6, ACPI_LEVEL_SENSITIVE, ACPI_ACTIVE_LOW, 0, true },
+@@ -546,20 +553,30 @@ static const struct irq_override_cmp override_table[] = {
+ 	{ lg_laptop, 1, ACPI_LEVEL_SENSITIVE, ACPI_ACTIVE_LOW, 0, false },
+ };
+ 
+-static bool acpi_dev_irq_override(u32 gsi, u8 triggering, u8 polarity,
+-				  u8 shareable)
++/*
++ * Ryzen 6000 requires ActiveLow for keyboard, but a number of machines
++ * seem to get it wrong in DSDT or don't have an Interrupt Source
++ * Override.
++ */
++static const struct irq_override_acpi_cmp acpi_override_table[] = {
++	{ "AMDI0007", 1, ACPI_EDGE_SENSITIVE, ACPI_ACTIVE_LOW },
++};
++
++static void acpi_dev_irq_override(u32 gsi, u8 *triggering, u8 *polarity,
++								  u8 *shareable)
+ {
+-	int i;
++	int i, p, t;
++	int check_override = true;
+ 
+-	for (i = 0; i < ARRAY_SIZE(override_table); i++) {
+-		const struct irq_override_cmp *entry = &override_table[i];
++	for (i = 0; i < ARRAY_SIZE(dmi_override_table); i++) {
++		const struct irq_override_dmi_cmp *entry = &dmi_override_table[i];
+ 
+ 		if (dmi_check_system(entry->system) &&
+ 		    entry->irq == gsi &&
+-		    entry->triggering == triggering &&
+-		    entry->polarity == polarity &&
+-		    entry->shareable == shareable)
+-			return entry->override;
++		    entry->triggering == *triggering &&
++		    entry->polarity == *polarity &&
++		    entry->shareable == *shareable)
++			check_override = entry->override;
+ 	}
+ 
+ #ifdef CONFIG_X86
+@@ -572,14 +589,47 @@ static bool acpi_dev_irq_override(u32 gsi, u8 triggering, u8 polarity,
+ 		return false;
+ #endif
+ 
+-	return true;
++	if (!check_override)
++			return;
++
++	if (!acpi_get_override_irq(gsi, &t, &p)) {
++			u8 trig = t ? ACPI_LEVEL_SENSITIVE : ACPI_EDGE_SENSITIVE;
++			u8 pol = p ? ACPI_ACTIVE_LOW : ACPI_ACTIVE_HIGH;
++
++			if (*triggering != trig || *polarity != pol) {
++				pr_warn("ACPI: IRQ %d override to %s%s, %s%s\n", gsi,
++					t ? "level" : "edge",
++					trig == *triggering ? "" : "(!)",
++					p ? "low" : "high",
++					pol == *polarity ? "" : "(!)");
++				*triggering = trig;
++				*polarity = pol;
++			}
++		}
++
++	for (i = 0; i < ARRAY_SIZE(acpi_override_table); i++) {
++		const struct irq_override_acpi_cmp *entry = &acpi_override_table[i];
++
++		if (acpi_dev_found(entry->id) && gsi == entry->irq &&
++		   (*polarity != entry->polarity || *triggering != entry->triggering)) {
++			pr_warn("ACPI: IRQ %d override to %s%s, %s%s due to %s\n",
++				gsi,
++				entry->triggering ? "level" : "edge",
++				entry->triggering == *triggering ? "" : "(!)",
++				entry->polarity ? "low" : "high",
++				entry->polarity == *polarity ? "" : "(!)",
++				entry->id);
++			*polarity = entry->polarity;
++			*triggering = entry->triggering;
++		}
++	}
+ }
+ 
+ static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
+ 				     u8 triggering, u8 polarity, u8 shareable,
+ 				     u8 wake_capable, bool check_override)
+ {
+-	int irq, p, t;
++	int irq;
+ 
+ 	if (!valid_IRQ(gsi)) {
+ 		irqresource_disabled(res, gsi);
+@@ -592,26 +642,12 @@ static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
+ 	 * 2. BIOS uses IO-APIC mode Interrupt Source Override
+ 	 *
+ 	 * We do this only if we are dealing with IRQ() or IRQNoFlags()
+-	 * resource (the legacy ISA resources). With modern ACPI 5 devices
++	 * resource (the legacy ISA resources). With ACPI devices
+ 	 * using extended IRQ descriptors we take the IRQ configuration
+ 	 * from _CRS directly.
+ 	 */
+-	if (check_override &&
+-	    acpi_dev_irq_override(gsi, triggering, polarity, shareable) &&
+-	    !acpi_get_override_irq(gsi, &t, &p)) {
+-		u8 trig = t ? ACPI_LEVEL_SENSITIVE : ACPI_EDGE_SENSITIVE;
+-		u8 pol = p ? ACPI_ACTIVE_LOW : ACPI_ACTIVE_HIGH;
+-
+-		if (triggering != trig || polarity != pol) {
+-			pr_warn("ACPI: IRQ %d override to %s%s, %s%s\n", gsi,
+-				t ? "level" : "edge",
+-				trig == triggering ? "" : "(!)",
+-				p ? "low" : "high",
+-				pol == polarity ? "" : "(!)");
+-			triggering = trig;
+-			polarity = pol;
+-		}
+-	}
++	if (check_override)
++		acpi_dev_irq_override(gsi, &triggering, &polarity, &shareable);
+ 
+ 	res->flags = acpi_dev_irq_flags(triggering, polarity, shareable, wake_capable);
+ 	irq = acpi_register_gsi(NULL, gsi, triggering, polarity);
