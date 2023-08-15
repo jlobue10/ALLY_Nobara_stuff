@@ -579,16 +579,6 @@ static void acpi_dev_irq_override(u32 gsi, u8 *triggering, u8 *polarity,
 			check_override = entry->override;
 	}
 
-#ifdef CONFIG_X86
-	/*
-	 * IRQ override isn't needed on modern AMD Zen systems and
-	 * this override breaks active low IRQs on AMD Ryzen 6000 and
-	 * newer systems. Skip it.
-	 */
-	if (boot_cpu_has(X86_FEATURE_ZEN))
-		return false;
-#endif
-
 	if (!check_override)
 			return;
 
