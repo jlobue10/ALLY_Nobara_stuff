@@ -7,7 +7,7 @@ index 0800a9d..ece3dbc 100644
  };
  
 -struct irq_override_cmp {
-++struct irq_override_dmi_cmp {
++struct irq_override_dmi_cmp {
  	const struct dmi_system_id *system;
  	unsigned char irq;
  	unsigned char triggering;
