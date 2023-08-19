@@ -898,6 +898,15 @@ static int asus_input_mapping(struct hid_device *hdev,
 		case 0x6a: asus_map_key_clear(KEY_F13);		break; /* Screenpad toggle */
 		case 0x4b: asus_map_key_clear(KEY_F14);		break; /* Arrows/Pg-Up/Dn toggle */
 
+		case 0xa0: asus_map_key_clear(KEY_F10);		break; /* ROG Ally back paddle + A */
+		case 0xa1: asus_map_key_clear(KEY_F11);		break;
+		case 0xa2: asus_map_key_clear(KEY_F12);		break; /* ROG Ally back paddle + D Pad Up */
+		case 0xa3: asus_map_key_clear(KEY_F13);		break;
+		case 0xa4: asus_map_key_clear(KEY_F14);		break; /* ROG Ally back paddle + Y */
+		case 0xa5: asus_map_key_clear(KEY_F15);		break; /* ROG Ally left back */
+		case 0xa6: asus_map_key_clear(KEY_F16);		break; /* ROG Ally QAM button */
+		case 0xa7: asus_map_key_clear(KEY_F17);		break; /* ROG Ally ROG long-press */
+		case 0xa8: asus_map_key_clear(KEY_F18);		break; /* ROG Ally ROG longer-press */
 
 		default:
 			/* ASUS lazily declares 256 usages, ignore the rest,
@@ -1258,6 +1267,9 @@ static const struct hid_device_id asus_devices[] = {
 	{ HID_USB_DEVICE(USB_VENDOR_ID_ASUSTEK,
 	    USB_DEVICE_ID_ASUSTEK_ROG_NKEY_KEYBOARD3),
 	  QUIRK_USE_KBD_BACKLIGHT | QUIRK_ROG_NKEY_KEYBOARD },
+	{ HID_USB_DEVICE(USB_VENDOR_ID_ASUSTEK,
+	    USB_DEVICE_ID_ASUSTEK_ROG_NKEY_ALLY),
+	  QUIRK_ROG_NKEY_KEYBOARD },
 	{ HID_USB_DEVICE(USB_VENDOR_ID_ASUSTEK,
 	    USB_DEVICE_ID_ASUSTEK_ROG_CLAYMORE_II_KEYBOARD),
 	  QUIRK_ROG_CLAYMORE_II_KEYBOARD },
