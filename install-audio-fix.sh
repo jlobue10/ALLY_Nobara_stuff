@@ -9,6 +9,8 @@ sudo dnf install acpica-tools
 iasl -tc cirrus_sddt_patch.dsl
 mkdir -p $HOME/.local/ROG-ALLY-fixes/kernel/firmware/acpi
 cp cirrus_sddt_patch.aml $HOME/.local/ROG-ALLY-fixes/kernel/firmware/acpi
+iasl -tc ally.dsl
+cp ally.aml $HOME/.local/ROG-ALLY-fixes/kernel/firmware/acpi
 cd $HOME/.local/ROG-ALLY-fixes
 find kernel | cpio -H newc --create > patched_cirrus_acpi.cpio
 sudo cp patched_cirrus_acpi.cpio /boot/patched_cirrus_acpi.cpio
