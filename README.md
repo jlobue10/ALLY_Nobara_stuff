@@ -7,7 +7,7 @@ I highly recommend using this [repo's utility](https://github.com/Maclay74/steam
 
 If you experience crackling with the audio, the potential fix is to edit the `/usr/share/wireplumber/main.lua.d/50-alsa-config.lua` file line with `--["api.alsa.headroom"]` to be `--["api.alsa.headroom"] = 1024,` (installed with `install-audio-fix.sh`)
 
-## **Installation (no longer recommended... use official 6.4.8 kernel or later instead)**
+## **Installation (do not use for now. Will be updated when 6.5 goes stable...)**
 
 An automated kernel installer has been added. As is, it downloads the latest source kernel from Nobara copr, unpacks it, adds the ROG ALLY patches and compiles the kernel, the kernel modules and installs them (both kernel and modules).
 
