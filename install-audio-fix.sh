@@ -5,15 +5,10 @@
 # running Nobara.
 
 CURRENT_WD=$(pwd)
-sudo dnf install acpica-tools
-iasl -tc cirrus_sddt_patch.dsl
-mkdir -p $HOME/.local/ROG-ALLY-fixes/kernel/firmware/acpi
-cp cirrus_sddt_patch.aml $HOME/.local/ROG-ALLY-fixes/kernel/firmware/acpi
-iasl -tc ally.dsl
-cp ally.aml $HOME/.local/ROG-ALLY-fixes/kernel/firmware/acpi
-cd $HOME/.local/ROG-ALLY-fixes
-find kernel | cpio -H newc --create > patched_cirrus_acpi.cpio
-sudo cp patched_cirrus_acpi.cpio /boot/patched_cirrus_acpi.cpio
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/releases/download/v1.5.0/kernel-6.4.10-202.fsync.ally.fc38.x86_64.tar.gz
+tar xvf kernel-6.4.10-202.fsync.ally.fc38.x86_64.tar.gz
+cd RPM
+sudo dnf install *.rpm
 sudo cp /etc/default/grub /etc/default/grub-bkp
 sudo cp $CURRENT_WD/grub /etc/default/grub
 sudo grub2-mkconfig -o /etc/grub2-efi.cfg
