@@ -30,7 +30,7 @@ sudo dnf install *.rpm
 
 Only do either of these two installation methods if you simply must try out these fixes for the ROG ALLY running Nobara, sooner rather than later. GloriousEggroll is aware of the patches and will hopefully incorporate them into the next kernel release. The audio fix will likely still need to be run from here or elsewhere though.
 
-## **Audio Fix (Old method. No longer recommended.)**
+## **Audio Fix**
 
 From within the cloned directory, make the `install-audio-fix.sh` file executable and run it.
 
@@ -39,11 +39,7 @@ chmod +x install-audio-fix.sh
 ./install-audio-fix.sh
 ```
 
-This will install the necessary files for the ACPI override that is currently necessary to get audio working on ROG ALLY in Linux. This installation also updates GRUB with the proper init variable to use the ACPI override, and it updates the Cirrus firmware files loaded by Nobara.
-
-## **Audio fix without DSD ACPI override.**
-
-A new method has been created for the kernel to add missing DSD properties for certain specific devices. This requires 2 new kernel patches. New RPMs are being created and will be released with version 1.5.0. These patch changes will be shared with the Nobara developers, and it's likely just a matter of time before they are included in official Nobara kernel releases. This method fixes a lot of other Asus devices, not just the ROG ALLY.
+As of release 1.5.0, this audio fix installation will install the latest kernel RPMs (with the relevant kernel patches installed) which no longer need the DSD ACPI override to get audio working on the ASUS ROG ALLY.
 
 ## **References**
 
