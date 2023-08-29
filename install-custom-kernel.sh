@@ -37,7 +37,8 @@ wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0011-ALSA-hda-cs3
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0012-platform-x86-asus-wmi-corrections-to-egpu-safety-che.patch
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0013-platform-x86-asus-wmi-add-support-for-ASUS-screenpad.patch
 cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.5/linux-6.5-201.ally.fc38.x86_64/
-
+cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
+rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
 cd $HOME/rpmbuild/BUILD/kernel-6.5/linux-6.5-201.ally.fc38.x86_64/
 time make bzImage -j8 && make modules -j8
 make modules_install -j8
