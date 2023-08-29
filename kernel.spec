@@ -959,7 +959,7 @@ Patch506: 0001-Allow-to-set-custom-USB-pollrate-for-specific-device.patch
 Patch507: set-ps4-bt-poll-rate-1000hz.patch
 
 # mediatek fixups
-Patch405: mt76_-mt7921_-Disable-powersave-features-by-default.patch
+# Patch405: mt76_-mt7921_-Disable-powersave-features-by-default.patch
 
 # xbox controller update
 Patch505: xbox-controller-update.patch
