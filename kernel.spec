@@ -947,6 +947,7 @@ Patch408: 0001-acpi-proc-idle-skip-dummy-wait.patch
 Patch409: 0001-drm-i915-quirks-disable-async-flipping-on-specific-d.patch
 Patch410: 0002-drm-i915-add-kernel-parameter-to-disable-async-page-.patch
 Patch411: OpenRGB-patch-fix.patch
+Patch412: modpost.patch
 
 # Allow to set custom USB pollrate for specific devices like so:
 # usbcore.interrupt_interval_override=045e:00db:16,1bcf:0005:1
@@ -1658,6 +1659,7 @@ ApplyOptionalPatch steam-deck.patch
 # ApplyOptionalPatch lenovo-legion-laptop.patch
 ApplyOptionalPatch asus-rog-ally-side-buttons.patch
 ApplyOptionalPatch OpenRGB-patch-fix.patch
+ApplyOptionalPatch modpost.patch
 
 # hdr
 # ApplyOptionalPatch 0001-HDR.patch
