@@ -5,10 +5,10 @@
 # running Nobara.
 
 CURRENT_WD=$(pwd)
-wget https://github.com/jlobue10/ALLY_Nobara_fixes/releases/download/v1.5.0/kernel-6.4.10-202.fsync.ally.fc38.x86_64.tar.gz
-tar xvf kernel-6.4.10-202.fsync.ally.fc38.x86_64.tar.gz
-cd RPM
-sudo dnf install *.rpm
+# wget https://github.com/jlobue10/ALLY_Nobara_fixes/releases/download/v1.5.0/kernel-6.4.10-202.fsync.ally.fc38.x86_64.tar.gz
+# tar xvf kernel-6.4.10-202.fsync.ally.fc38.x86_64.tar.gz
+# cd RPM
+# sudo dnf install *.rpm
 sudo cp /etc/default/grub /etc/default/grub-bkp
 sudo cp $CURRENT_WD/grub /etc/default/grub
 sudo grub2-mkconfig -o /etc/grub2-efi.cfg
