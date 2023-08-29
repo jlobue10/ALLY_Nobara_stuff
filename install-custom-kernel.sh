@@ -19,7 +19,7 @@ wget https://download.copr.fedorainfracloud.org/results/gloriouseggroll/nobara/f
 rm -rf $HOME/rpmbuild/
 rpm -Uvh kernel-6.4.10-202.fsync.fc38.src.rpm
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
-cp $CURRENT_WD/{asus-rog-ally-side-buttons.patch,OpenRGB-patch-fix.patch} $HOME/rpmbuild/SOURCES/
+cp $CURRENT_WD/{asus-rog-ally-side-buttons.patch,OpenRGB-patch-fix.patch,modpost.patch} $HOME/rpmbuild/SOURCES/
 cd $HOME/rpmbuild/SOURCES
 wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.5.tar.xz
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/patch-6.5-redhat.patch
