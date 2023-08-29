@@ -142,19 +142,19 @@ Summary: The Linux kernel
 #  to build the base kernel using the debug configuration. (Specifying
 #  the --with-release option overrides this setting.)
 %define debugbuildsenabled 1
-%define buildid .fsync.ally
-%define specrpmversion 6.3.12
-%define specversion 6.3.12
-%define patchversion 6.3
-%define pkgrelease 205
+%define buildid .ally
+%define specrpmversion 6.5
+%define specversion 6.5
+%define patchversion 6.5
+%define pkgrelease 201
 %define kversion 6
-%define tarfile_release 6.3.12
+%define tarfile_release 6.5
 # This is needed to do merge window version magic
 %define patchlevel 3
 # This allows pkg_release to have configurable %%{?dist} tag
-%define specrelease 205%{?buildid}%{?dist}
+%define specrelease 201%{?buildid}%{?dist}
 # This defines the kabi tarball version
-%define kabiversion 6.3.12
+%define kabiversion 6.5
 
 # If this variable is set to 1, a bpf selftests build failure will cause a
 # fatal kernel package build error
@@ -755,7 +755,7 @@ BuildRequires: tpm2-tools
 # xzcat -qq ${TARBALL} | git get-tar-commit-id
 Source0: linux-%{tarfile_release}.tar.xz
 
-Source1: Makefile.rhelver
+#Source1: Makefile.rhelver
 
 
 # Name of the packaged file containing signing key
@@ -919,9 +919,9 @@ Source4002: gating.yaml
 Patch1: patch-%{patchversion}-redhat.patch
 
 # Fix gamescope drm layer regression - these commits cause the gamescope overlay to display behind the game instead of on top of it
-Patch197: 0001-Revert-b0cb56fc6e3096c9da04c30d9b501da84dae2b4f.patch
-Patch198: 0002-Revert-1ca399f127e0a372537625b1d462ed586f5d9139.patch
-Patch199: 0003-Revert-da2d907e051d591717d00e28e67ab341b961fd05.patch
+#Patch197: 0001-Revert-b0cb56fc6e3096c9da04c30d9b501da84dae2b4f.patch
+#Patch198: 0002-Revert-1ca399f127e0a372537625b1d462ed586f5d9139.patch
+#Patch199: 0003-Revert-da2d907e051d591717d00e28e67ab341b961fd05.patch
 
 # linux-fsync patches
 Patch200: tkg.patch
@@ -929,24 +929,24 @@ Patch202: fsync.patch
 Patch203: OpenRGB.patch
 Patch206: amdgpu-si-cik-default.patch
 Patch207: acso.patch
-Patch208: amdgpu_hotfix_backport.patch
+#Patch208: amdgpu_hotfix_backport.patch
 
 # device specific patches
 Patch300: steam-deck.patch
 Patch301: linux-surface.patch
-Patch302: 0001-Add-legion-laptop-v0.1.patch
+#Patch302: 0001-Add-legion-laptop-v0.1.patch
 Patch303: asus-linux.patch
-Patch304: rog-ally-mediatek-fix.patch
-Patch305: rog-ally-audio-fix.patch
-Patch306: rog-ally-side-keys-fix.patch
-Patch307: rog-ally-volume-keys-fix.patch
-Patch308: rog-ally-i2c-fix.patch
+Patch308: asus-rog-ally-side-buttons.patch
+
+# hdr: https://github.com/ChimeraOS/linux-chimeraos
+Patch407: 0001-HDR.patch
 
 # temporary patches
 Patch401: 0001-Revert-PCI-Add-a-REBAR-size-quirk-for-Sapphire-RX-56.patch
 Patch408: 0001-acpi-proc-idle-skip-dummy-wait.patch
 Patch409: 0001-drm-i915-quirks-disable-async-flipping-on-specific-d.patch
 Patch410: 0002-drm-i915-add-kernel-parameter-to-disable-async-page-.patch
+Patch411: OpenRGB-patch-fix.patch
 
 # Allow to set custom USB pollrate for specific devices like so:
 # usbcore.interrupt_interval_override=045e:00db:16,1bcf:0005:1
@@ -962,7 +962,27 @@ Patch507: set-ps4-bt-poll-rate-1000hz.patch
 Patch405: mt76_-mt7921_-Disable-powersave-features-by-default.patch
 
 # xbox controller update
-Patch510: xbox-controller-update.patch
+Patch505: xbox-controller-update.patch
+
+# temporary patches
+Patch501: 0001-Revert-PCI-Add-a-REBAR-size-quirk-for-Sapphire-RX-56.patch
+Patch508: 0001-acpi-proc-idle-skip-dummy-wait.patch
+Patch509: 0001-drm-i915-quirks-disable-async-flipping-on-specific-d.patch
+Patch510: 0002-drm-i915-add-kernel-parameter-to-disable-async-page-.patch
+Patch511: disable-ftpm-amd.patch
+Patch512: 0001-platform-x86-asus-wmi-add-support-for-showing-charge.patch
+Patch513: 0002-platform-x86-asus-wmi-add-support-for-showing-middle.patch
+Patch514: 0003-platform-x86-asus-wmi-support-middle-fan-custom-curv.patch
+Patch515: 0004-platform-x86-asus-wmi-add-WMI-method-to-show-if-egpu.patch
+Patch516: 0005-platform-x86-asus-wmi-don-t-allow-eGPU-switching-if-.patch
+Patch517: 0006-platform-x86-asus-wmi-add-safety-checks-to-gpu-switc.patch
+Patch518: 0007-platform-x86-asus-wmi-support-setting-mini-LED-mode.patch
+Patch519: 0008-platform-x86-asus-wmi-expose-dGPU-and-CPU-tunables-f.patch
+Patch520: 0009-Fixes-a23870110a38-asus-wmi-add-support-for-showing-.patch
+Patch521: 0010-ALSA-hda-cs35l41-Support-systems-with-missing-_DSD-p.patch
+Patch522: 0011-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-miss.patch
+Patch523: 0012-platform-x86-asus-wmi-corrections-to-egpu-safety-che.patch
+Patch524: 0013-platform-x86-asus-wmi-add-support-for-ASUS-screenpad.patch
 
 %endif
 
@@ -1610,40 +1630,57 @@ ApplyOptionalPatch()
 mv linux-%{tarfile_release} linux-%{KVERREL}
 
 cd linux-%{KVERREL}
-cp -a %{SOURCE1} .
+#cp -a %{SOURCE1} .
 
 %if !%{nopatches}
 
-ApplyOptionalPatch 0001-Revert-b0cb56fc6e3096c9da04c30d9b501da84dae2b4f.patch
-ApplyOptionalPatch 0002-Revert-1ca399f127e0a372537625b1d462ed586f5d9139.patch
-ApplyOptionalPatch 0003-Revert-da2d907e051d591717d00e28e67ab341b961fd05.patch
+#ApplyOptionalPatch 0001-Revert-b0cb56fc6e3096c9da04c30d9b501da84dae2b4f.patch
+#ApplyOptionalPatch 0002-Revert-1ca399f127e0a372537625b1d462ed586f5d9139.patch
+#ApplyOptionalPatch 0003-Revert-da2d907e051d591717d00e28e67ab341b961fd05.patch
 
 ApplyOptionalPatch patch-%{patchversion}-redhat.patch
 
+# Reverts to fix https://gitlab.freedesktop.org/drm/amd/-/issues/2657
+#ApplyOptionalPatch 0001-Revert-8e1b45c578b799510f9a01a9745a737e74f43cb1.patch
+#ApplyOptionalPatch 0002-Revert-822b84ecfc646da0f87fd947fa00dc3be5e45ecc.patch
+
 # linux-fsync patches
-ApplyOptionalPatch tkg.patch
+# ApplyOptionalPatch tkg.patch
 ApplyOptionalPatch fsync.patch
 ApplyOptionalPatch OpenRGB.patch
 ApplyOptionalPatch amdgpu-si-cik-default.patch
 ApplyOptionalPatch acso.patch
-ApplyOptionalPatch amdgpu_hotfix_backport.patch
 
 # device specific patches
-ApplyOptionalPatch linux-surface.patch
+# ApplyOptionalPatch linux-surface.patch
 ApplyOptionalPatch steam-deck.patch
-ApplyOptionalPatch asus-linux.patch
-ApplyOptionalPatch 0001-Add-legion-laptop-v0.1.patch
-ApplyOptionalPatch rog-ally-mediatek-fix.patch
-ApplyOptionalPatch rog-ally-audio-fix.patch
-ApplyOptionalPatch rog-ally-side-keys-fix.patch
-ApplyOptionalPatch rog-ally-volume-keys-fix.patch
-ApplyOptionalPatch rog-ally-i2c-fix.patch
+# ApplyOptionalPatch asus-linux.patch
+# ApplyOptionalPatch lenovo-legion-laptop.patch
+ApplyOptionalPatch asus-rog-ally-side-buttons.patch
+ApplyOptionalPatch OpenRGB-patch-fix.patch
+
+# hdr
+# ApplyOptionalPatch 0001-HDR.patch
 
 # temporary patches
 ApplyOptionalPatch 0001-Revert-PCI-Add-a-REBAR-size-quirk-for-Sapphire-RX-56.patch
 ApplyOptionalPatch 0001-acpi-proc-idle-skip-dummy-wait.patch
 ApplyOptionalPatch 0001-drm-i915-quirks-disable-async-flipping-on-specific-d.patch
-ApplyOptionalPatch 0002-drm-i915-add-kernel-parameter-to-disable-async-page-.patch
+#ApplyOptionalPatch 0002-drm-i915-add-kernel-parameter-to-disable-async-page-.patch
+#ApplyOptionalPatch disable-ftpm-amd.patch
+ApplyOptionalPatch 0001-platform-x86-asus-wmi-add-support-for-showing-charge.patch
+ApplyOptionalPatch 0002-platform-x86-asus-wmi-add-support-for-showing-middle.patch
+ApplyOptionalPatch 0003-platform-x86-asus-wmi-support-middle-fan-custom-curv.patch
+ApplyOptionalPatch 0004-platform-x86-asus-wmi-add-WMI-method-to-show-if-egpu.patch
+ApplyOptionalPatch 0005-platform-x86-asus-wmi-don-t-allow-eGPU-switching-if-.patch
+ApplyOptionalPatch 0006-platform-x86-asus-wmi-add-safety-checks-to-gpu-switc.patch
+ApplyOptionalPatch 0007-platform-x86-asus-wmi-support-setting-mini-LED-mode.patch
+ApplyOptionalPatch 0008-platform-x86-asus-wmi-expose-dGPU-and-CPU-tunables-f.patch
+ApplyOptionalPatch 0009-Fixes-a23870110a38-asus-wmi-add-support-for-showing-.patch
+ApplyOptionalPatch 0010-ALSA-hda-cs35l41-Support-systems-with-missing-_DSD-p.patch
+ApplyOptionalPatch 0011-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-miss.patch
+ApplyOptionalPatch 0012-platform-x86-asus-wmi-corrections-to-egpu-safety-che.patch
+ApplyOptionalPatch 0013-platform-x86-asus-wmi-add-support-for-ASUS-screenpad.patch
 
 # Allow to set custom USB pollrate for specific devices like so:
 # usbcore.interrupt_interval_override=045e:00db:16,1bcf:0005:1
@@ -1656,10 +1693,10 @@ ApplyOptionalPatch 0001-Allow-to-set-custom-USB-pollrate-for-specific-device.pat
 ApplyOptionalPatch set-ps4-bt-poll-rate-1000hz.patch
 
 # mediatek fixups
-ApplyOptionalPatch mt76_-mt7921_-Disable-powersave-features-by-default.patch
+# ApplyOptionalPatch mt76:-mt7921:-Disable-powersave-features-by-default.patch
 
 # xbox controller update
-ApplyOptionalPatch xbox-controller-update.patch
+# ApplyOptionalPatch xbox-controller-update.patch
 
 
 %endif
@@ -1695,36 +1732,36 @@ pathfix.py -i "%{__python3} %{py3_shbang_opts}" -p -n \
 # only deal with configs if we are going to build for the arch
 %ifnarch %nobuildarches
 
-if [ -L configs ]; then
-	rm -f configs
-fi
-mkdir configs
-cd configs
+#if [ -L configs ]; then
+#	rm -f configs
+#fi
+#mkdir configs
+#cd configs
 
 # Drop some necessary files from the source dir into the buildroot
-cp $RPM_SOURCE_DIR/%{name}-*.config .
-cp %{SOURCE80} .
+#cp $RPM_SOURCE_DIR/%{name}-*.config .
+#cp %{SOURCE80} .
 # merge.py
-cp %{SOURCE3000} .
+#cp %{SOURCE3000} .
 # kernel-local
-cp %{SOURCE3001} .
-FLAVOR=%{primary_target} SPECPACKAGE_NAME=%{name} SPECVERSION=%{specversion} SPECRPMVERSION=%{specrpmversion} ./generate_all_configs.sh %{debugbuildsenabled}
+#cp %{SOURCE3001} .
+#FLAVOR=%{primary_target} SPECPACKAGE_NAME=%{name} SPECVERSION=%{specversion} SPECRPMVERSION=%{specrpmversion} ./generate_all_configs.sh %{debugbuildsenabled}
 
 # Merge in any user-provided local config option changes
-%ifnarch %nobuildarches
-for i in %{all_arch_configs}
-do
-  mv $i $i.tmp
-  ./merge.py %{SOURCE3001} $i.tmp > $i
-%if %{with_gcov}
-  echo "Merging with gcov options"
-  cat %{SOURCE75}
-  mv $i $i.tmp
-  ./merge.py %{SOURCE75} $i.tmp > $i
-%endif
-  rm $i.tmp
-done
-%endif
+#%ifnarch %nobuildarches
+#for i in %{all_arch_configs}
+#do
+#  mv $i $i.tmp
+#  ./merge.py %{SOURCE3001} $i.tmp > $i
+#%if %{with_gcov}
+#  echo "Merging with gcov options"
+#  cat %{SOURCE75}
+#  mv $i $i.tmp
+#  ./merge.py %{SOURCE75} $i.tmp > $i
+#%endif
+#  rm $i.tmp
+#done
+#%endif
 
 %if %{with clang_lto}
 for i in *aarch64*.config *x86_64*.config; do
@@ -1766,7 +1803,7 @@ for opt in %{clang_make_opts}; do
   OPTS="$OPTS -m $opt"
 done
 %endif
-RHJOBS=$RPM_BUILD_NCPUS SPECPACKAGE_NAME=%{name} ./process_configs.sh $OPTS %{specrpmversion}
+#RHJOBS=$RPM_BUILD_NCPUS SPECPACKAGE_NAME=%{name} ./process_configs.sh $OPTS %{specrpmversion}
 
 cp %{SOURCE82} .
 RPM_SOURCE_DIR=$RPM_SOURCE_DIR ./update_scripts.sh %{primary_target}
