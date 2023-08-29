@@ -11,7 +11,7 @@ CURRENT_WD=$(pwd)
 # sudo dnf install *.rpm
 sudo cp /etc/default/grub /etc/default/grub-bkp
 sudo cp $CURRENT_WD/grub /etc/default/grub
-sudo grub2-mkconfig -o /etc/grub2-efi.cfg
+sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 sudo cp $CURRENT_WD/50-alsa-config.lua /usr/share/wireplumber/main.lua.d/50-alsa-config.lua
 cd $CURRENT_WD
 tar xvf cirrus.tar.gz
