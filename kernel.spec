@@ -984,6 +984,17 @@ Patch521: 0010-ALSA-hda-cs35l41-Support-systems-with-missing-_DSD-p.patch
 Patch522: 0011-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-miss.patch
 Patch523: 0012-platform-x86-asus-wmi-corrections-to-egpu-safety-che.patch
 Patch524: 0013-platform-x86-asus-wmi-add-support-for-ASUS-screenpad.patch
+Patch525: 0001-ALSA-cs35l41-Use-mbox-command-to-enable-speaker-outp.patch
+Patch526: 0002-ALSA-cs35l41-Poll-for-Power-Up-Down-rather-than-wait.patch
+Patch527: 0003-ALSA-hda-cs35l41-Check-mailbox-status-of-pause-comma.patch
+Patch528: 0004-ALSA-hda-cs35l41-Ensure-we-correctly-re-sync-regmap-.patch
+Patch529: 0005-ALSA-hda-cs35l41-Ensure-we-pass-up-any-errors-during.patch
+Patch530: 0006-ALSA-hda-cs35l41-Move-Play-and-Pause-into-separate-f.patch
+Patch531: 0007-ALSA-hda-hda_component-Add-pre-and-post-playback-hoo.patch
+Patch532: 0008-ALSA-hda-cs35l41-Use-pre-and-post-playback-hooks.patch
+Patch533: 0009-ALSA-hda-cs35l41-Rework-System-Suspend-to-ensure-cor.patch
+Patch534: 0010-ALSA-hda-cs35l41-Add-device_link-between-HDA-and-cs3.patch
+Patch535: 0011-ALSA-hda-cs35l41-Ensure-amp-is-only-unmuted-during-p.patch
 
 %endif
 
@@ -1683,6 +1694,17 @@ ApplyOptionalPatch 0010-ALSA-hda-cs35l41-Support-systems-with-missing-_DSD-p.pat
 ApplyOptionalPatch 0011-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-miss.patch
 ApplyOptionalPatch 0012-platform-x86-asus-wmi-corrections-to-egpu-safety-che.patch
 ApplyOptionalPatch 0013-platform-x86-asus-wmi-add-support-for-ASUS-screenpad.patch
+ApplyOptionalPatch 0001-ALSA-cs35l41-Use-mbox-command-to-enable-speaker-outp.patch
+ApplyOptionalPatch 0002-ALSA-cs35l41-Poll-for-Power-Up-Down-rather-than-wait.patch
+ApplyOptionalPatch 0003-ALSA-hda-cs35l41-Check-mailbox-status-of-pause-comma.patch
+ApplyOptionalPatch 0004-ALSA-hda-cs35l41-Ensure-we-correctly-re-sync-regmap-.patch
+ApplyOptionalPatch 0005-ALSA-hda-cs35l41-Ensure-we-pass-up-any-errors-during.patch
+ApplyOptionalPatch 0006-ALSA-hda-cs35l41-Move-Play-and-Pause-into-separate-f.patch
+ApplyOptionalPatch 0007-ALSA-hda-hda_component-Add-pre-and-post-playback-hoo.patch
+ApplyOptionalPatch 0008-ALSA-hda-cs35l41-Use-pre-and-post-playback-hooks.patch
+ApplyOptionalPatch 0009-ALSA-hda-cs35l41-Rework-System-Suspend-to-ensure-cor.patch
+ApplyOptionalPatch 0010-ALSA-hda-cs35l41-Add-device_link-between-HDA-and-cs3.patch
+ApplyOptionalPatch 0011-ALSA-hda-cs35l41-Ensure-amp-is-only-unmuted-during-p.patch
 
 # Allow to set custom USB pollrate for specific devices like so:
 # usbcore.interrupt_interval_override=045e:00db:16,1bcf:0005:1
