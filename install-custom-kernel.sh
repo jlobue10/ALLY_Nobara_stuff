@@ -36,6 +36,17 @@ wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0010-ALSA-hda-cs3
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0011-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-miss.patch
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0012-platform-x86-asus-wmi-corrections-to-egpu-safety-che.patch
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0013-platform-x86-asus-wmi-add-support-for-ASUS-screenpad.patch
+wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0001-ALSA-cs35l41-Use-mbox-command-to-enable-speaker-outp.patch
+wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0002-ALSA-cs35l41-Poll-for-Power-Up-Down-rather-than-wait.patch
+wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0003-ALSA-hda-cs35l41-Check-mailbox-status-of-pause-comma.patch
+wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0004-ALSA-hda-cs35l41-Ensure-we-correctly-re-sync-regmap-.patch
+wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0005-ALSA-hda-cs35l41-Ensure-we-pass-up-any-errors-during.patch
+wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0006-ALSA-hda-cs35l41-Move-Play-and-Pause-into-separate-f.patch
+wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0007-ALSA-hda-hda_component-Add-pre-and-post-playback-hoo.patch
+wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0008-ALSA-hda-cs35l41-Use-pre-and-post-playback-hooks.patch
+wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0009-ALSA-hda-cs35l41-Rework-System-Suspend-to-ensure-cor.patch
+wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0010-ALSA-hda-cs35l41-Add-device_link-between-HDA-and-cs3.patch
+wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0011-ALSA-hda-cs35l41-Ensure-amp-is-only-unmuted-during-p.patch
 cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
 cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.5/linux-6.5-201.ally.fc38.x86_64/
