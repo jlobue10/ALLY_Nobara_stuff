@@ -39,7 +39,7 @@ chmod +x install-audio-fix.sh
 ./install-audio-fix.sh
 ```
 
-As of release 1.5.0, this audio fix installation will install the latest kernel RPMs (with the relevant kernel patches installed) which no longer need the DSD ACPI override to get audio working on the ASUS ROG ALLY.
+As of release 1.5.0, it's recommended to use a patched kernel which no longer needs the DSD ACPI override to get audio working on the ASUS ROG ALLY.
 
 ## **References**
 
