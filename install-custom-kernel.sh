@@ -21,7 +21,7 @@ rpm -Uvh kernel-6.4.10-202.fsync.fc38.src.rpm
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
 cp $CURRENT_WD/{asus-rog-ally-side-buttons.patch,OpenRGB-patch-fix.patch,modpost.patch} $HOME/rpmbuild/SOURCES/
 cd $HOME/rpmbuild/SOURCES
-wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.5.tar.xz
+wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.5.1.tar.xz
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/patch-6.5-redhat.patch
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0001-platform-x86-asus-wmi-add-support-for-showing-charge.patch
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0002-platform-x86-asus-wmi-add-support-for-showing-middle.patch
@@ -32,10 +32,10 @@ wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0006-platform-x86
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0007-platform-x86-asus-wmi-support-setting-mini-LED-mode.patch
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0008-platform-x86-asus-wmi-expose-dGPU-and-CPU-tunables-f.patch
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0009-Fixes-a23870110a38-asus-wmi-add-support-for-showing-.patch
-wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0010-ALSA-hda-cs35l41-Support-systems-with-missing-_DSD-p.patch
-wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0011-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-miss.patch
-wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0012-platform-x86-asus-wmi-corrections-to-egpu-safety-che.patch
-wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0013-platform-x86-asus-wmi-add-support-for-ASUS-screenpad.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/v2-0001-ALSA-hda-cs35l41-Support-systems-with-missing-_DS.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/v2-0002-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-m.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/v2-0001-platform-x86-asus-wmi-corrections-to-egpu-safety-.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/v6-0001-platform-x86-asus-wmi-add-support-for-ASUS-screen.patch
 wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0001-ALSA-cs35l41-Use-mbox-command-to-enable-speaker-outp.patch
 wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0002-ALSA-cs35l41-Poll-for-Power-Up-Down-rather-than-wait.patch
 wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0003-ALSA-hda-cs35l41-Check-mailbox-status-of-pause-comma.patch
@@ -49,8 +49,9 @@ wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0010
 wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0011-ALSA-hda-cs35l41-Ensure-amp-is-only-unmuted-during-p.patch
 cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
-cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.5/linux-6.5-201.ally.fc38.x86_64/
-cd $HOME/rpmbuild/BUILD/kernel-6.5/linux-6.5-201.ally.fc38.x86_64/
+cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/
+cd $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/
+patch -p1 < ../../../SOURCES/patch-6.5-redhat.patch
 time make bzImage -j8 && make modules -j8
 make modules_install -j8
 make install
