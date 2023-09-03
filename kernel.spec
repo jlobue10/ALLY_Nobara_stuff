@@ -916,7 +916,7 @@ Source4002: gating.yaml
 
 %if !%{nopatches}
 
-Patch1: patch-%{patchversion}-redhat.patch
+# Patch1: patch-%{patchversion}-redhat.patch
 
 # Fix gamescope drm layer regression - these commits cause the gamescope overlay to display behind the game instead of on top of it
 #Patch197: 0001-Revert-b0cb56fc6e3096c9da04c30d9b501da84dae2b4f.patch
