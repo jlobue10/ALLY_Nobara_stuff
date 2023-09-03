@@ -1650,7 +1650,7 @@ cd linux-%{KVERREL}
 #ApplyOptionalPatch 0002-Revert-1ca399f127e0a372537625b1d462ed586f5d9139.patch
 #ApplyOptionalPatch 0003-Revert-da2d907e051d591717d00e28e67ab341b961fd05.patch
 
-ApplyOptionalPatch patch-%{patchversion}-redhat.patch
+#ApplyOptionalPatch patch-%{patchversion}-redhat.patch
 
 # Reverts to fix https://gitlab.freedesktop.org/drm/amd/-/issues/2657
 #ApplyOptionalPatch 0001-Revert-8e1b45c578b799510f9a01a9745a737e74f43cb1.patch
