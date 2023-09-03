@@ -17,7 +17,7 @@ Steps to perform the custom kernel compile and installation.
 git clone https://github.com/jlobue10/ALLY_Nobara_fixes
 cd ALLY_Nobara_fixes
 chmod +x install-custom-kernel.sh
-sudo ./install-custom-kernel.sh
+./install-custom-kernel.sh
 ```
 
 RPMs have been provided on the release page as an alternative to the local compile. If you download the tarball with the kernel RPMs, this would be the install procedure after changing into the directory where that tarball was downloaded.
