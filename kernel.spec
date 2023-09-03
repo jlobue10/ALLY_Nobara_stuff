@@ -1692,7 +1692,7 @@ ApplyOptionalPatch 0008-platform-x86-asus-wmi-expose-dGPU-and-CPU-tunables-f.pat
 ApplyOptionalPatch 0009-Fixes-a23870110a38-asus-wmi-add-support-for-showing-.patch
 ApplyOptionalPatch v2-0001-ALSA-hda-cs35l41-Support-systems-with-missing-_DS.patch
 ApplyOptionalPatch v2-0002-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-m.patch
-ApplyOptionalPatch v2-0001-platform-x86-asus-wmi-corrections-to-egpu-safety-.patch
+#ApplyOptionalPatch v2-0001-platform-x86-asus-wmi-corrections-to-egpu-safety-.patch
 ApplyOptionalPatch v6-0001-platform-x86-asus-wmi-add-support-for-ASUS-screen.patch
 ApplyOptionalPatch 0001-ALSA-cs35l41-Use-mbox-command-to-enable-speaker-outp.patch
 ApplyOptionalPatch 0002-ALSA-cs35l41-Poll-for-Power-Up-Down-rather-than-wait.patch
