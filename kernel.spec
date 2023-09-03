@@ -143,9 +143,9 @@ Summary: The Linux kernel
 #  the --with-release option overrides this setting.)
 %define debugbuildsenabled 1
 %define buildid .ally
-%define specrpmversion 6.5
-%define specversion 6.5
-%define patchversion 6.5
+%define specrpmversion 6.5.1
+%define specversion 6.5.1
+%define patchversion 6.5.1
 %define pkgrelease 201
 %define kversion 6
 %define tarfile_release 6.5
@@ -154,7 +154,7 @@ Summary: The Linux kernel
 # This allows pkg_release to have configurable %%{?dist} tag
 %define specrelease 201%{?buildid}%{?dist}
 # This defines the kabi tarball version
-%define kabiversion 6.5
+%define kabiversion 6.5.1
 
 # If this variable is set to 1, a bpf selftests build failure will cause a
 # fatal kernel package build error
@@ -980,10 +980,10 @@ Patch517: 0006-platform-x86-asus-wmi-add-safety-checks-to-gpu-switc.patch
 Patch518: 0007-platform-x86-asus-wmi-support-setting-mini-LED-mode.patch
 Patch519: 0008-platform-x86-asus-wmi-expose-dGPU-and-CPU-tunables-f.patch
 Patch520: 0009-Fixes-a23870110a38-asus-wmi-add-support-for-showing-.patch
-Patch521: 0010-ALSA-hda-cs35l41-Support-systems-with-missing-_DSD-p.patch
-Patch522: 0011-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-miss.patch
-Patch523: 0012-platform-x86-asus-wmi-corrections-to-egpu-safety-che.patch
-Patch524: 0013-platform-x86-asus-wmi-add-support-for-ASUS-screenpad.patch
+Patch521: v2-0001-ALSA-hda-cs35l41-Support-systems-with-missing-_DS.patch
+Patch522: v2-0002-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-m.patch
+Patch523: v2-0001-platform-x86-asus-wmi-corrections-to-egpu-safety-.patch
+Patch524: v6-0001-platform-x86-asus-wmi-add-support-for-ASUS-screen.patch
 Patch525: 0001-ALSA-cs35l41-Use-mbox-command-to-enable-speaker-outp.patch
 Patch526: 0002-ALSA-cs35l41-Poll-for-Power-Up-Down-rather-than-wait.patch
 Patch527: 0003-ALSA-hda-cs35l41-Check-mailbox-status-of-pause-comma.patch
@@ -1690,10 +1690,10 @@ ApplyOptionalPatch 0006-platform-x86-asus-wmi-add-safety-checks-to-gpu-switc.pat
 ApplyOptionalPatch 0007-platform-x86-asus-wmi-support-setting-mini-LED-mode.patch
 ApplyOptionalPatch 0008-platform-x86-asus-wmi-expose-dGPU-and-CPU-tunables-f.patch
 ApplyOptionalPatch 0009-Fixes-a23870110a38-asus-wmi-add-support-for-showing-.patch
-ApplyOptionalPatch 0010-ALSA-hda-cs35l41-Support-systems-with-missing-_DSD-p.patch
-ApplyOptionalPatch 0011-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-miss.patch
-ApplyOptionalPatch 0012-platform-x86-asus-wmi-corrections-to-egpu-safety-che.patch
-ApplyOptionalPatch 0013-platform-x86-asus-wmi-add-support-for-ASUS-screenpad.patch
+ApplyOptionalPatch v2-0001-ALSA-hda-cs35l41-Support-systems-with-missing-_DS.patch
+ApplyOptionalPatch v2-0002-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-m.patch
+ApplyOptionalPatch v2-0001-platform-x86-asus-wmi-corrections-to-egpu-safety-.patch
+ApplyOptionalPatch v6-0001-platform-x86-asus-wmi-add-support-for-ASUS-screen.patch
 ApplyOptionalPatch 0001-ALSA-cs35l41-Use-mbox-command-to-enable-speaker-outp.patch
 ApplyOptionalPatch 0002-ALSA-cs35l41-Poll-for-Power-Up-Down-rather-than-wait.patch
 ApplyOptionalPatch 0003-ALSA-hda-cs35l41-Check-mailbox-status-of-pause-comma.patch
