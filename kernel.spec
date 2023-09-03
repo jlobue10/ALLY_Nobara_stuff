@@ -148,7 +148,7 @@ Summary: The Linux kernel
 %define patchversion 6.5.1
 %define pkgrelease 201
 %define kversion 6
-%define tarfile_release 6.5
+%define tarfile_release 6.5.1
 # This is needed to do merge window version magic
 %define patchlevel 3
 # This allows pkg_release to have configurable %%{?dist} tag
