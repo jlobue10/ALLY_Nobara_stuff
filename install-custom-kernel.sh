@@ -50,8 +50,11 @@ wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0011
 cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
 cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/
+cp $CURRENT_WD/modpost.patch $HOME/rpmbuild/SOURCES
 cd $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/
 patch -d $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/ -p1 < $HOME/rpmbuild/SOURCES/patch-6.5-redhat.patch
+patch -d $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/ -p1 < $HOME/rpmbuild/SOURCES/modpost.patch
+cp $CURRENT_WD/modpost.patch $HOME/rpmbuild/SOURCES
 time make bzImage -j8 && make modules -j8
 make modules_install -j8
 make install
