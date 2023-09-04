@@ -145,7 +145,7 @@ Summary: The Linux kernel
 %define buildid .ally
 %define specrpmversion 6.5.1
 %define specversion 6.5.1
-%define patchversion 6.5.1
+%define patchversion 6.5
 %define pkgrelease 201
 %define kversion 6
 %define tarfile_release 6.5.1
@@ -916,7 +916,7 @@ Source4002: gating.yaml
 
 %if !%{nopatches}
 
-# Patch1: patch-%{patchversion}-redhat.patch
+Patch1: patch-%{patchversion}-redhat.patch
 
 # Fix gamescope drm layer regression - these commits cause the gamescope overlay to display behind the game instead of on top of it
 #Patch197: 0001-Revert-b0cb56fc6e3096c9da04c30d9b501da84dae2b4f.patch
@@ -947,7 +947,7 @@ Patch408: 0001-acpi-proc-idle-skip-dummy-wait.patch
 Patch409: 0001-drm-i915-quirks-disable-async-flipping-on-specific-d.patch
 Patch410: 0002-drm-i915-add-kernel-parameter-to-disable-async-page-.patch
 Patch411: OpenRGB-patch-fix.patch
-#Patch412: modpost.patch
+Patch412: modpost.patch
 
 # Allow to set custom USB pollrate for specific devices like so:
 # usbcore.interrupt_interval_override=045e:00db:16,1bcf:0005:1
@@ -995,6 +995,15 @@ Patch532: 0008-ALSA-hda-cs35l41-Use-pre-and-post-playback-hooks.patch
 Patch533: 0009-ALSA-hda-cs35l41-Rework-System-Suspend-to-ensure-cor.patch
 Patch534: 0010-ALSA-hda-cs35l41-Add-device_link-between-HDA-and-cs3.patch
 Patch535: 0011-ALSA-hda-cs35l41-Ensure-amp-is-only-unmuted-during-p.patch
+Patch536: 0001-ALSA-cs35l41-Handle-mdsync_down-reg-write-errors.patch
+Patch537: 0002-ALSA-cs35l41-Handle-mdsync_up.patch
+Patch538: 0003-ALSA-cs35l41-Initialize-completion-object-before-requesting-IRQ.patch
+Patch539: 0004-ALSA-cs35l41-Fix-broken-shared-boost-activation.patch
+Patch540: 0005-ALSA-cs35l41-Rename-pll_lock-to-pll_lock_done.patch
+Patch541: 0006-ALSA-cs35l4-Make-use-of-dev_err_probe.patch
+Patch542: 0007-ALSA-cs35l41-Verify-PM-runtime-resume-errors-in-IRQ-handler.patch
+Patch543: 0008-ALSA-cs35l41-Use-modern-pm_ops.patch
+Patch544: 0009-ALSA-cs35l41-Use-devm_pm_runtime_enable.patch
 
 %endif
 
@@ -1650,7 +1659,7 @@ cd linux-%{KVERREL}
 #ApplyOptionalPatch 0002-Revert-1ca399f127e0a372537625b1d462ed586f5d9139.patch
 #ApplyOptionalPatch 0003-Revert-da2d907e051d591717d00e28e67ab341b961fd05.patch
 
-#ApplyOptionalPatch patch-%{patchversion}-redhat.patch
+ApplyOptionalPatch patch-%{patchversion}-redhat.patch
 
 # Reverts to fix https://gitlab.freedesktop.org/drm/amd/-/issues/2657
 #ApplyOptionalPatch 0001-Revert-8e1b45c578b799510f9a01a9745a737e74f43cb1.patch
@@ -1670,7 +1679,7 @@ ApplyOptionalPatch steam-deck.patch
 # ApplyOptionalPatch lenovo-legion-laptop.patch
 ApplyOptionalPatch asus-rog-ally-side-buttons.patch
 ApplyOptionalPatch OpenRGB-patch-fix.patch
-#ApplyOptionalPatch modpost.patch
+ApplyOptionalPatch modpost.patch
 
 # hdr
 # ApplyOptionalPatch 0001-HDR.patch
@@ -1692,7 +1701,7 @@ ApplyOptionalPatch 0008-platform-x86-asus-wmi-expose-dGPU-and-CPU-tunables-f.pat
 ApplyOptionalPatch 0009-Fixes-a23870110a38-asus-wmi-add-support-for-showing-.patch
 ApplyOptionalPatch v2-0001-ALSA-hda-cs35l41-Support-systems-with-missing-_DS.patch
 ApplyOptionalPatch v2-0002-ALSA-hda-cs35l41-Support-ASUS-2023-laptops-with-m.patch
-ApplyOptionalPatch v2-0001-platform-x86-asus-wmi-corrections-to-egpu-safety-.patch
+# ApplyOptionalPatch v2-0001-platform-x86-asus-wmi-corrections-to-egpu-safety-.patch
 ApplyOptionalPatch v6-0001-platform-x86-asus-wmi-add-support-for-ASUS-screen.patch
 ApplyOptionalPatch 0001-ALSA-cs35l41-Use-mbox-command-to-enable-speaker-outp.patch
 ApplyOptionalPatch 0002-ALSA-cs35l41-Poll-for-Power-Up-Down-rather-than-wait.patch
@@ -1705,6 +1714,15 @@ ApplyOptionalPatch 0008-ALSA-hda-cs35l41-Use-pre-and-post-playback-hooks.patch
 ApplyOptionalPatch 0009-ALSA-hda-cs35l41-Rework-System-Suspend-to-ensure-cor.patch
 ApplyOptionalPatch 0010-ALSA-hda-cs35l41-Add-device_link-between-HDA-and-cs3.patch
 ApplyOptionalPatch 0011-ALSA-hda-cs35l41-Ensure-amp-is-only-unmuted-during-p.patch
+ApplyOptionalPatch 0001-ALSA-cs35l41-Handle-mdsync_down-reg-write-errors.patch
+ApplyOptionalPatch 0002-ALSA-cs35l41-Handle-mdsync_up.patch
+ApplyOptionalPatch 0003-ALSA-cs35l41-Initialize-completion-object-before-requesting-IRQ.patch
+ApplyOptionalPatch 0004-ALSA-cs35l41-Fix-broken-shared-boost-activation.patch
+ApplyOptionalPatch 0005-ALSA-cs35l41-Rename-pll_lock-to-pll_lock_done.patch
+ApplyOptionalPatch 0006-ALSA-cs35l4-Make-use-of-dev_err_probe.patch
+ApplyOptionalPatch 0007-ALSA-cs35l41-Verify-PM-runtime-resume-errors-in-IRQ-handler.patch
+ApplyOptionalPatch 0008-ALSA-cs35l41-Use-modern-pm_ops.patch
+ApplyOptionalPatch 0009-ALSA-cs35l41-Use-devm_pm_runtime_enable.patch
 
 # Allow to set custom USB pollrate for specific devices like so:
 # usbcore.interrupt_interval_override=045e:00db:16,1bcf:0005:1
@@ -1756,36 +1774,36 @@ pathfix.py -i "%{__python3} %{py3_shbang_opts}" -p -n \
 # only deal with configs if we are going to build for the arch
 %ifnarch %nobuildarches
 
-#if [ -L configs ]; then
-#	rm -f configs
-#fi
-#mkdir configs
-#cd configs
+if [ -L configs ]; then
+	rm -f configs
+fi
+mkdir configs
+cd configs
 
 # Drop some necessary files from the source dir into the buildroot
-#cp $RPM_SOURCE_DIR/%{name}-*.config .
-#cp %{SOURCE80} .
-# merge.py
-#cp %{SOURCE3000} .
+cp $RPM_SOURCE_DIR/%{name}-*.config .
+cp %{SOURCE80} .
+# $RPM_SOURCE_DIR/./merge.py
+cp %{SOURCE3000} .
 # kernel-local
-#cp %{SOURCE3001} .
-#FLAVOR=%{primary_target} SPECPACKAGE_NAME=%{name} SPECVERSION=%{specversion} SPECRPMVERSION=%{specrpmversion} ./generate_all_configs.sh %{debugbuildsenabled}
+cp %{SOURCE3001} .
+FLAVOR=%{primary_target} SPECPACKAGE_NAME=%{name} SPECVERSION=%{specversion} SPECRPMVERSION=%{specrpmversion} ./generate_all_configs.sh %{debugbuildsenabled}
 
 # Merge in any user-provided local config option changes
-#%ifnarch %nobuildarches
-#for i in %{all_arch_configs}
-#do
-#  mv $i $i.tmp
-#  ./merge.py %{SOURCE3001} $i.tmp > $i
-#%if %{with_gcov}
-#  echo "Merging with gcov options"
-#  cat %{SOURCE75}
-#  mv $i $i.tmp
-#  ./merge.py %{SOURCE75} $i.tmp > $i
-#%endif
-#  rm $i.tmp
-#done
-#%endif
+%ifnarch %nobuildarches
+for i in %{all_arch_configs}
+do
+  mv $i $i.tmp
+  $RPM_SOURCE_DIR/./merge.py %{SOURCE3001} $i.tmp > $i
+%if %{with_gcov}
+  echo "Merging with gcov options"
+  cat %{SOURCE75}
+  mv $i $i.tmp
+  $RPM_SOURCE_DIR/./merge.py %{SOURCE75} $i.tmp > $i
+%endif
+  rm $i.tmp
+done
+%endif
 
 %if %{with clang_lto}
 for i in *aarch64*.config *x86_64*.config; do
