@@ -22,18 +22,6 @@ $(if $(filter __%, $(MAKECMDGOALS)), \
 PHONY := __all
 __all:
 
-# Set RHEL variables
-# Note that this ifdef'ery is required to handle when building with
-# the O= mechanism (relocate the object file results) due to upstream
-# commit 67d7c302 which broke our RHEL include file
-ifneq ($(realpath source),)
-include $(realpath source)/Makefile.rhelver
-else
-ifneq ($(realpath Makefile.rhelver),)
-include Makefile.rhelver
-endif
-endif
-
 # We are using a recursive build, so we need to do a little thinking
 # to get the ordering right.
 #
@@ -1347,13 +1335,7 @@ define filechk_version.h
 	((c) > 255 ? 255 : (c)))';                                       \
 	echo \#define LINUX_VERSION_MAJOR $(VERSION);                    \
 	echo \#define LINUX_VERSION_PATCHLEVEL $(PATCHLEVEL);            \
-	echo \#define LINUX_VERSION_SUBLEVEL $(SUBLEVEL);                \
-	echo '#define RHEL_MAJOR $(RHEL_MAJOR)'; \
-	echo '#define RHEL_MINOR $(RHEL_MINOR)'; \
-	echo '#define RHEL_RELEASE_VERSION(a,b) (((a) << 8) + (b))'; \
-	echo '#define RHEL_RELEASE_CODE \
-		$(shell expr $(RHEL_MAJOR) \* 256 + $(RHEL_MINOR))'; \
-	echo '#define RHEL_RELEASE "$(RHEL_RELEASE)"'
+	echo \#define LINUX_VERSION_SUBLEVEL $(SUBLEVEL)
 endef
 
 $(version_h): PATCHLEVEL := $(or $(PATCHLEVEL), 0)
