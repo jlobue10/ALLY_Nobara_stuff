@@ -47,14 +47,22 @@ wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0008
 wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0009-ALSA-hda-cs35l41-Rework-System-Suspend-to-ensure-cor.patch
 wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0010-ALSA-hda-cs35l41-Add-device_link-between-HDA-and-cs3.patch
 wget https://raw.githubusercontent.com/ChimeraOS/linux-chimeraos/main/linux/0011-ALSA-hda-cs35l41-Ensure-amp-is-only-unmuted-during-p.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0001-ALSA-cs35l41-Handle-mdsync_down-reg-write-errors.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0002-ALSA-cs35l41-Handle-mdsync_up.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0003-ALSA-cs35l41-Initialize-completion-object-before-requesting-IRQ.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0004-ALSA-cs35l41-Fix-broken-shared-boost-activation.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0005-ALSA-cs35l41-Rename-pll_lock-to-pll_lock_done.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0006-ALSA-cs35l4-Make-use-of-dev_err_probe.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0007-ALSA-cs35l41-Verify-PM-runtime-resume-errors-in-IRQ-handler.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0008-ALSA-cs35l41-Use-modern-pm_ops.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0009-ALSA-cs35l41-Use-devm_pm_runtime_enable.patch
 cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
-cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/
-cp $CURRENT_WD/modpost.patch $HOME/rpmbuild/SOURCES
+cp $CURRENT_WD/{.config} $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/
+# cp $CURRENT_WD/modpost.patch $HOME/rpmbuild/SOURCES
 cd $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/
-patch -d $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/ -p1 < $HOME/rpmbuild/SOURCES/patch-6.5-redhat.patch
-patch -d $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/ -p1 < $HOME/rpmbuild/SOURCES/modpost.patch
-cp $CURRENT_WD/modpost.patch $HOME/rpmbuild/SOURCES
+# patch -d $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/ -p1 < $HOME/rpmbuild/SOURCES/patch-6.5-redhat.patch
+# patch -d $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/ -p1 < $HOME/rpmbuild/SOURCES/modpost.patch
 time make bzImage -j8 && make modules -j8
 make modules_install -j8
 make install
