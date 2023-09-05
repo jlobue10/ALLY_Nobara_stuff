@@ -5,6 +5,8 @@ All credit should go to the original authors and developers. Many of these origi
 
 I highly recommend using this [repo's utility](https://github.com/Maclay74/steam-patch) so that the side buttons function like they would on the Steam Deck in a `gamescope-session` or big picture mode in desktop view.
 
+There is also a different way to get side button control using [HandyGCCS](https://github.com/ShadowBlip/HandyGCCS) and a modified version of [Decky PowerTools](https://github.com/hicder/PowerTools) for TDP control and adjustments. THis is the method that I'm currently using.
+
 If you experience crackling with the audio, the potential fix is to edit the `/usr/share/wireplumber/main.lua.d/50-alsa-config.lua` file line with `--["api.alsa.headroom"]` to be `--["api.alsa.headroom"] = 1024,` (installed with `install-audio-fix.sh`)
 
 ## **Installation (Updated for 6.5.1)**
