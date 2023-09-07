@@ -21,7 +21,7 @@ rpm -Uvh kernel-6.4.10-202.fsync.fc38.src.rpm
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
 cp $CURRENT_WD/{asus-rog-ally-side-buttons.patch,OpenRGB-patch-fix.patch,modpost.patch} $HOME/rpmbuild/SOURCES/
 cd $HOME/rpmbuild/SOURCES
-wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.5.1.tar.xz
+wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.5.2.tar.xz
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/patch-6.5-redhat.patch
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0001-platform-x86-asus-wmi-add-support-for-showing-charge.patch
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.5/0002-platform-x86-asus-wmi-add-support-for-showing-middle.patch
@@ -58,9 +58,9 @@ wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0008-ALSA-cs35l41-Us
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0009-ALSA-cs35l41-Use-devm_pm_runtime_enable.patch
 cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
-cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/
+cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.5.2/linux-6.5.1-201.ally.fc38.x86_64/
 # cp $CURRENT_WD/modpost.patch $HOME/rpmbuild/SOURCES
-cd $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/
+cd $HOME/rpmbuild/BUILD/kernel-6.5.2/linux-6.5.2-201.ally.fc38.x86_64/
 # patch -d $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/ -p1 < $HOME/rpmbuild/SOURCES/patch-6.5-redhat.patch
 # patch -d $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/ -p1 < $HOME/rpmbuild/SOURCES/modpost.patch
 time make bzImage -j8 && make modules -j8
