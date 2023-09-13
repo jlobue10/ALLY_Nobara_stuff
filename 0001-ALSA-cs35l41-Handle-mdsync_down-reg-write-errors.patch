@@ -1,7 +1,7 @@
-From: Cristian Ciocaltea @ 2023-09-02 21:06 UTC (permalink / raw)
+From: Cristian Ciocaltea @ 2023-09-07 17:10 UTC (permalink / raw)
   To: James Schulman, David Rhodes, Richard Fitzgerald,
 	Jaroslav Kysela, Takashi Iwai, Liam Girdwood, Mark Brown,
-	Stefan Binding, Charles Keepax
+	Stefan Binding, Charles Keepax, Vitaly Rodionov
   Cc: alsa-devel, patches, linux-kernel, kernel
 
 The return code of regmap_multi_reg_write() call related to "MDSYNC
@@ -14,6 +14,7 @@ Let cs35l41_global_enable() return the correct error code instead of
 
 Fixes: f5030564938b ("ALSA: cs35l41: Add shared boost feature")
 Signed-off-by: Cristian Ciocaltea <cristian.ciocaltea@collabora.com>
+Acked-by: Charles Keepax <ckeepax@opensource.cirrus.com>
 ---
  sound/soc/codecs/cs35l41-lib.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
@@ -29,7 +30,7 @@ index 4ec306cd2f47..a018f1d98428 100644
 -		if (!enable)
 +		if (ret || !enable)
  			break;
-
+ 
  		if (!pll_lock)
---
+-- 
 2.41.0
