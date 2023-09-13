@@ -1,7 +1,7 @@
-From: Cristian Ciocaltea @ 2023-09-02 21:06 UTC (permalink / raw)
+From: Cristian Ciocaltea @ 2023-09-07 17:10 UTC (permalink / raw)
   To: James Schulman, David Rhodes, Richard Fitzgerald,
 	Jaroslav Kysela, Takashi Iwai, Liam Girdwood, Mark Brown,
-	Stefan Binding, Charles Keepax
+	Stefan Binding, Charles Keepax, Vitaly Rodionov
   Cc: alsa-devel, patches, linux-kernel, kernel
 
 Make use of the recently introduced EXPORT_GPL_DEV_PM_OPS() macro, to
@@ -18,6 +18,7 @@ ERROR: modpost: "cs35l41_pm_ops" [sound/soc/codecs/snd-soc-cs35l41-spi.ko] undef
 ERROR: modpost: "cs35l41_pm_ops" [sound/soc/codecs/snd-soc-cs35l41-i2c.ko] undefined!
 
 Signed-off-by: Cristian Ciocaltea <cristian.ciocaltea@collabora.com>
+Acked-by: Charles Keepax <ckeepax@opensource.cirrus.com>
 ---
  sound/soc/codecs/cs35l41-i2c.c |  2 +-
  sound/soc/codecs/cs35l41-spi.c |  2 +-
@@ -51,80 +52,80 @@ index 28e9c9473e60..a6db44520c06 100644
  		.acpi_match_table = ACPI_PTR(cs35l41_acpi_match),
  	},
 diff --git a/sound/soc/codecs/cs35l41.c b/sound/soc/codecs/cs35l41.c
-index 66418547a4dd..5655758063ae 100644
+index 7ddaa9bd8911..4bc64ba71cd6 100644
 --- a/sound/soc/codecs/cs35l41.c
 +++ b/sound/soc/codecs/cs35l41.c
-@@ -1394,7 +1394,7 @@ void cs35l41_remove(struct cs35l41_private *cs35l41)
+@@ -1368,7 +1368,7 @@ void cs35l41_remove(struct cs35l41_private *cs35l41)
  }
  EXPORT_SYMBOL_GPL(cs35l41_remove);
-
+ 
 -static int __maybe_unused cs35l41_runtime_suspend(struct device *dev)
 +static int cs35l41_runtime_suspend(struct device *dev)
  {
  	struct cs35l41_private *cs35l41 = dev_get_drvdata(dev);
-
-@@ -1411,7 +1411,7 @@ static int __maybe_unused cs35l41_runtime_suspend(struct device *dev)
+ 
+@@ -1385,7 +1385,7 @@ static int __maybe_unused cs35l41_runtime_suspend(struct device *dev)
  	return 0;
  }
-
+ 
 -static int __maybe_unused cs35l41_runtime_resume(struct device *dev)
 +static int cs35l41_runtime_resume(struct device *dev)
  {
  	struct cs35l41_private *cs35l41 = dev_get_drvdata(dev);
  	int ret;
-@@ -1440,7 +1440,7 @@ static int __maybe_unused cs35l41_runtime_resume(struct device *dev)
+@@ -1414,7 +1414,7 @@ static int __maybe_unused cs35l41_runtime_resume(struct device *dev)
  	return 0;
  }
-
+ 
 -static int __maybe_unused cs35l41_sys_suspend(struct device *dev)
 +static int cs35l41_sys_suspend(struct device *dev)
  {
  	struct cs35l41_private *cs35l41 = dev_get_drvdata(dev);
-
-@@ -1450,7 +1450,7 @@ static int __maybe_unused cs35l41_sys_suspend(struct device *dev)
+ 
+@@ -1424,7 +1424,7 @@ static int __maybe_unused cs35l41_sys_suspend(struct device *dev)
  	return 0;
  }
-
+ 
 -static int __maybe_unused cs35l41_sys_suspend_noirq(struct device *dev)
 +static int cs35l41_sys_suspend_noirq(struct device *dev)
  {
  	struct cs35l41_private *cs35l41 = dev_get_drvdata(dev);
-
-@@ -1460,7 +1460,7 @@ static int __maybe_unused cs35l41_sys_suspend_noirq(struct device *dev)
+ 
+@@ -1434,7 +1434,7 @@ static int __maybe_unused cs35l41_sys_suspend_noirq(struct device *dev)
  	return 0;
  }
-
+ 
 -static int __maybe_unused cs35l41_sys_resume_noirq(struct device *dev)
 +static int cs35l41_sys_resume_noirq(struct device *dev)
  {
  	struct cs35l41_private *cs35l41 = dev_get_drvdata(dev);
-
-@@ -1470,7 +1470,7 @@ static int __maybe_unused cs35l41_sys_resume_noirq(struct device *dev)
+ 
+@@ -1444,7 +1444,7 @@ static int __maybe_unused cs35l41_sys_resume_noirq(struct device *dev)
  	return 0;
  }
-
+ 
 -static int __maybe_unused cs35l41_sys_resume(struct device *dev)
 +static int cs35l41_sys_resume(struct device *dev)
  {
  	struct cs35l41_private *cs35l41 = dev_get_drvdata(dev);
-
-@@ -1480,13 +1480,12 @@ static int __maybe_unused cs35l41_sys_resume(struct device *dev)
+ 
+@@ -1454,13 +1454,12 @@ static int __maybe_unused cs35l41_sys_resume(struct device *dev)
  	return 0;
  }
-
+ 
 -const struct dev_pm_ops cs35l41_pm_ops = {
 -	SET_RUNTIME_PM_OPS(cs35l41_runtime_suspend, cs35l41_runtime_resume, NULL)
 +EXPORT_GPL_DEV_PM_OPS(cs35l41_pm_ops) = {
 +	RUNTIME_PM_OPS(cs35l41_runtime_suspend, cs35l41_runtime_resume, NULL)
-
+ 
 -	SET_SYSTEM_SLEEP_PM_OPS(cs35l41_sys_suspend, cs35l41_sys_resume)
 -	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(cs35l41_sys_suspend_noirq, cs35l41_sys_resume_noirq)
 +	SYSTEM_SLEEP_PM_OPS(cs35l41_sys_suspend, cs35l41_sys_resume)
 +	NOIRQ_SYSTEM_SLEEP_PM_OPS(cs35l41_sys_suspend_noirq, cs35l41_sys_resume_noirq)
  };
 -EXPORT_SYMBOL_GPL(cs35l41_pm_ops);
-
+ 
  MODULE_DESCRIPTION("ASoC CS35L41 driver");
  MODULE_AUTHOR("David Rhodes, Cirrus Logic Inc, <david.rhodes@cirrus.com>");
---
+-- 
 2.41.0
