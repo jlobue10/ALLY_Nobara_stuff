@@ -51,11 +51,13 @@ wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0001-ALSA-cs35l41-Ha
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0002-ALSA-cs35l41-Handle-mdsync_up.patch
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0003-ALSA-cs35l41-Initialize-completion-object-before-requesting-IRQ.patch
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0004-ALSA-cs35l41-Fix-broken-shared-boost-activation.patch
-wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0005-ALSA-cs35l41-Rename-pll_lock-to-pll_lock_done.patch
-wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0006-ALSA-cs35l4-Make-use-of-dev_err_probe.patch
-wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0007-ALSA-cs35l41-Verify-PM-runtime-resume-errors-in-IRQ-handler.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0005-ALSA-cs35l41-Verify-PM-runtime-resume-errors-in-IRQ.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0006-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0007-ALSA-cs35l41-Make-use-of-dev_err_probe.patch
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0008-ALSA-cs35l41-Use-modern-pm_ops.patch
-wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0009-ALSA-cs35l41-Use-devm_pm_runtime_enable.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0009-ALSA-cs35l41-Fix-unbalanced-pm_runtime_get.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0010-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
+wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0011-ALSA-cs35l41-Consistently-use-dev_err_probe.patch
 cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
 cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.5.3/linux-6.5.3-201.ally.fc38.x86_64/
