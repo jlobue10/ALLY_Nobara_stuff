@@ -999,11 +999,13 @@ Patch536: 0001-ALSA-cs35l41-Handle-mdsync_down-reg-write-errors.patch
 Patch537: 0002-ALSA-cs35l41-Handle-mdsync_up.patch
 Patch538: 0003-ALSA-cs35l41-Initialize-completion-object-before-requesting-IRQ.patch
 Patch539: 0004-ALSA-cs35l41-Fix-broken-shared-boost-activation.patch
-Patch540: 0005-ALSA-cs35l41-Rename-pll_lock-to-pll_lock_done.patch
-Patch541: 0006-ALSA-cs35l4-Make-use-of-dev_err_probe.patch
-Patch542: 0007-ALSA-cs35l41-Verify-PM-runtime-resume-errors-in-IRQ-handler.patch
+Patch540: 0005-ALSA-cs35l41-Verify-PM-runtime-resume-errors-in-IRQ.patch
+Patch541: 0006-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
+Patch542: 0007-ALSA-cs35l41-Make-use-of-dev_err_probe.patch
 Patch543: 0008-ALSA-cs35l41-Use-modern-pm_ops.patch
-Patch544: 0009-ALSA-cs35l41-Use-devm_pm_runtime_enable.patch
+Patch544: 0009-ALSA-cs35l41-Fix-unbalanced-pm_runtime_get.patch
+Patch545: 0010-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
+Patch546: 0011-ALSA-cs35l41-Consistently-use-dev_err_probe.patch
 
 %endif
 
@@ -1718,11 +1720,13 @@ ApplyOptionalPatch 0001-ALSA-cs35l41-Handle-mdsync_down-reg-write-errors.patch
 ApplyOptionalPatch 0002-ALSA-cs35l41-Handle-mdsync_up.patch
 ApplyOptionalPatch 0003-ALSA-cs35l41-Initialize-completion-object-before-requesting-IRQ.patch
 ApplyOptionalPatch 0004-ALSA-cs35l41-Fix-broken-shared-boost-activation.patch
-ApplyOptionalPatch 0005-ALSA-cs35l41-Rename-pll_lock-to-pll_lock_done.patch
-ApplyOptionalPatch 0006-ALSA-cs35l4-Make-use-of-dev_err_probe.patch
-ApplyOptionalPatch 0007-ALSA-cs35l41-Verify-PM-runtime-resume-errors-in-IRQ-handler.patch
+ApplyOptionalPatch 0005-ALSA-cs35l41-Verify-PM-runtime-resume-errors-in-IRQ.patch
+ApplyOptionalPatch 0006-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
+ApplyOptionalPatch 0007-ALSA-cs35l41-Make-use-of-dev_err_probe.patch
 ApplyOptionalPatch 0008-ALSA-cs35l41-Use-modern-pm_ops.patch
-ApplyOptionalPatch 0009-ALSA-cs35l41-Use-devm_pm_runtime_enable.patch
+ApplyOptionalPatch 0009-ALSA-cs35l41-Fix-unbalanced-pm_runtime_get.patch
+ApplyOptionalPatch 0010-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
+ApplyOptionalPatch 0011-ALSA-cs35l41-Consistently-use-dev_err_probe.patch
 
 # Allow to set custom USB pollrate for specific devices like so:
 # usbcore.interrupt_interval_override=045e:00db:16,1bcf:0005:1
