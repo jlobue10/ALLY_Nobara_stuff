@@ -15,9 +15,9 @@
 CURRENT_WD=$(pwd)
 dnf install fedpkg fedora-packager rpmdevtools rpmlint ncurses-devel pesign grubby qt5-qtbase-devel libXi-devel gcc-c++\
  bpftool dwarves elfutils-devel gcc-plugin-devel glibc-static kernel-rpm-macros perl-devel perl-generators python3-devel systemd-boot-unsigned
-wget https://download.copr.fedorainfracloud.org/results/gloriouseggroll/nobara/fedora-38-x86_64/06307746-kernel/kernel-6.4.10-202.fsync.fc38.src.rpm
+wget https://download.copr.fedorainfracloud.org/results/gloriouseggroll/nobara/fedora-38-x86_64/06403856-kernel/kernel-6.5.3-200.fsync.fc38.src.rpm
 rm -rf $HOME/rpmbuild/
-rpm -Uvh kernel-6.4.10-202.fsync.fc38.src.rpm
+rpm -Uvh kernel-6.5.3-200.fsync.fc38.src.rpm
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
 cp $CURRENT_WD/{asus-rog-ally-side-buttons.patch,OpenRGB-patch-fix.patch,modpost.patch} $HOME/rpmbuild/SOURCES/
 cd $HOME/rpmbuild/SOURCES
@@ -61,10 +61,7 @@ wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0011-ALSA-cs35l41-Co
 cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
 cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.5.3/linux-6.5.3-201.ally.fc38.x86_64/
-# cp $CURRENT_WD/modpost.patch $HOME/rpmbuild/SOURCES
 cd $HOME/rpmbuild/BUILD/kernel-6.5.3/linux-6.5.3-201.ally.fc38.x86_64/
-# patch -d $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/ -p1 < $HOME/rpmbuild/SOURCES/patch-6.5-redhat.patch
-# patch -d $HOME/rpmbuild/BUILD/kernel-6.5.1/linux-6.5.1-201.ally.fc38.x86_64/ -p1 < $HOME/rpmbuild/SOURCES/modpost.patch
 time make bzImage -j8 && make modules -j8
 make modules_install -j8
 make install
