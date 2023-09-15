@@ -2,7 +2,7 @@
 VERSION = 6
 PATCHLEVEL = 5
 SUBLEVEL = 3
-EXTRAVERSION = -201.ally.fc38.x86_64
+EXTRAVERSION = -200.fsync.ally.fc38.x86_64
 NAME = Hurr durr I'ma ninja sloth
 
 # *DOCUMENTATION*
