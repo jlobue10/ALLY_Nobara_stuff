@@ -142,17 +142,17 @@ Summary: The Linux kernel
 #  to build the base kernel using the debug configuration. (Specifying
 #  the --with-release option overrides this setting.)
 %define debugbuildsenabled 1
-%define buildid .ally
+%define buildid fsync.ally
 %define specrpmversion 6.5.3
 %define specversion 6.5.3
 %define patchversion 6.5
-%define pkgrelease 201
+%define pkgrelease 200
 %define kversion 6
 %define tarfile_release 6.5.3
 # This is needed to do merge window version magic
 %define patchlevel 3
 # This allows pkg_release to have configurable %%{?dist} tag
-%define specrelease 201%{?buildid}%{?dist}
+%define specrelease 200%{?buildid}%{?dist}
 # This defines the kabi tarball version
 %define kabiversion 6.5.3
 
