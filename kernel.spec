@@ -1016,7 +1016,7 @@ Patch543: 0008-ALSA-cs35l41-Use-modern-pm_ops.patch
 Patch544: 0009-ALSA-cs35l41-Fix-unbalanced-pm_runtime_get.patch
 Patch545: 0010-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
 Patch546: 0011-ALSA-cs35l41-Consistently-use-dev_err_probe.patch
-
+Patch547: ROG-ALLY-LED-fix.patch
 
 # Allow to set custom USB pollrate for specific devices like so:
 # usbcore.interrupt_interval_override=045e:00db:16,1bcf:0005:1
@@ -1809,6 +1809,7 @@ ApplyOptionalPatch 0008-ALSA-cs35l41-Use-modern-pm_ops.patch
 ApplyOptionalPatch 0009-ALSA-cs35l41-Fix-unbalanced-pm_runtime_get.patch
 ApplyOptionalPatch 0010-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
 ApplyOptionalPatch 0011-ALSA-cs35l41-Consistently-use-dev_err_probe.patch
+ApplyOptionalPatch ROG-ALLY-LED-fix.patch
 
 # hdr
 ApplyOptionalPatch 0001-HDR.patch
