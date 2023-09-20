@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0
 VERSION = 6
 PATCHLEVEL = 5
-SUBLEVEL = 3
+SUBLEVEL = 4
 EXTRAVERSION = -200.fsync.ally.fc38.x86_64
 NAME = Hurr durr I'ma ninja sloth
 
