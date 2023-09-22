@@ -9,7 +9,7 @@ There is also a different way to get side button control using [HandyGCCS](https
 
 If you experience crackling with the audio, the potential fix is to edit the `/usr/share/wireplumber/main.lua.d/50-alsa-config.lua` file line with `--["api.alsa.headroom"]` to be `--["api.alsa.headroom"] = 1024,` (installed with `install-audio-fix.sh`)
 
-## **Installation (Updated for 6.5.4)**
+## **Installation (Updated for 6.5.4) (no longer necessary, stock Nobara kernel has patches)**
 
 An automated kernel installer has been added. As is, it downloads the latest source kernel from Nobara copr, unpacks it, adds the ROG ALLY patches and compiles the kernel, the kernel modules and installs them (both kernel and modules).
 
@@ -32,7 +32,7 @@ sudo dnf install *.rpm
 
 Only do either of these two installation methods if you simply must try out these fixes for the ROG ALLY running Nobara, sooner rather than later. GloriousEggroll is aware of the patches and will hopefully incorporate them into the next kernel release. The audio fix will likely still need to be run from here or elsewhere though.
 
-## **Audio Fix**
+## **Audio Fix (no longer necessary.. provided by linux-firmware git)**
 
 From within the cloned directory, make the `install-audio-fix.sh` file executable and run it.
 
