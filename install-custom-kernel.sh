@@ -31,7 +31,6 @@ wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0008-ALSA-cs35l41-Us
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0009-ALSA-cs35l41-Fix-unbalanced-pm_runtime_get.patch
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0010-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/0011-ALSA-cs35l41-Consistently-use-dev_err_probe.patch
-wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/ROG-ALLY-LED-fix.patch
 wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.5.4.tar.xz
 cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
