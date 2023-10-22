@@ -78,6 +78,33 @@ static int asus_rog_2023_spkr_id2(struct cs35l41_hda *cs35l41, struct device *ph
 	return 0;
 }
 
+static int asus_rog_2023_ally_fix(struct cs35l41_hda *cs35l41, struct device *physdev, int id,
+				const char *hid)
+{
+	/* ROG ALLY specific config - BIOS version check would be a nice to have addition 
+	   If Bios version is less than 330, then manually load the following properties. */
+	struct cs35l41_hw_cfg *hw_cfg = &cs35l41->hw_cfg;
+
+	dev_info(cs35l41->dev, "Adding DSD properties for %s\n", cs35l41->acpi_subsystem_id);
+
+	cs35l41->index = 0x40;
+	cs35l41->channel_index = 0;
+	cs35l41->reset_gpio = gpiod_get_index(physdev, NULL, 0, GPIOD_OUT_HIGH);
+	cs35l41->speaker_id = cs35l41_get_speaker_id(physdev, 0, 0, 2);
+	hw_cfg->spk_pos = cs35l41->index ? 0 : 1; // left:right
+	hw_cfg->gpio1.func = CS35L41_NOT_USED;
+	hw_cfg->gpio1.valid = true;
+	hw_cfg->gpio2.func = CS35L41_INTERRUPT;
+	hw_cfg->gpio2.valid = true;
+	hw_cfg->bst_type = CS35L41_INT_BOOST;
+	hw_cfg->bst_ind = 1000; /* 1,000nH Inductance value */
+	hw_cfg->bst_ipk = 4500; /* 4,500mA peak current */
+	hw_cfg->bst_cap = 24; /* 24 microFarad cap value */
+	hw_cfg->valid = true;
+
+	return 0;
+}
+
 struct cs35l41_prop_model {
 	const char *hid;
 	const char *ssid;
@@ -94,7 +121,7 @@ const struct cs35l41_prop_model cs35l41_prop_model_table[] = {
 	{ "CSC3551", "10431483", asus_rog_2023_spkr_id2 }, // ASUS GU603V - spi, reset gpio 1
 	{ "CSC3551", "10431493", asus_rog_2023_spkr_id2 }, // ASUS GV601V - spi, reset gpio 1
 	{ "CSC3551", "10431573", asus_rog_2023_spkr_id2 }, // ASUS GZ301V - spi, reset gpio 0
-	{ "CSC3551", "104317F3", asus_rog_2023_spkr_id2 }, // ASUS ROG ALLY - i2c
+	{ "CSC3551", "104317F3", asus_rog_2023_ally_fix }, // ASUS ROG ALLY - i2c
 	{ "CSC3551", "10431B93", asus_rog_2023_spkr_id2 }, // ASUS G614J - spi, reset gpio 0
 	{ "CSC3551", "10431CAF", asus_rog_2023_spkr_id2 }, // ASUS G634J - spi, reset gpio 0
 	{ "CSC3551", "10431C9F", asus_rog_2023_spkr_id2 }, // ASUS G614JI -spi, reset gpio 0
