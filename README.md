@@ -30,22 +30,7 @@ cd RPM
 sudo dnf install *.rpm
 ```
 
-Only do either of these two installation methods if you simply must try out these fixes for the ROG ALLY running Nobara, sooner rather than later. GloriousEggroll is aware of the patches and will hopefully incorporate them into the next kernel release. The audio fix will likely still need to be run from here or elsewhere though.
-
-## **Audio Fix (no longer necessary... provided by linux-firmware git)**
-
-From within the cloned directory, make the `install-audio-fix.sh` file executable and run it.
-
-```
-chmod +x install-audio-fix.sh
-./install-audio-fix.sh
-```
-
-As of release 1.5.0, it's recommended to use a patched kernel which no longer needs the DSD ACPI override to get audio working on the ASUS ROG ALLY.
-
-## **Update October 12, 2023**
-
-Kernel patch is no longer necessary for audio to work as long as your ROG ALLY is using BIOS 330 or later. 6.5.7 RPMs (release 1.7.0) has the kernel audio patch disabled.
+Only do either of these two installation methods if you simply must try out these fixes for the ROG ALLY running Nobara, sooner rather than later. GloriousEggroll is aware of the patches and has incorporated them into Nobara stock kernels.
 
 ## **References**
 
