@@ -7,8 +7,6 @@ I highly recommend using this [repo's utility](https://github.com/Maclay74/steam
 
 There is also a different way to get side button control using [HandyGCCS](https://github.com/ShadowBlip/HandyGCCS) and a modified version of [Decky PowerTools](https://github.com/hicder/PowerTools) for TDP control and adjustments. This is the method that I'm currently using.
 
-If you experience crackling with the audio, the potential fix is to edit the `/usr/share/wireplumber/main.lua.d/50-alsa-config.lua` file line with `--["api.alsa.headroom"]` to be `--["api.alsa.headroom"] = 1024,` (installed with `install-audio-fix.sh`)
-
 ## **Installation (Updated for 6.5.4) (no longer necessary, stock Nobara kernel has patches)**
 
 An automated kernel installer has been added. As is, it downloads the latest source kernel from Nobara copr, unpacks it, adds the ROG ALLY patches and compiles the kernel, the kernel modules and installs them (both kernel and modules).
