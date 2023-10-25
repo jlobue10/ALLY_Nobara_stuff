@@ -25,7 +25,7 @@ index b39f944..b67c636 100644
 +	kstrtoint(rog_ally_bios_num, 10, &rog_ally_bios_int);
 +	if(rog_ally_bios_int >= 330){
 +		printk(KERN_INFO "DSD properties exist in the %d BIOS\n", rog_ally_bios_int);
-+		return 0; //Patch not applicable. Exiting successfully 
++		return -ENOENT; //Patch not applicable. Exiting...
 +	}
 +
 +	struct cs35l41_hw_cfg *hw_cfg = &cs35l41->hw_cfg;
