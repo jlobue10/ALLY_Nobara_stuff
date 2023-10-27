@@ -46,6 +46,10 @@ install -D -m 644 %{SOURCE2} %{buildroot}/usr/lib/udev/rules.d/
 # Uncomment and adjust if necessary.
 #install -D -m 644 LICENSE %{buildroot}/usr/share/licenses/%{name}/
 
+%post
+%systemd_post ally-motion-evdev.service
+udevadm control --reload-rules && udevadm trigger
+
 %files
 /usr/bin/ally-motion-evdev
 /usr/lib/systemd/user/ally-motion-evdev.service
