@@ -1,6 +1,6 @@
-%global _name   ROG-ALLY-motion-evdev
+%global _name   ALLY-motion-evdev
 
-Name:           rog-ally-motion-evdev
+Name:           ally-motion-evdev
 Version:        1.0.0
 Release:        1%{?dist}
 Summary:        Exposes bmi323 chip over an evdev interface
@@ -8,7 +8,7 @@ Summary:        Exposes bmi323 chip over an evdev interface
 License:        BSD
 URL:            https://github.com/NeroReflex/ally-motion-evdev/
 Source0:        ally-motion-evdev-master.zip
-Source1:        rog-ally-motion-evdev.service
+Source1:        ally-motion-evdev.service
 Source2:        10-ally-motion-evdev.rule
 
 BuildRequires:  cmake
@@ -43,23 +43,22 @@ install -m 644 %{SOURCE1} %{buildroot}/usr/lib/systemd/system/
 install -m 644 %{SOURCE2} %{buildroot}/usr/lib/udev/rules.d/
 
 # The license file installation was commented out in the original PKGBUILD.
-# Uncomment and adjust if necessary.
 #install -D -m 644 LICENSE %{buildroot}/usr/share/licenses/%{name}/
 
 %post
 systemctl daemon-reload
-systemctl enable rog-ally-motion-evdev.service
-systemctl start rog-ally-motion-evdev.service
+systemctl enable ally-motion-evdev.service
+systemctl start ally-motion-evdev.service
 udevadm control --reload-rules && udevadm trigger
 
 %preun
-systemctl stop rog-ally-motion-evdev.service
-systemctl disable rog-ally-motion-evdev.service
+systemctl stop ally-motion-evdev.service
+systemctl disable ally-motion-evdev.service
 systemctl daemon-reload
 
 %files
 /usr/bin/ally-motion-evdev
-/usr/lib/systemd/system/rog-ally-motion-evdev.service
+/usr/lib/systemd/system/ally-motion-evdev.service
 /usr/lib/udev/rules.d/10-ally-motion-evdev.rule
 
 %changelog
