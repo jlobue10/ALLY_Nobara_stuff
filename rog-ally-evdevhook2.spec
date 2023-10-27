@@ -8,7 +8,7 @@ Summary:        Cemuhook UDP server for devices with modern Linux drivers
 License:        GPL3
 URL:            https://github.com/v1993/evdevhook2
 Source0:        evdevhook2-main.zip
-Source1:        evdevhook2.service
+Source1:        rog-ally-evdevhook2.service
 Source2:        rog-ally-bmi323.patch
 
 BuildRequires:  git meson vala
@@ -36,20 +36,31 @@ meson compile -C build
 
 %install
 meson install -C build --destdir=%{buildroot}
+mkdir -p %{buildroot}/usr/bin
+cp %{buildroot}/usr/local/bin/evdevhook2 %{buildroot}/usr/bin/evdevhook2
+rm -rf %{buildroot}/usr/local/bin/
 
-mkdir -p %{buildroot}/usr/lib/systemd/user/
+mkdir -p %{buildroot}/usr/lib/systemd/system/
 mkdir -p %{buildroot}/usr/share/licenses/evdevhook2/
 
-install -D -m 644 %{SOURCE1} %{buildroot}/usr/lib/systemd/user/
-install -D -m 644 evdevhook2/LICENSE %{buildroot}/usr/share/licenses/evdevhook2/
+install -m 644 %{SOURCE1} %{buildroot}/usr/lib/systemd/system/
+install -m 644 evdevhook2/LICENSE %{buildroot}/usr/share/licenses/evdevhook2/
 
 %post
-%systemd_post evdevhook2.service
+systemctl daemon-reload
+systemctl enable rog-ally-evdevhook2.service
+systemctl start rog-ally-evdevhook2.service
+
+%preun
+systemctl stop rog-ally-evdevhook2.service
+systemctl disable rog-ally-evdevhook2.service
+systemctl daemon-reload
+#%systemd_preun %{name}.service
 
 %files
-/usr/lib/systemd/user/evdevhook2.service
+/usr/lib/systemd/system/rog-ally-evdevhook2.service
 /usr/share/licenses/evdevhook2/LICENSE
-/usr/local/bin/evdevhook2
+/usr/bin/evdevhook2
 /usr/local/share/doc/evdevhook2/ExampleConfig.ini
 
 %changelog
