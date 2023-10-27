@@ -56,7 +56,6 @@ udevadm control --reload-rules && udevadm trigger
 systemctl stop rog-ally-motion-evdev.service
 systemctl disable rog-ally-motion-evdev.service
 systemctl daemon-reload
-#%systemd_preun %{name}.service
 
 %files
 /usr/bin/ally-motion-evdev
