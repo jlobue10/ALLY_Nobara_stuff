@@ -55,7 +55,6 @@ systemctl start rog-ally-evdevhook2.service
 systemctl stop rog-ally-evdevhook2.service
 systemctl disable rog-ally-evdevhook2.service
 systemctl daemon-reload
-#%systemd_preun %{name}.service
 
 %files
 /usr/lib/systemd/system/rog-ally-evdevhook2.service
