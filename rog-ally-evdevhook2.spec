@@ -12,7 +12,7 @@ Source1:        evdevhook2.service
 Source2:        rog-ally-bmi323.patch
 
 BuildRequires:  git meson vala
-Requires:       glib2 zlib libudev libevdev libgee-0.8 rog-ally-motion-evdev
+Requires:       glib2 zlib systemd-devel libevdev libgee rog-ally-motion-evdev
 Recommends:     upower
 Provides:       evdevhook2
 Conflicts:      evdevhook2
