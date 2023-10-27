@@ -1,6 +1,6 @@
-%global _name   ROG-ALLY-evdevhook2
+%global _name   evdevhook2
 
-Name:           rog-ally-evdevhook2
+Name:           evdevhook2
 Version:        1.0.1
 Release:        1%{?dist}
 Summary:        Cemuhook UDP server for devices with modern Linux drivers
@@ -8,11 +8,11 @@ Summary:        Cemuhook UDP server for devices with modern Linux drivers
 License:        GPL3
 URL:            https://github.com/v1993/evdevhook2
 Source0:        evdevhook2-main.zip
-Source1:        rog-ally-evdevhook2.service
+Source1:        evdevhook2.service
 Source2:        rog-ally-bmi323.patch
 
 BuildRequires:  git meson vala
-Requires:       glib2 zlib systemd-devel libevdev libgee rog-ally-motion-evdev
+Requires:       glib2 zlib systemd-devel libevdev libgee ally-motion-evdev
 Recommends:     upower
 Provides:       evdevhook2
 Conflicts:      evdevhook2
@@ -48,8 +48,8 @@ install -m 644 evdevhook2/LICENSE %{buildroot}/usr/share/licenses/evdevhook2/
 
 %post
 systemctl daemon-reload
-systemctl enable rog-ally-evdevhook2.service
-systemctl start rog-ally-evdevhook2.service
+systemctl enable evdevhook2.service
+systemctl start evdevhook2.service
 
 %preun
 systemctl stop rog-ally-evdevhook2.service
@@ -57,7 +57,7 @@ systemctl disable rog-ally-evdevhook2.service
 systemctl daemon-reload
 
 %files
-/usr/lib/systemd/system/rog-ally-evdevhook2.service
+/usr/lib/systemd/system/evdevhook2.service
 /usr/share/licenses/evdevhook2/LICENSE
 /usr/bin/evdevhook2
 /usr/local/share/doc/evdevhook2/ExampleConfig.ini
