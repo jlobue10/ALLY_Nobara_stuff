@@ -43,6 +43,9 @@ mkdir -p %{buildroot}/usr/share/licenses/evdevhook2/
 install -D -m 644 %{SOURCE1} %{buildroot}/usr/lib/systemd/user/
 install -D -m 644 evdevhook2/LICENSE %{buildroot}/usr/share/licenses/evdevhook2/
 
+%post
+%systemd_post evdevhook2.service
+
 %files
 /usr/lib/systemd/user/evdevhook2.service
 /usr/share/licenses/evdevhook2/LICENSE
