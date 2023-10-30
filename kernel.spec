@@ -161,18 +161,18 @@ Summary: The Linux kernel
 #  the --with-release option overrides this setting.)
 %define debugbuildsenabled 1
 %define buildid .fsync.ally
-%define specrpmversion 6.5.4
-%define specversion 6.5.4
-%define patchversion 6.5
+%define specrpmversion 6.6.0
+%define specversion 6.6.0
+%define patchversion 6.6
 %define pkgrelease 200
 %define kversion 6
-%define tarfile_release 6.5.4
+%define tarfile_release 6.6
 # This is needed to do merge window version magic
 %define patchlevel 5
 # This allows pkg_release to have configurable %%{?dist} tag
 %define specrelease 200%{?buildid}%{?dist}
 # This defines the kabi tarball version
-%define kabiversion 6.5.4
+%define kabiversion 6.6
 
 # If this variable is set to 1, a bpf selftests build failure will cause a
 # fatal kernel package build error
@@ -995,6 +995,9 @@ Patch302: asus-linux.patch
 Patch303: lenovo-legion-laptop.patch
 Patch306: rog-ally-side-keys-fix.patch
 Patch307: chimera-ALSA.patch
+Patch308: rog-ally-alsa.patch
+Patch309: rog-ally-audio-fix.patch
+Patch310: bmc150.patch
 
 # hdr: https://github.com/ChimeraOS/linux-chimeraos
 Patch407: 0001-HDR.patch
@@ -1005,18 +1008,6 @@ Patch508: 0001-acpi-proc-idle-skip-dummy-wait.patch
 Patch509: 0001-drm-i915-quirks-disable-async-flipping-on-specific-d.patch
 Patch510: 0002-drm-i915-add-kernel-parameter-to-disable-async-page-.patch
 
-Patch536: 0001-ALSA-cs35l41-Handle-mdsync_down-reg-write-errors.patch
-Patch537: 0002-ALSA-cs35l41-Handle-mdsync_up.patch
-Patch538: 0003-ALSA-cs35l41-Initialize-completion-object-before-requesting-IRQ.patch
-Patch539: 0004-ALSA-cs35l41-Fix-broken-shared-boost-activation.patch
-Patch540: 0005-ALSA-cs35l41-Verify-PM-runtime-resume-errors-in-IRQ.patch
-Patch541: 0006-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
-Patch542: 0007-ALSA-cs35l41-Make-use-of-dev_err_probe.patch
-Patch543: 0008-ALSA-cs35l41-Use-modern-pm_ops.patch
-Patch544: 0009-ALSA-cs35l41-Fix-unbalanced-pm_runtime_get.patch
-Patch545: 0010-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
-Patch546: 0011-ALSA-cs35l41-Consistently-use-dev_err_probe.patch
-Patch547: ROG-ALLY-NCT6775-PLATFORM.patch
 
 # Allow to set custom USB pollrate for specific devices like so:
 # usbcore.interrupt_interval_override=045e:00db:16,1bcf:0005:1
@@ -1569,7 +1560,7 @@ Provides: installonlypkg(kernel)\
 Provides: kernel-%{?1:%{1}-}uname-r = %{KVERREL}%{uname_suffix %{?1:+%{1}}}\
 Requires: kernel%{?1:-%{1}}-modules-core-uname-r = %{KVERREL}%{uname_suffix %{?1:+%{1}}}\
 Requires(pre): %{kernel_prereq}\
-Requires(pre): systemd >= 254-1\
+Requires(pre): systemd\
 %endif\
 %endif\
 %if %{with_gcov}\
@@ -1786,33 +1777,24 @@ cp -a %{SOURCE1} .
 ApplyOptionalPatch patch-%{patchversion}-redhat.patch
 
 # linux-fsync patches
-ApplyOptionalPatch tkg.patch
+# ApplyOptionalPatch tkg.patch
 ApplyOptionalPatch fsync.patch
 ApplyOptionalPatch OpenRGB.patch
-ApplyOptionalPatch amdgpu-si-cik-default.patch
+# ApplyOptionalPatch amdgpu-si-cik-default.patch
 
 # device specific patches
-ApplyOptionalPatch linux-surface.patch
-ApplyOptionalPatch steam-deck.patch
-ApplyOptionalPatch asus-linux.patch
+# ApplyOptionalPatch linux-surface.patch
+# ApplyOptionalPatch steam-deck.patch
+# ApplyOptionalPatch asus-linux.patch
 ApplyOptionalPatch lenovo-legion-laptop.patch
 ApplyOptionalPatch rog-ally-side-keys-fix.patch
-ApplyOptionalPatch chimera-ALSA.patch
-ApplyOptionalPatch 0001-ALSA-cs35l41-Handle-mdsync_down-reg-write-errors.patch
-ApplyOptionalPatch 0002-ALSA-cs35l41-Handle-mdsync_up.patch
-ApplyOptionalPatch 0003-ALSA-cs35l41-Initialize-completion-object-before-requesting-IRQ.patch
-ApplyOptionalPatch 0004-ALSA-cs35l41-Fix-broken-shared-boost-activation.patch
-ApplyOptionalPatch 0005-ALSA-cs35l41-Verify-PM-runtime-resume-errors-in-IRQ.patch
-ApplyOptionalPatch 0006-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
-ApplyOptionalPatch 0007-ALSA-cs35l41-Make-use-of-dev_err_probe.patch
-ApplyOptionalPatch 0008-ALSA-cs35l41-Use-modern-pm_ops.patch
-ApplyOptionalPatch 0009-ALSA-cs35l41-Fix-unbalanced-pm_runtime_get.patch
-ApplyOptionalPatch 0010-ALSA-cs35l41-Undo-runtime-PM-changes-at-driver-exit-time.patch
-ApplyOptionalPatch 0011-ALSA-cs35l41-Consistently-use-dev_err_probe.patch
-ApplyOptionalPatch ROG-ALLY-NCT6775-PLATFORM.patch
+#ApplyOptionalPatch chimera-ALSA.patch
+ApplyOptionalPatch rog-ally-alsa.patch
+ApplyOptionalPatch rog-ally-audio-fix.patch
+ApplyOptionalPatch bmc150.patch
 
 # hdr
-ApplyOptionalPatch 0001-HDR.patch
+# ApplyOptionalPatch 0001-HDR.patch
 
 # temporary patches
 ApplyOptionalPatch 0001-Revert-PCI-Add-a-REBAR-size-quirk-for-Sapphire-RX-56.patch
@@ -3444,7 +3426,7 @@ fi\
 %endif
 
 %if %{with_debug} && %{with_arm64_16k}
-%kernel_variant_preun 16k-debug
+%kernel_variant_preun -v 16k-debug
 %kernel_variant_post -v 16k-debug
 %endif
 
@@ -3806,6 +3788,45 @@ fi\
 #
 #
 %changelog
+* Fri Oct 20 2023 Augusto Caringi <acaringi@redhat.com> [6.5.8-0]
+- Linux v6.5.8
+
+* Tue Oct 10 2023 Augusto Caringi <acaringi@redhat.com> [6.5.7-0]
+- common: aarch64: enable CONFIG_ARM64_ERRATUM_2966298 (Augusto Caringi)
+- Linux v6.5.7
+
+* Fri Oct 06 2023 Augusto Caringi <acaringi@redhat.com> [6.5.6-0]
+- power: supply: core: Use blocking_notifier_call_chain to avoid RCU complaint (Kai-Heng Feng)
+- Revert "Add linux-next specific files for 20231004" (Justin M. Forbes)
+- redhat/configs: enable missing Kconfig options for Qualcomm RideSX4 (Brian Masney)
+- add a couple of CVEs to BugsFixed (Justin M. Forbes)
+- Add another F39 FE bug to BugsFixed (Justin M. Forbes)
+- Add linux-next specific files for 20231004 (Stephen Rothwell)
+- common: aarch64: enable NXP Flex SPI (Peter Robinson)
+- fedora: Switch TI_SCI_CLK and TI_SCI_PM_DOMAINS symbols to built-in (Javier Martinez Canillas)
+- Add bug for amdgpu to BugsFixed for 6.5.6 (Justin M. Forbes)
+- drm/amdgpu: set completion status as preempted for the resubmission (Jiadong Zhu)
+- Add CVE-2023-42756 to BugsFixed for 6.5.6 (Justin M. Forbes)
+- Linux v6.5.6
+
+* Sat Sep 23 2023 Justin M. Forbes <jforbes@fedoraproject.org> [6.5.5-0]
+- iommu/apple-dart: Handle DMA_FQ domains in attach_dev() (Hector Martin)
+- Note fix for atomic locking in BugsFixed (Justin M. Forbes)
+- locking/atomic: scripts: fix fallback ifdeffery (Mark Rutland)
+- redhat: spec: Fix typo for kernel_variant_preun for 16k-debug flavor (Neal Gompa)
+- Fix installreq for UKI (Justin M. Forbes)
+- Add btrfs bug to BugsFixed for 6.5.5 (Justin M. Forbes)
+- btrfs: adjust overcommit logic when very close to full (Josef Bacik)
+- btrfs: properly report 0 avail for very full file systems (Josef Bacik)
+- Linux v6.5.5
+
+* Tue Sep 19 2023 Justin M. Forbes <jforbes@fedoraproject.org> [6.5.4-0]
+- Add F38 and F37 as release targets (Justin M. Forbes)
+- Add NFS bug fix for 6.5.4 (Justin M. Forbes)
+- selinux: fix handling of empty opts in selinux_fs_context_submount() (Ondrej Mosnacek)
+- Turn off appletalk for fedora (Justin M. Forbes)
+- Linux v6.5.4
+
 * Wed Sep 13 2023 Justin M. Forbes <jforbes@fedoraproject.org> [6.5.3-0]
 - Revert "misc: rtsx: judge ASPM Mode to set PETXCFG Reg" (Justin M. Forbes)
 - Config updates for 6.5.3 (Justin M. Forbes)
