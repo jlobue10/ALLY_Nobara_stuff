@@ -25,7 +25,7 @@ rm -f rog-ally-side-keys-fix.patch
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/mt76:-mt7921:-Disable-powersave-features-by-default.patch
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/bmc150.patch
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/rog-ally-audio-fix.patch
-wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/patch-6.6-redhat.patch
+wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.6/patch-6.6-redhat.patch
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/rog-ally-side-keys-fix.patch
 wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.6.tar.xz
 cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
