@@ -20,6 +20,8 @@ chmod +x install-custom-kernel.sh
 sudo ./install-custom-kernel.sh
 ```
 
+Removal of the custom kernel requires some manual steps. Please inquire about this (open an issue) if you need help with it.
+
 RPMs have been provided on the release page as an alternative to the local compile. If you download the tarball with the kernel RPMs, this would be the install procedure after changing into the directory where that tarball was downloaded.
 
 ```
@@ -29,6 +31,12 @@ sudo dnf install *.rpm
 ```
 
 Only do either of these two installation methods if you simply must try out these fixes for the ROG ALLY running Nobara, sooner rather than later. GloriousEggroll is aware of the patches and has incorporated them into Nobara stock kernels.
+
+RPM uninstall example:
+
+```
+sudo dnf remove kernel-6.5.9-200.fsync.ally.fc38.x86_64 kernel-core-6.5.9-200.fsync.ally.fc38.x86_64 kernel-devel-6.5.9-200.fsync.ally.fc38.x86_64 kernel-modules-6.5.9-200.fsync.ally.fc38.x86_64 kernel-modules-core-6.5.9-200.fsync.ally.fc38.x86_64 kernel-modules-extra-6.5.9-200.fsync.ally.fc38.x86_64
+```
 
 ## **References**
 
