@@ -7,7 +7,7 @@ Summary:        Exposes bmi323 chip over an evdev interface
 
 License:        BSD
 URL:            https://github.com/NeroReflex/ally-motion-evdev/
-Source0:        ally-motion-evdev-master.zip
+Source0:        rog-ally-motion-evdev-main.zip
 Source1:        ally-motion-evdev.service
 Source2:        10-ally-motion-evdev.rule
 
@@ -19,7 +19,11 @@ Exposes bmi323 chip over an evdev interface.
 
 %prep
 rm -rf %{_builddir}/ally-motion-evdev
-unzip -j $RPM_SOURCE_DIR/ally-motion-evdev-master.zip -d %{_builddir}/ally-motion-evdev
+cd $RPM_SOURCE_DIR
+rm -f rog-ally-motion-evdev-main.zip
+wget https://github.com/NeroReflex/ally-motion-evdev/archive/refs/heads/master.zip
+mv master.zip rog-ally-motion-evdev-main.zip
+unzip -j $RPM_SOURCE_DIR/rog-ally-motion-evdev-main.zip -d %{_builddir}/ally-motion-evdev
 
 %build
 cd %{_builddir}/ally-motion-evdev/
