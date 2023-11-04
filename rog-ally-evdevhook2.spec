@@ -22,6 +22,10 @@ Cemuhook UDP server for devices with modern Linux drivers
 
 %prep
 rm -rf %{_builddir}/evdevhook2
+cd $RPM_SOURCE_DIR
+rm -f evdevhook2-main.zip
+wget https://github.com/v1993/evdevhook2/archive/refs/heads/main.zip
+mv main.zip evdevhook2-main.zip
 unzip $RPM_SOURCE_DIR/evdevhook2-main.zip -d %{_builddir}
 mkdir -p %{_builddir}/evdevhook2
 cp -rf %{_builddir}/evdevhook2-main/* %{_builddir}/evdevhook2
