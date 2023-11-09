@@ -28,11 +28,11 @@ wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/rog-ally-audio-fix.p
 wget https://gitlab.com/asus-linux/fedora-kernel/-/raw/rog-6.6/patch-6.6-redhat.patch
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/rog-ally-side-keys-fix.patch
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/modpost-fix.patch
-wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.6.tar.xz
+wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.6.1.tar.xz
 cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
-cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.6/linux-6.6.0-200.fsync.ally.fc38.x86_64/
-cd $HOME/rpmbuild/BUILD/kernel-6.6/linux-6.6.0-200.fsync.ally.fc38.x86_64/
+cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.6.1/linux-6.6.1-200.fsync.ally.fc38.x86_64/
+cd $HOME/rpmbuild/BUILD/kernel-6.6/linux-6.6.1-200.fsync.ally.fc38.x86_64/
 time make bzImage -j8 && make modules -j8
 make modules_install -j8
 make install
