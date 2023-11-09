@@ -161,12 +161,12 @@ Summary: The Linux kernel
 #  the --with-release option overrides this setting.)
 %define debugbuildsenabled 1
 %define buildid .fsync.ally
-%define specrpmversion 6.6.0
-%define specversion 6.6.0
+%define specrpmversion 6.6.1
+%define specversion 6.6.1
 %define patchversion 6.6
 %define pkgrelease 200
 %define kversion 6
-%define tarfile_release 6.6
+%define tarfile_release 6.6.1
 # This is needed to do merge window version magic
 %define patchlevel 5
 # This allows pkg_release to have configurable %%{?dist} tag
