@@ -997,7 +997,7 @@ Patch306: rog-ally-side-keys-fix.patch
 Patch307: chimera-ALSA.patch
 Patch308: rog-ally-alsa.patch
 Patch309: rog-ally-audio-fix.patch
-Patch310: bmc150.patch
+Patch310: rog-ally-bmc150.patch
 Patch311: modpost-fix.patch
 
 # hdr: https://github.com/ChimeraOS/linux-chimeraos
@@ -1792,7 +1792,7 @@ ApplyOptionalPatch rog-ally-side-keys-fix.patch
 #ApplyOptionalPatch chimera-ALSA.patch
 ApplyOptionalPatch rog-ally-alsa.patch
 #ApplyOptionalPatch rog-ally-audio-fix.patch
-ApplyOptionalPatch bmc150.patch
+ApplyOptionalPatch rog-ally-bmc150.patch
 ApplyOptionalPatch modpost-fix.patch
 
 # hdr
