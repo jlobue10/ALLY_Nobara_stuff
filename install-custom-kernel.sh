@@ -15,7 +15,7 @@
 CURRENT_WD=$(pwd)
 dnf install fedpkg fedora-packager rpmdevtools rpmlint ncurses-devel pesign grubby qt5-qtbase-devel libXi-devel gcc-c++\
  bpftool dwarves elfutils-devel gcc-plugin-devel glibc-static kernel-rpm-macros perl-devel perl-generators python3-devel systemd-boot-unsigned
-wget https://download.copr.fedorainfracloud.org/results/gloriouseggroll/nobara/fedora-38-x86_64/06568260-kernel/kernel-6.5.9-200.fsync.fc38.src.rpm
+wget https://download.copr.fedorainfracloud.org/results/gloriouseggroll/nobara/fedora-38-x86_64/06585608-kernel/kernel-6.5.9-201.fsync.fc38.src.rpm
 rm -rf $HOME/rpmbuild/
 rpm -Uvh kernel-6.5.9-200.fsync.fc38.src.rpm
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
