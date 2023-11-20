@@ -161,12 +161,12 @@ Summary: The Linux kernel
 #  the --with-release option overrides this setting.)
 %define debugbuildsenabled 1
 %define buildid .fsync.ally
-%define specrpmversion 6.6.1
-%define specversion 6.6.1
+%define specrpmversion 6.6.2
+%define specversion 6.6.2
 %define patchversion 6.6
 %define pkgrelease 200
 %define kversion 6
-%define tarfile_release 6.6.1
+%define tarfile_release 6.6.2
 # This is needed to do merge window version magic
 %define patchlevel 5
 # This allows pkg_release to have configurable %%{?dist} tag
@@ -994,11 +994,31 @@ Patch301: steam-deck.patch
 Patch302: asus-linux.patch
 Patch303: lenovo-legion-laptop.patch
 Patch306: rog-ally-side-keys-fix.patch
-Patch307: chimera-ALSA.patch
-Patch308: rog-ally-alsa.patch
+#Patch307: chimera-ALSA.patch
+#Patch308: rog-ally-alsa.patch
 Patch309: rog-ally-audio-fix.patch
-Patch310: rog-ally-bmc150.patch
+#Patch310: rog-ally-bmc150.patch
 Patch311: modpost-fix.patch
+Patch312: 0001-ZEN-Add-sysctl-and-CONFIG-to-disallow-unprivileged-C.patch
+Patch313: 0004-sphinx-kfigure.py-Convert-outdir-to-str-before-using.patch
+Patch314: 0001-mm-Support-soft-dirty-flag-reset-for-VA-range.patch
+Patch315: 0001-add-hid_id-and-keys-for-ASUS-ROG-ALLY.patch
+Patch316: 0002-usb-Add-a-mode-switch-for-the-controller-embedded-on.patch
+Patch317: 0003-asus-hid-set-led-brightness-at-resume-as-it-was-left.patch
+Patch318: 0004-hid-asus-Improve-function-signature.patch
+Patch319: 0005-hid-asis-add-platform-device-and-relative-sysfs.patch
+Patch320: 0006-Add-asus-platform-and-send-USB-ABORT_PIPE-befor-slee.patch
+Patch321: ROG-ALLY-NCT6775-PLATFORM.patch
+Patch322: 0001-add-GPU-reset-sysfs-event.patch
+Patch323: 0012-misc-additions.patch
+Patch324: 0007-fsync1_via_futex_waitv.patch
+Patch325: 0006-add-acs-overrides_iommu.patch
+Patch326: more-uarches-for-kernel-5.17+.patch
+Patch327: 0007-winesync.patch
+Patch328: 0013-optimize_harder_O3.patch
+Patch329: 0001-add-acpi_call.patch
+Patch330: bmc150.patch
+Patch331: uinput.patch
 
 # hdr: https://github.com/ChimeraOS/linux-chimeraos
 Patch407: 0001-HDR.patch
@@ -1794,6 +1814,26 @@ ApplyOptionalPatch rog-ally-alsa.patch
 #ApplyOptionalPatch rog-ally-audio-fix.patch
 ApplyOptionalPatch rog-ally-bmc150.patch
 ApplyOptionalPatch modpost-fix.patch
+ApplyOptionalPatch 0001-ZEN-Add-sysctl-and-CONFIG-to-disallow-unprivileged-C.patch
+ApplyOptionalPatch 0004-sphinx-kfigure.py-Convert-outdir-to-str-before-using.patch
+ApplyOptionalPatch 0001-mm-Support-soft-dirty-flag-reset-for-VA-range.patch
+ApplyOptionalPatch 0001-add-hid_id-and-keys-for-ASUS-ROG-ALLY.patch
+ApplyOptionalPatch 0002-usb-Add-a-mode-switch-for-the-controller-embedded-on.patch
+ApplyOptionalPatch 0003-asus-hid-set-led-brightness-at-resume-as-it-was-left.patch
+ApplyOptionalPatch 0004-hid-asus-Improve-function-signature.patch
+ApplyOptionalPatch 0005-hid-asis-add-platform-device-and-relative-sysfs.patch
+ApplyOptionalPatch 0006-Add-asus-platform-and-send-USB-ABORT_PIPE-befor-slee.patch
+ApplyOptionalPatch ROG-ALLY-NCT6775-PLATFORM.patch
+ApplyOptionalPatch 0001-add-GPU-reset-sysfs-event.patch
+ApplyOptionalPatch 0012-misc-additions.patch
+ApplyOptionalPatch 0007-fsync1_via_futex_waitv.patch
+ApplyOptionalPatch 0006-add-acs-overrides_iommu.patch
+ApplyOptionalPatch more-uarches-for-kernel-5.17+.patch
+ApplyOptionalPatch 0007-winesync.patch
+ApplyOptionalPatch 0013-optimize_harder_O3.patch
+ApplyOptionalPatch 0001-add-acpi_call.patch
+ApplyOptionalPatch bmc150.patch
+ApplyOptionalPatch uinput.patch
 
 # hdr
 # ApplyOptionalPatch 0001-HDR.patch
