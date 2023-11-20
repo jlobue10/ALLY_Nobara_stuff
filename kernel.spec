@@ -1796,6 +1796,7 @@ cp -a %{SOURCE1} .
 %if !%{nopatches}
 
 ApplyOptionalPatch patch-%{patchversion}-redhat.patch
+ApplyOptionalPatch modpost-fix.patch
 
 # linux-fsync patches
 # ApplyOptionalPatch tkg.patch
@@ -1813,7 +1814,6 @@ ApplyOptionalPatch rog-ally-side-keys-fix.patch
 ApplyOptionalPatch rog-ally-alsa.patch
 #ApplyOptionalPatch rog-ally-audio-fix.patch
 ApplyOptionalPatch rog-ally-bmc150.patch
-ApplyOptionalPatch modpost-fix.patch
 ApplyOptionalPatch 0001-ZEN-Add-sysctl-and-CONFIG-to-disallow-unprivileged-C.patch
 ApplyOptionalPatch 0004-sphinx-kfigure.py-Convert-outdir-to-str-before-using.patch
 ApplyOptionalPatch 0001-mm-Support-soft-dirty-flag-reset-for-VA-range.patch
