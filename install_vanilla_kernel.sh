@@ -6,8 +6,8 @@ cd $HOME/vanilla_Nero_kernel
 wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.6.2.tar.xz
 tar xvf linux-6.6.2.tar.xz
 cd linux-6.6.2
-echo -e "\nSave and close on next step xconfig...\n"
-make xconfig
+echo -e "\nSave and close on next step menuconfig...\n"
+make menuconfig
 rm $HOME/vanilla_Nero_kernel/linux-6.6.2/.config
 wget https://github.com/jlobue10/ALLY_Nobara_fixes/raw/main/.config
 # NeroReflex patches for DS4 virtual controller...  https://github.com/NeroReflex/linux-chimeraos/blob/v6.6/linux/PKGBUILD
