@@ -1,0 +1,12 @@
+[Unit]
+Description=ROGueENEMY service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+WorkingDirectory=/usr/bin
+ExecStart=/usr/bin/ROGueENEMY
+
+[Install]
+WantedBy=multi-user.target
