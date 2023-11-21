@@ -10,7 +10,7 @@ URL:            https://github.com/NeroReflex/ROGueENEMY
 Source0:        ROGueENEMY-main.zip
 Source1:        ROGueENEMY.service
 
-BuildRequires:  cmake gcc-c++
+BuildRequires:  cmake
 Recommends:     steam gamescope-session
 Provides:       ROGueENEMY
 Conflicts:      ROGueENEMY
