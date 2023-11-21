@@ -1825,6 +1825,7 @@ ApplyOptionalPatch 0005-hid-asis-add-platform-device-and-relative-sysfs.patch
 ApplyOptionalPatch 0006-Add-asus-platform-and-send-USB-ABORT_PIPE-befor-slee.patch
 ApplyOptionalPatch ROG-ALLY-NCT6775-PLATFORM.patch
 ApplyOptionalPatch 0001-add-GPU-reset-sysfs-event.patch
+ApplyOptionalPatch 0001-HDR.patch
 ApplyOptionalPatch 0012-misc-additions.patch
 ApplyOptionalPatch 0007-fsync1_via_futex_waitv.patch
 ApplyOptionalPatch 0006-add-acs-overrides_iommu.patch
@@ -1836,7 +1837,7 @@ ApplyOptionalPatch bmc150.patch
 ApplyOptionalPatch uinput.patch
 
 # hdr
-# ApplyOptionalPatch 0001-HDR.patch
+#ApplyOptionalPatch 0001-HDR.patch
 
 # temporary patches
 ApplyOptionalPatch 0001-Revert-PCI-Add-a-REBAR-size-quirk-for-Sapphire-RX-56.patch
