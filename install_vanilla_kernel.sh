@@ -4,6 +4,7 @@ cd $HOME
 mkdir -p $HOME/vanilla_Nero_kernel
 cd $HOME/vanilla_Nero_kernel
 wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.6.2.tar.xz
+tar xvf linux-6.6.2.tar.xz
 cd linux-6.6.2
 echo -e "\nSave and close on next step xconfig...\n"
 make xconfig
