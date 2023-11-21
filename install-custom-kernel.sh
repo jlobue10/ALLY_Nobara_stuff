@@ -47,7 +47,7 @@ wget https://github.com/NeroReflex/linux-chimeraos/blob/v6.6/linux/uinput.patch
 wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.6.2.tar.xz
 cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
-cp $CURRENT_WD/.config $HOME/rpmbuild/BUILD/kernel-6.6.2/linux-6.6.2-200.fsync.ally.fc38.x86_64/.config
+cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.6.2/linux-6.6.2-200.fsync.ally.fc38.x86_64/
 cd $HOME/rpmbuild/BUILD/kernel-6.6.2/linux-6.6.2-200.fsync.ally.fc38.x86_64/
 time make bzImage -j8 && make modules -j8
 make modules_install -j8
