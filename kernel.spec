@@ -995,7 +995,7 @@ Patch302: asus-linux.patch
 Patch303: lenovo-legion-laptop.patch
 Patch306: rog-ally-side-keys-fix.patch
 #Patch307: chimera-ALSA.patch
-#Patch308: rog-ally-alsa.patch
+Patch308: rog-ally-alsa.patch
 Patch309: rog-ally-audio-fix.patch
 #Patch310: rog-ally-bmc150.patch
 Patch311: modpost-fix.patch
@@ -1811,8 +1811,8 @@ ApplyOptionalPatch OpenRGB.patch
 ApplyOptionalPatch lenovo-legion-laptop.patch
 ApplyOptionalPatch rog-ally-side-keys-fix.patch
 #ApplyOptionalPatch chimera-ALSA.patch
-ApplyOptionalPatch rog-ally-alsa.patch
-#ApplyOptionalPatch rog-ally-audio-fix.patch
+#ApplyOptionalPatch rog-ally-alsa.patch
+ApplyOptionalPatch rog-ally-audio-fix.patch
 ApplyOptionalPatch rog-ally-bmc150.patch
 ApplyOptionalPatch 0001-ZEN-Add-sysctl-and-CONFIG-to-disallow-unprivileged-C.patch
 ApplyOptionalPatch 0004-sphinx-kfigure.py-Convert-outdir-to-str-before-using.patch
