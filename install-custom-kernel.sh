@@ -49,6 +49,12 @@ cp $CURRENT_WD/kernel.spec $HOME/rpmbuild/SPECS
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
 cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.6.2/linux-6.6.2-200.fsync.ally.fc38.x86_64/
 cd $HOME/rpmbuild/BUILD/kernel-6.6.2/linux-6.6.2-200.fsync.ally.fc38.x86_64/
+ls -l $HOME/rpmbuild/BUILD/kernel-6.6.2/linux-6.6.2-200.fsync.ally.fc38.x86_64/.config.old
+OLD_CONFIG_EXISTS=$?
+if [ $OLD_CONFIG_EXISTS == 0 ]; then
+    # undo auto config changes
+    cp -f $HOME/rpmbuild/BUILD/kernel-6.6.2/linux-6.6.2-200.fsync.ally.fc38.x86_64/.config.old $HOME/rpmbuild/BUILD/kernel-6.6.2/linux-6.6.2-200.fsync.ally.fc38.x86_64/.config
+fi
 time make bzImage -j8 && make modules -j8
 make modules_install -j8
 make install
