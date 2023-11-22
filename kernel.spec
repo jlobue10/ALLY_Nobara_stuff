@@ -1809,7 +1809,7 @@ ApplyOptionalPatch OpenRGB.patch
 # ApplyOptionalPatch steam-deck.patch
 # ApplyOptionalPatch asus-linux.patch
 ApplyOptionalPatch lenovo-legion-laptop.patch
-ApplyOptionalPatch rog-ally-side-keys-fix.patch
+#ApplyOptionalPatch rog-ally-side-keys-fix.patch
 #ApplyOptionalPatch chimera-ALSA.patch
 #ApplyOptionalPatch rog-ally-alsa.patch
 ApplyOptionalPatch rog-ally-audio-fix.patch
