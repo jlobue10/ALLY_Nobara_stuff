@@ -66,7 +66,7 @@ patch -p1 < ../../../SOURCES/0012-misc-additions.patch
 patch -p1 < ../../../SOURCES/0006-add-acs-overrides_iommu.patch
 patch -p1 < ../../../SOURCES/more-uarches-for-kernel-5.17+.patch
 patch -p1 < ../../../SOURCES/0007-winesync.patch
-patch -p1 < ../../../SOURCES/0013-optimize_harder_O3.patc
+patch -p1 < ../../../SOURCES/0013-optimize_harder_O3.patch
 patch -p1 < ../../../SOURCES/0001-add-acpi_call.patch
 patch -p1 < ../../../SOURCES/bmc150.patch
 patch -p1 < ../../../SOURCES/uinput.patch
