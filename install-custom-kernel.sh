@@ -70,6 +70,7 @@ patch -p1 < ../../../SOURCES/0013-optimize_harder_O3.patc
 patch -p1 < ../../../SOURCES/0001-add-acpi_call.patch
 patch -p1 < ../../../SOURCES/bmc150.patch
 patch -p1 < ../../../SOURCES/uinput.patch
+cp $CURRENT_WD/.config $HOME/rpmbuild/BUILD/kernel-6.6.2/linux-6.6.2-201.fsync.ally.fc38.x86_64/.config
 time make bzImage -j8 && make modules -j8
 make modules_install -j8
 make install
