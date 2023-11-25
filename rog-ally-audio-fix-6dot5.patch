@@ -1,5 +1,5 @@
 diff --git a/sound/pci/hda/cs35l41_hda_property.c b/sound/pci/hda/cs35l41_hda_property.c
-index b39f944..b67c636 100644
+index b39f944..2498414 100644
 --- a/sound/pci/hda/cs35l41_hda_property.c
 +++ b/sound/pci/hda/cs35l41_hda_property.c
 @@ -6,7 +6,9 @@
@@ -24,7 +24,7 @@ index b39f944..b67c636 100644
 +	int rog_ally_bios_int;
 +	kstrtoint(rog_ally_bios_num, 10, &rog_ally_bios_int);
 +	if(rog_ally_bios_int >= 330){
-+		printk(KERN_INFO "DSD properties exist in the %d BIOS\n", rog_ally_bios_int);
++		printk(KERN_INFO "DSD properties exist in the %d BIOS. Not applying DSD override...\n", rog_ally_bios_int);
 +		return -ENOENT; //Patch not applicable. Exiting...
 +	}
 +
