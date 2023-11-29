@@ -14,6 +14,7 @@ wget https://github.com/jlobue10/ALLY_Nobara_fixes/releases/download/v1.9.0/kern
 rm -rf $HOME/rpmbuild/
 rpm -Uvh kernel-6.7.0.rc3-200.fsync.ally.fc38.src.rpm
 rpmbuild -bp $HOME/rpmbuild/SPECS/kernel.spec
+sleep 1
 cp $CURRENT_WD/{.config,Makefile} $HOME/rpmbuild/BUILD/kernel-6.7-rc3-14-gdf60cee26a2e/linux-6.7.0.rc3-200.fsync.ally.fc38.x86_64/
 cd $HOME/rpmbuild/BUILD/kernel-6.7-rc3-14-gdf60cee26a2e/linux-6.7.0.rc3-200.fsync.ally.fc38.x86_64/
 time make bzImage -j8 && make modules -j8
