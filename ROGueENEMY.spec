@@ -1,16 +1,17 @@
-%global _name   ROGueENEMY
+%global _name   rogue-enemy
 
-Name:           ROGueENEMY
+Name:           rogue-enemy
 Version:        1.4.0
 Release:        1%{?dist}
 Summary:        Convert ROG Ally [RC71L] input to DualShock4 and allows mode switching with a long CC press
 
 License:        GPL3
 URL:            https://github.com/NeroReflex/ROGueENEMY
-Source0:        ROGueENEMY-main.zip
+Source0:        rogue-enemy
 Source1:        rogue-enemy.service
-Source2:        rogue_enemy.rule
-Source3:        config.cfg
+Source2:        80-playstation.rules
+Source3:        99-rogue_enemy.rules
+Source4:        config.cfg
 
 BuildRequires:  cmake
 Requires:       libevdev libconfig
@@ -23,21 +24,17 @@ Convert ROG Ally [RC71L] input to DualShock4 and allows mode switching with a lo
 
 %prep
 rm -rf %{_builddir}/ROGueENEMY
-cd $RPM_SOURCE_DIR
-rm -f ROGueENEMY-main.zip
-wget https://github.com/NeroReflex/ROGueENEMY/archive/refs/heads/main.zip
-mv main.zip ROGueENEMY-main.zip
-unzip $RPM_SOURCE_DIR/ROGueENEMY-main.zip -d %{_builddir}
-mkdir -p %{_builddir}/ROGueENEMY
-cp -rf %{_builddir}/ROGueENEMY-main/* %{_builddir}/ROGueENEMY
-rm -rf %{_builddir}/ROGueENEMY-main
+cd %{_builddir}
+git clone %{url}
+mkdir -p %{_builddir}/ROGueENEMY/build
 cp %{_builddir}/ROGueENEMY/rogue_enemy.rule $RPM_SOURCE_DIR
+mv $RPM_SOURCE_DIR/rogue_enemy.rule $RPM_SOURCE_DIR/99-rogue_enemy.rules
+cp %{_builddir}/ROGueENEMY/80-playstation.rules $RPM_SOURCE_DIR
 
 %build
-cd %{_builddir}/ROGueENEMY
-rm -f Makefile
-mkdir -p build
-cd build
+cd %{_builddir}/ROGueENEMY/build
+rm -f %{_builddir}/ROGueENEMY/Makefile
+#cmake -D CMAKE_C_FLAGS="-O3 -march=znver4 -flto=full" ..
 cmake ..
 make
 
@@ -46,12 +43,13 @@ mkdir -p %{buildroot}/usr/bin
 cp %{_builddir}/ROGueENEMY/build/rogue-enemy %{buildroot}/usr/bin/rogue-enemy
 
 mkdir -p %{buildroot}/etc/systemd/system/
-mkdir -p %{buildroot}/usr/lib/udev/rules.d
+mkdir -p %{buildroot}/usr/lib/udev/rules.d/
 mkdir -p %{buildroot}/etc/ROGueENEMY
 
 install -m 644 %{SOURCE1} %{buildroot}/etc/systemd/system/
-install -m 644 %{SOURCE2} %{buildroot}/usr/lib/udev/rules.d
-install -m 644 %{SOURCE3} %{buildroot}/etc/ROGueENEMY/config.cfg
+install -m 644 %{SOURCE2} %{buildroot}/usr/lib/udev/rules.d/
+install -m 644 %{SOURCE3} %{buildroot}/usr/lib/udev/rules.d/
+install -m 644 %{SOURCE4} %{buildroot}/etc/ROGueENEMY/config.cfg
 
 %post
 systemctl daemon-reload
@@ -68,9 +66,10 @@ systemctl daemon-reload
 %files
 /etc/systemd/system/rogue-enemy.service
 /usr/bin/rogue-enemy
-/usr/lib/udev/rules.d/rogue_enemy.rule
+/usr/lib/udev/rules.d/99-rogue_enemy.rules
+/usr/lib/udev/rules.d/80-playstation.rules
 /etc/ROGueENEMY/config.cfg
 
 %changelog
-* Wed Nov 29 2023 Denis Benato <dbenato.denis96@gmail.com> [1.4.0-1]
+* Thu Nov 30 2023 Denis Benato <dbenato.denis96@gmail.com> [1.4.0-1]
 - Initial package
