@@ -13,7 +13,7 @@ Source2:        80-playstation.rules
 Source3:        99-rogue_enemy.rules
 Source4:        config.cfg
 
-BuildRequires:  cmake
+BuildRequires:  cmake libconfig-devel
 Requires:       libevdev libconfig
 Recommends:     steam gamescope-session
 Provides:       rogue-enemy
