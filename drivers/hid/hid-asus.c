@@ -647,7 +647,7 @@ static const struct asus_touchpad_info medion_e1239t_tp = {
  * PRE:
  *     - rc71l internal mutex MUST be locked
  */
-static int rc71l_usb_read(struct hid_device * hdev) {
+static int __maybe_unused rc71l_usb_read(struct hid_device * hdev) {
 	struct asus_drvdata *drvdata = (struct asus_drvdata*)hid_get_drvdata(hdev);
 	if (drvdata == NULL) {
 		return -EINVAL;
@@ -1071,7 +1071,7 @@ static int asus_raw_event(struct hid_device *hdev,
 	return 0;
 }
 
-static int asus_kbd_set_report(struct hid_device *hdev, u8 *buf, size_t buf_size)
+static int asus_kbd_set_report(struct hid_device *hdev, const u8 *buf, size_t buf_size)
 {
 	unsigned char *dmabuf;
 	int ret;
@@ -1094,7 +1094,7 @@ static int asus_kbd_set_report(struct hid_device *hdev, u8 *buf, size_t buf_size
 
 static int asus_kbd_init(struct hid_device *hdev)
 {
-	u8 buf[] = { FEATURE_KBD_REPORT_ID, 0x41, 0x53, 0x55, 0x53, 0x20, 0x54,
+	const u8 buf[] = { FEATURE_KBD_REPORT_ID, 0x41, 0x53, 0x55, 0x53, 0x20, 0x54,
 		     0x65, 0x63, 0x68, 0x2e, 0x49, 0x6e, 0x63, 0x2e, 0x00 };
 	int ret;
 
@@ -1108,7 +1108,7 @@ static int asus_kbd_init(struct hid_device *hdev)
 static int asus_kbd_get_functions(struct hid_device *hdev,
 				  unsigned char *kbd_func)
 {
-	u8 buf[] = { FEATURE_KBD_REPORT_ID, 0x05, 0x20, 0x31, 0x00, 0x08 };
+	const u8 buf[] = { FEATURE_KBD_REPORT_ID, 0x05, 0x20, 0x31, 0x00, 0x08 };
 	u8 *readbuf;
 	int ret;
 
@@ -1139,7 +1139,7 @@ static int asus_kbd_get_functions(struct hid_device *hdev,
 
 static int rog_nkey_led_init(struct hid_device *hdev)
 {
-	u8 buf_init_start[] = { FEATURE_KBD_LED_REPORT_ID1, 0xB9 };
+	const u8 buf_init_start[] = { FEATURE_KBD_LED_REPORT_ID1, 0xB9 };
 	u8 buf_init2[] = { FEATURE_KBD_LED_REPORT_ID1, 0x41, 0x53, 0x55, 0x53, 0x20,
 				0x54, 0x65, 0x63, 0x68, 0x2e, 0x49, 0x6e, 0x63, 0x2e, 0x00 };
 	u8 buf_init3[] = { FEATURE_KBD_LED_REPORT_ID1,
@@ -1700,7 +1700,7 @@ static int __maybe_unused asus_reset_resume(struct hid_device *hdev)
 	int ret = 0;
 
 	struct asus_drvdata *drvdata = hid_get_drvdata(hdev);
-	+	if (drvdata != NULL) {
+	if (drvdata != NULL) {
 		return -EINVAL;
 	}
 
@@ -1736,7 +1736,7 @@ static int __maybe_unused asus_resume(struct hid_device *hdev)
  			goto asus_resume_err;
  		}
  	}
- 
+
 
 	/*
 		 * On some devices such as the Asus RC71L leds are reset to default after sleep and sysfs attribute will report
@@ -1758,14 +1758,14 @@ static int __maybe_unused asus_resume(struct hid_device *hdev)
  	return ret;
 }
 
-+static int __maybe_unused asus_suspend(struct hid_device *hdev, struct pm_message)
+static int __maybe_unused asus_suspend(struct hid_device *hdev, struct pm_message)
  {
  	struct asus_drvdata *drvdata = hid_get_drvdata(hdev);
- 
+
 	if (drvdata == NULL) {
 		return 0;
  	}
- 
+
 	struct usb_interface *intf = to_usb_interface(hdev->dev.parent);
 	struct usb_device *dev = interface_to_usbdev(intf);
 
