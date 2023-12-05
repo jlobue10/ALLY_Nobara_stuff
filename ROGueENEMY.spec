@@ -34,14 +34,7 @@ cp %{_builddir}/ROGueENEMY/80-playstation.rules $RPM_SOURCE_DIR
 %build
 cd %{_builddir}/ROGueENEMY/build
 rm -f %{_builddir}/ROGueENEMY/Makefile
-#cmake -D CMAKE_C_FLAGS="-O3 -march=znver4 -flto=full" ..
-cmake \
-        -B build \
-        -S "rogue-enemy" \
-        -G 'Unix Makefiles' \
-        -DCMAKE_BUILD_TYPE:STRING='Release' \
-        -DCMAKE_INSTALL_PREFIX:PATH='/usr' \
-        -Wno-dev ..
+cmake ..
 make
 
 %install
@@ -77,5 +70,5 @@ systemctl daemon-reload
 /etc/ROGueENEMY/config.cfg
 
 %changelog
-* Thu Nov 30 2023 Denis Benato <dbenato.denis96@gmail.com> [1.4.0-1]
+* Mon Dec 4 2023 Denis Benato <dbenato.denis96@gmail.com> [1.5.0-1]
 - Initial package
