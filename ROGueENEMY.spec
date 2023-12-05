@@ -1,7 +1,7 @@
 %global _name   rogue-enemy
 
 Name:           rogue-enemy
-Version:        1.4.0
+Version:        1.5.0
 Release:        1%{?dist}
 Summary:        Convert ROG Ally [RC71L] input to DualShock4 and allows mode switching with a long CC press
 
