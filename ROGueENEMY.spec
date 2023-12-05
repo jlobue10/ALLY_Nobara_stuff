@@ -35,7 +35,13 @@ cp %{_builddir}/ROGueENEMY/80-playstation.rules $RPM_SOURCE_DIR
 cd %{_builddir}/ROGueENEMY/build
 rm -f %{_builddir}/ROGueENEMY/Makefile
 #cmake -D CMAKE_C_FLAGS="-O3 -march=znver4 -flto=full" ..
-cmake ..
+cmake \
+        -B build \
+        -S "rogue-enemy" \
+        -G 'Unix Makefiles' \
+        -DCMAKE_BUILD_TYPE:STRING='Release' \
+        -DCMAKE_INSTALL_PREFIX:PATH='/usr' \
+        -Wno-dev ..
 make
 
 %install
