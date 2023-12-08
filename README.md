@@ -3,7 +3,7 @@ Compilation of fixes for the ROG ALLY when using Nobara (side buttons, volume bu
 
 All credit should go to the original authors and developers. Many of these original fixes were done by ChimeraOS devs. I'm mainly recreating the same fixes that the ChimeraOS devs have done for ChimeraOS and Arch, but for Nobara (Fedora) and packaging them together in one place.
 
-I highly recommend using this [repo's utility](https://github.com/Maclay74/steam-patch) so that the side buttons function like they would on the Steam Deck in a `gamescope-session` or big picture mode in desktop view.
+I highly recommend using this [repo's utility(https://github.com/corando98/steam-patch) so that the side buttons function like they would on the Steam Deck in `gamescope-session` or big picture mode in desktop view.
 
 There is also a different way to get side button control using [HandyGCCS](https://github.com/ShadowBlip/HandyGCCS) and a modified version of [Decky PowerTools](https://github.com/hicder/PowerTools) for TDP control and adjustments. This is the method that I'm currently using.
 
