@@ -32,7 +32,7 @@ ls -alh /boot
 
 sudo ls -alh /boot/loader/entries
 
-#Delete the entry there as well with 'sudo rm' and you should be fully cleaned up
+# Delete the entry there as well with 'sudo rm' and you should be fully cleaned up
 ```
 
 ## **Kernel RPM Installation method**
