@@ -7,7 +7,7 @@ I highly recommend using this [repo's utility](https://github.com/corando98/stea
 
 There is also a different way to get side button control using [HandyGCCS](https://github.com/ShadowBlip/HandyGCCS) and a modified version of [Decky PowerTools](https://github.com/hicder/PowerTools) for TDP control and adjustments. This is the method that I'm currently using.
 
-## **Installation (Updated for 6.6.2) (no longer necessary, stock Nobara kernel has patches)**
+## **Custom kernel script Installation (please use RPMs instead... left online for my own testing...)**
 
 An automated kernel installer has been added. As is, it downloads the latest source kernel from Nobara copr, unpacks it, adds the ROG ALLY patches and compiles the kernel, the kernel modules and installs them (both kernel and modules).
 
@@ -20,17 +20,30 @@ chmod +x install-custom-kernel.sh
 sudo ./install-custom-kernel.sh
 ```
 
-Removal of the custom kernel requires some manual steps. Please inquire about this (open an issue) if you need help with it.
-
-RPMs have been provided on the release page as an alternative to the local compile. If you download the tarball with the kernel RPMs, this would be the install procedure after changing into the directory where that tarball was downloaded.
+Removal of the custom kernel from the script requires some manual steps. (Comments below are preceeded by '#')
 
 ```
-tar xvf kernel-6.3.12-205.fsync.ally.fc38.x86_64.tar.gz
+ls -alh /boot
+
+# Take note of the kernel version number that you want to manually remove
+# You are interested in removing the vmlinuz, System.map and initramfs files
+# Manually delete all three of these with 'sudo rm filename' (replace with actual filename)
+# Then one more step is needed to  clean up the GRUB entry
+
+sudo ls -alh /boot/loader/entries
+
+#Delete the entry there as well with 'sudo rm' and you should be fully cleaned up
+```
+
+## **Kernel RPM Installation method**
+
+RPMs have been provided on the release page as an alternative to the local compile. If you download the tarball with the kernel RPMs, this would be the install procedure after changing into the directory where that tarball was downloaded. Kernels are now being compiled with clang llvm lto as this method seems to benefit the ASUS ROG ALLY's performance.
+
+```
+tar xvf kernel-version-blah-blah.fsync.ally.fc38.x86_64.tar.gz
 cd RPM
 sudo dnf install *.rpm
 ```
-
-Only do either of these two installation methods if you simply must try out these fixes for the ROG ALLY running Nobara, sooner rather than later. GloriousEggroll is aware of the patches and has incorporated them into Nobara stock kernels.
 
 RPM uninstall example:
 
