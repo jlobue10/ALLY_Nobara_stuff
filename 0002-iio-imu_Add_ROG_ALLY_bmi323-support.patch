@@ -20,13 +20,13 @@ index 1105918..d665a6e 100644
  	if (!indio_dev)
  		return -ENOMEM;
 diff --git a/drivers/iio/imu/bmi323/bmi323_i2c.c b/drivers/iio/imu/bmi323/bmi323_i2c.c
-index afbaa3d..f6ea153 100644
+index afbaa3d..21b8f63 100644
 --- a/drivers/iio/imu/bmi323/bmi323_i2c.c
 +++ b/drivers/iio/imu/bmi323/bmi323_i2c.c
 @@ -5,6 +5,7 @@
   * Copyright (C) 2023, Jagath Jog J <jagathjog1996@gmail.com>
   */
-
+ 
 +#include <linux/acpi.h>
  #include <linux/i2c.h>
  #include <linux/mod_devicetable.h>
@@ -34,7 +34,7 @@ index afbaa3d..f6ea153 100644
 @@ -87,6 +88,12 @@ static int bmi323_i2c_probe(struct i2c_client *i2c)
  	return bmi323_core_probe(dev);
  }
-
+ 
 +static const struct acpi_device_id bmi323_acpi_match[] = {
 +	{"BOSC0200"},
 +	{ },
@@ -44,11 +44,14 @@ index afbaa3d..f6ea153 100644
  static const struct i2c_device_id bmi323_i2c_ids[] = {
  	{ "bmi323", 0 },
  	{ }
-@@ -103,6 +110,7 @@ static struct i2c_driver bmi323_i2c_driver = {
+@@ -103,8 +110,9 @@ static struct i2c_driver bmi323_i2c_driver = {
  	.driver = {
  		.name = "bmi323",
  		.of_match_table = bmi323_of_i2c_match,
 +		.acpi_match_table = ACPI_PTR(bmi323_acpi_match),
  	},
- 	.probe_new = bmi323_i2c_probe,
+-	.probe_new = bmi323_i2c_probe,
++	.probe = bmi323_i2c_probe,
  	.id_table = bmi323_i2c_ids,
+ };
+ module_i2c_driver(bmi323_i2c_driver);
