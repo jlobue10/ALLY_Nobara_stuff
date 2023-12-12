@@ -5,6 +5,7 @@
  * Copyright (C) 2023, Jagath Jog J <jagathjog1996@gmail.com>
  */
 
+#include <linux/acpi.h>
 #include <linux/i2c.h>
 #include <linux/mod_devicetable.h>
 #include <linux/module.h>
@@ -93,6 +94,12 @@ static int bmi323_i2c_probe(struct i2c_client *i2c)
 	return bmi323_core_probe(dev);
 }
 
+static const struct acpi_device_id bmi323_acpi_match[] = {
+	{"BOSC0200"},
+	{ },
+};
+MODULE_DEVICE_TABLE(acpi, bmi323_acpi_match);
+
 static const struct i2c_device_id bmi323_i2c_ids[] = {
 	{ "bmi323" },
 	{ }
@@ -109,6 +116,7 @@ static struct i2c_driver bmi323_i2c_driver = {
 	.driver = {
 		.name = "bmi323",
 		.of_match_table = bmi323_of_i2c_match,
+		.acpi_match_table = ACPI_PTR(bmi323_acpi_match),
 	},
 	.probe = bmi323_i2c_probe,
 	.id_table = bmi323_i2c_ids,
