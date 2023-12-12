@@ -5,7 +5,7 @@ All credit should go to the original authors and developers. Many of these origi
 
 I highly recommend using this [repo's utility](https://github.com/corando98/steam-patch) so that the side buttons function like they would on the Steam Deck in `gamescope-session` or big picture mode in desktop view.
 
-There is also a different way to get side button control using [HandyGCCS](https://github.com/ShadowBlip/HandyGCCS) and a modified version of [Decky PowerTools](https://github.com/hicder/PowerTools) for TDP control and adjustments. This is the method that I'm currently using.
+Rogue-enemy will give you a virtual Playstation controller with gyro support.
 
 ## **Custom kernel script Installation (please use RPMs instead... left online for my own testing...)**
 
