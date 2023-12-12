@@ -1,3 +1,95 @@
+Add devicetree description document for Bosch BMI323, a 6-Axis IMU.
+
+Signed-off-by: Jagath Jog J <jagathjog1996@gmail.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+---
+ .../bindings/iio/imu/bosch,bmi323.yaml        | 77 +++++++++++++++++++
+ 1 file changed, 77 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/iio/imu/bosch,bmi323.yaml
+
+diff --git a/Documentation/devicetree/bindings/iio/imu/bosch,bmi323.yaml b/Documentation/devicetree/bindings/iio/imu/bosch,bmi323.yaml
+new file mode 100644
+index 000000000000..64ef26e19669
+--- /dev/null
++++ b/Documentation/devicetree/bindings/iio/imu/bosch,bmi323.yaml
+@@ -0,0 +1,77 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/iio/imu/bosch,bmi323.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Bosch BMI323 6-Axis IMU
++
++maintainers:
++  - Jagath Jog J <jagathjog1996@gmail.com>
++
++description:
++  BMI323 is a 6-axis inertial measurement unit that supports acceleration and
++  gyroscopic measurements with hardware fifo buffering. Sensor also provides
++  events information such as motion, steps, orientation, single and double
++  tap detection.
++
++properties:
++  compatible:
++    const: bosch,bmi323
++
++  reg:
++    maxItems: 1
++
++  vdd-supply: true
++  vddio-supply: true
++
++  interrupts:
++    minItems: 1
++    maxItems: 2
++
++  interrupt-names:
++    minItems: 1
++    maxItems: 2
++    items:
++      enum:
++        - INT1
++        - INT2
++
++  drive-open-drain:
++    description:
++      set if the specified interrupt pin should be configured as
++      open drain. If not set, defaults to push-pull.
++
++  mount-matrix:
++    description:
++      an optional 3x3 mounting rotation matrix.
++
++required:
++  - compatible
++  - reg
++  - vdd-supply
++  - vddio-supply
++
++allOf:
++  - $ref: /schemas/spi/spi-peripheral-props.yaml#
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    // Example for I2C
++    #include <dt-bindings/interrupt-controller/irq.h>
++    i2c {
++        #address-cells = <1>;
++        #size-cells = <0>;
++
++        imu@68 {
++            compatible = "bosch,bmi323";
++            reg = <0x68>;
++            vddio-supply = <&vddio>;
++            vdd-supply = <&vdd>;
++            interrupt-parent = <&gpio1>;
++            interrupts = <29 IRQ_TYPE_EDGE_RISING>;
++            interrupt-names = "INT1";
++        };
++    };
 From: Jagath Jog J <jagathjog1996@gmail.com>
 To: jic23@kernel.org, andriy.shevchenko@linux.intel.com,
 	lars@metafoo.de, robh+dt@kernel.org,
@@ -16,21 +108,20 @@ and activity/inactivity interrupt capabilities.
 
 The driver supports various functionalities, including data ready, FIFO
 data handling, and events such as tap detection, step counting, and
-activity interrupts
+activity interrupts.
 
-Datasheet: https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi323-ds000.pdf
 Signed-off-by: Jagath Jog J <jagathjog1996@gmail.com>
 ---
- MAINTAINERS                          |    7 +
- drivers/iio/imu/Kconfig              |    1 +
- drivers/iio/imu/Makefile             |    1 +
- drivers/iio/imu/bmi323/Kconfig       |   33 +
- drivers/iio/imu/bmi323/Makefile      |    7 +
- drivers/iio/imu/bmi323/bmi323.h      |  198 +++
- drivers/iio/imu/bmi323/bmi323_core.c | 2260 ++++++++++++++++++++++++++
- drivers/iio/imu/bmi323/bmi323_i2c.c  |  115 ++
- drivers/iio/imu/bmi323/bmi323_spi.c  |  106 ++
- 9 files changed, 2728 insertions(+)
+ MAINTAINERS                             |    7 +
+ drivers/iio/imu/Kconfig                 |    1 +
+ drivers/iio/imu/Makefile                |    1 +
+ drivers/iio/imu/bmi323/Kconfig          |   33 +
+ drivers/iio/imu/bmi323/Makefile         |    7 +
+ drivers/iio/imu/bmi323/bmi323.h         |  209 +++
+ drivers/iio/imu/bmi323/bmi323_core.c    | 2139 +++++++++++++++++++++++
+ drivers/iio/imu/bmi323/bmi323_i2c.c     |  121 ++
+ drivers/iio/imu/bmi323/bmi323_spi.c     |   92 +
+ 10 files changed, 2628 insertions(+)
  create mode 100644 drivers/iio/imu/bmi323/Kconfig
  create mode 100644 drivers/iio/imu/bmi323/Makefile
  create mode 100644 drivers/iio/imu/bmi323/bmi323.h
@@ -39,13 +130,13 @@ Signed-off-by: Jagath Jog J <jagathjog1996@gmail.com>
  create mode 100644 drivers/iio/imu/bmi323/bmi323_spi.c
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 4fe86f4ec383..7479e187270a 100644
+index 4e07c032d06a..47ca415212a7 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -3605,6 +3605,13 @@ S:	Maintained
+@@ -3595,6 +3595,13 @@ S:	Maintained
  F:	Documentation/devicetree/bindings/iio/accel/bosch,bma400.yaml
  F:	drivers/iio/accel/bma400*
- 
+
 +BOSCH SENSORTEC BMI323 IMU IIO DRIVER
 +M:	Jagath Jog J <jagathjog1996@gmail.com>
 +L:	linux-iio@vger.kernel.org
@@ -61,11 +152,11 @@ index c2f97629e9cd..6c9a85294bc1 100644
 --- a/drivers/iio/imu/Kconfig
 +++ b/drivers/iio/imu/Kconfig
 @@ -54,6 +54,7 @@ config ADIS16480
- 
+
  source "drivers/iio/imu/bmi160/Kconfig"
  source "drivers/iio/imu/bno055/Kconfig"
 +source "drivers/iio/imu/bmi323/Kconfig"
- 
+
  config FXOS8700
  	tristate
 diff --git a/drivers/iio/imu/Makefile b/drivers/iio/imu/Makefile
@@ -73,11 +164,11 @@ index 6eb612034722..627406476357 100644
 --- a/drivers/iio/imu/Makefile
 +++ b/drivers/iio/imu/Makefile
 @@ -16,6 +16,7 @@ obj-$(CONFIG_IIO_ADIS_LIB) += adis_lib.o
- 
+
  obj-y += bmi160/
  obj-y += bno055/
 +obj-y += bmi323/
- 
+
  obj-$(CONFIG_FXOS8700) += fxos8700_core.o
  obj-$(CONFIG_FXOS8700_I2C) += fxos8700_i2c.o
 diff --git a/drivers/iio/imu/bmi323/Kconfig b/drivers/iio/imu/bmi323/Kconfig
@@ -134,10 +225,10 @@ index 000000000000..a6a6dc0207c9
 +obj-$(CONFIG_BMI323_SPI) += bmi323_spi.o
 diff --git a/drivers/iio/imu/bmi323/bmi323.h b/drivers/iio/imu/bmi323/bmi323.h
 new file mode 100644
-index 000000000000..bb04894761ee
+index 000000000000..dff126d41658
 --- /dev/null
 +++ b/drivers/iio/imu/bmi323/bmi323.h
-@@ -0,0 +1,198 @@
+@@ -0,0 +1,209 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
 + * IIO driver for Bosch BMI323 6-Axis IMU
@@ -148,8 +239,9 @@ index 000000000000..bb04894761ee
 +#ifndef _BMI323_H_
 +#define _BMI323_H_
 +
-+#include <linux/regmap.h>
 +#include <linux/bits.h>
++#include <linux/regmap.h>
++#include <linux/units.h>
 +
 +#define BMI323_I2C_DUMMY			2
 +#define BMI323_SPI_DUMMY			1
@@ -158,13 +250,16 @@ index 000000000000..bb04894761ee
 +
 +#define BMI323_CHIP_ID_REG			0x00
 +#define BMI323_CHIP_ID_VAL			0x0043
++#define BMI323_CHIP_ID_MSK			GENMASK(7, 0)
 +#define BMI323_ERR_REG				0x01
 +#define BMI323_STATUS_REG			0x02
++#define BMI323_STATUS_POR_MSK			BIT(0)
 +
 +/* Accelero/Gyro/Temp data registers */
 +#define BMI323_ACCEL_X_REG			0x03
 +#define BMI323_GYRO_X_REG			0x06
 +#define BMI323_TEMP_REG				0x09
++#define BMI323_ALL_CHAN_MSK			GENMASK(5, 0)
 +
 +/* Status registers */
 +#define BMI323_STATUS_INT1_REG			0x0D
@@ -185,13 +280,17 @@ index 000000000000..bb04894761ee
 +#define BMI323_FEAT_IO0_REG			0x10
 +#define BMI323_FEAT_IO0_XYZ_NOMOTION_MSK	GENMASK(2, 0)
 +#define BMI323_FEAT_IO0_XYZ_MOTION_MSK		GENMASK(5, 3)
++#define BMI323_FEAT_XYZ_MSK			GENMASK(2, 0)
 +#define BMI323_FEAT_IO0_STP_CNT_MSK		BIT(9)
 +#define BMI323_FEAT_IO0_S_TAP_MSK		BIT(12)
 +#define BMI323_FEAT_IO0_D_TAP_MSK		BIT(13)
 +#define BMI323_FEAT_IO1_REG			0x11
++#define BMI323_FEAT_IO1_ERR_MSK			GENMASK(3, 0)
 +#define BMI323_FEAT_IO2_REG			0x12
 +#define BMI323_FEAT_IO_STATUS_REG		0x14
 +#define BMI323_FEAT_IO_STATUS_MSK		BIT(0)
++#define BMI323_FEAT_ENG_POLL			2000
++#define BMI323_FEAT_ENG_TIMEOUT			10000
 +
 +/* FIFO registers */
 +#define BMI323_FIFO_FILL_LEVEL_REG		0x15
@@ -211,6 +310,7 @@ index 000000000000..bb04894761ee
 +#define BMI323_FIFO_CONF_REG			0x36
 +#define BMI323_FIFO_CONF_STP_FUL_MSK		BIT(0)
 +#define BMI323_FIFO_CONF_ACC_GYR_EN_MSK		GENMASK(10, 9)
++#define BMI323_FIFO_ACC_GYR_MSK			GENMASK(1, 0)
 +#define BMI323_FIFO_CTRL_REG			0x37
 +#define BMI323_FIFO_FLUSH_MSK			BIT(0)
 +
@@ -273,10 +373,12 @@ index 000000000000..bb04894761ee
 +#define BMI323_STEP_SC1_WTRMRK_MSK		GENMASK(9, 0)
 +#define BMI323_STEP_SC1_RST_CNT_MSK		BIT(10)
 +#define BMI323_STEP_SC1_REG			0x10
++#define BMI323_STEP_LEN				2
 +
 +/* Tap gesture config registers */
 +#define BMI323_TAP1_REG				0x1E
 +#define BMI323_TAP1_AXIS_SEL_MSK		GENMASK(1, 0)
++#define BMI323_AXIS_XYZ_MSK			GENMASK(1, 0)
 +#define BMI323_TAP1_TIMOUT_MSK			BIT(2)
 +#define BMI323_TAP1_MAX_PEAKS_MSK		GENMASK(5, 3)
 +#define BMI323_TAP1_MODE_MSK			GENMASK(7, 6)
@@ -326,8 +428,8 @@ index 000000000000..bb04894761ee
 +#define BMI323_FIFO_FULL_IN_WORDS		\
 +	(BMI323_FIFO_FULL_IN_FRAMES * BMI323_FIFO_FRAME_LENGTH)
 +
-+#define BMI323_INT_MICRO_TO_RAW(val, val2, scale) (((val) * (scale)) + \
-+						  (((val2) * (scale)) / MEGA))
++#define BMI323_INT_MICRO_TO_RAW(val, val2, scale) ((val) * (scale) + \
++						  ((val2) * (scale)) / MEGA)
 +
 +#define BMI323_RAW_TO_MICRO(raw, scale) ((((raw) % (scale)) * MEGA) / scale)
 +
@@ -338,20 +440,24 @@ index 000000000000..bb04894761ee
 +#endif
 diff --git a/drivers/iio/imu/bmi323/bmi323_core.c b/drivers/iio/imu/bmi323/bmi323_core.c
 new file mode 100644
-index 000000000000..adbcfbc6b97d
+index 000000000000..0bd5dedd9a63
 --- /dev/null
 +++ b/drivers/iio/imu/bmi323/bmi323_core.c
-@@ -0,0 +1,2260 @@
+@@ -0,0 +1,2139 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * IIO core driver for Bosch BMI323 6-Axis IMU.
 + *
 + * Copyright (C) 2023, Jagath Jog J <jagathjog1996@gmail.com>
++ *
++ * Datasheet: https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi323-ds000.pdf
 + */
 +
 +#include <linux/bitfield.h>
++#include <linux/cleanup.h>
 +#include <linux/device.h>
 +#include <linux/interrupt.h>
++#include <linux/minmax.h>
 +#include <linux/module.h>
 +#include <linux/mutex.h>
 +#include <linux/property.h>
@@ -374,6 +480,7 @@ index 000000000000..adbcfbc6b97d
 +enum bmi323_sensor_type {
 +	BMI323_ACCEL,
 +	BMI323_GYRO,
++	BMI323_SENSORS_CNT,
 +};
 +
 +enum bmi323_opr_mode {
@@ -466,8 +573,8 @@ index 000000000000..adbcfbc6b97d
 +	bool drdy_trigger_enabled;
 +	enum bmi323_state state;
 +	s64 fifo_tstamp, old_fifo_tstamp;
-+	u32 odrns[2];
-+	u32 odrhz[2];
++	u32 odrns[BMI323_SENSORS_CNT];
++	u32 odrhz[BMI323_SENSORS_CNT];
 +	unsigned int feature_events;
 +
 +	/*
@@ -479,19 +586,11 @@ index 000000000000..adbcfbc6b97d
 +	int watermark;
 +	__le16 fifo_buff[BMI323_FIFO_FULL_IN_WORDS] __aligned(IIO_DMA_MINALIGN);
 +	struct {
-+		__le16 channels[6];
++		__le16 channels[BMI323_CHAN_MAX];
 +		s64 ts __aligned(8);
 +	} buffer;
-+	__le16 steps_count[2];
++	__le16 steps_count[BMI323_STEP_LEN];
 +};
-+
-+const struct regmap_config bmi323_regmap_config = {
-+	.reg_bits = 8,
-+	.val_bits = 16,
-+	.max_register = BMI323_CFG_RES_REG,
-+	.val_format_endian = REGMAP_ENDIAN_LITTLE,
-+};
-+EXPORT_SYMBOL_NS_GPL(bmi323_regmap_config, IIO_BMI323);
 +
 +static const struct iio_mount_matrix *
 +bmi323_get_mount_matrix(const struct iio_dev *idev,
@@ -554,10 +653,12 @@ index 000000000000..adbcfbc6b97d
 +	.channel2 = IIO_MOD_##_axis,					\
 +	.info_mask_separate = BIT(IIO_CHAN_INFO_RAW),			\
 +	.info_mask_shared_by_type = BIT(IIO_CHAN_INFO_SAMP_FREQ) |	\
-+				    BIT(IIO_CHAN_INFO_SCALE),		\
++				    BIT(IIO_CHAN_INFO_SCALE) |		\
++				    BIT(IIO_CHAN_INFO_OVERSAMPLING_RATIO), \
 +	.info_mask_shared_by_type_available =				\
 +				    BIT(IIO_CHAN_INFO_SAMP_FREQ) |	\
-+				    BIT(IIO_CHAN_INFO_SCALE),		\
++				    BIT(IIO_CHAN_INFO_SCALE) |		\
++				    BIT(IIO_CHAN_INFO_OVERSAMPLING_RATIO), \
 +	.scan_index = _index,						\
 +	.scan_type = {							\
 +		.sign = 's',						\
@@ -576,10 +677,12 @@ index 000000000000..adbcfbc6b97d
 +	.channel2 = IIO_MOD_##_axis,					\
 +	.info_mask_separate = BIT(IIO_CHAN_INFO_RAW),			\
 +	.info_mask_shared_by_type = BIT(IIO_CHAN_INFO_SAMP_FREQ) |	\
-+				    BIT(IIO_CHAN_INFO_SCALE),		\
++				    BIT(IIO_CHAN_INFO_SCALE) |		\
++				    BIT(IIO_CHAN_INFO_OVERSAMPLING_RATIO), \
 +	.info_mask_shared_by_type_available =				\
 +				    BIT(IIO_CHAN_INFO_SAMP_FREQ) |	\
-+				    BIT(IIO_CHAN_INFO_SCALE),		\
++				    BIT(IIO_CHAN_INFO_SCALE) |		\
++				    BIT(IIO_CHAN_INFO_OVERSAMPLING_RATIO), \
 +	.scan_index = _index,						\
 +	.scan_type = {							\
 +		.sign = 's',						\
@@ -640,8 +743,8 @@ index 000000000000..adbcfbc6b97d
 +	20 * MEGA,
 +	10 * MEGA,
 +	5 * MEGA,
-+	2500000,
-+	1250000,
++	2500 * KILO,
++	1250 * KILO,
 +};
 +
 +static enum bmi323_sensor_type bmi323_iio_to_sensor(enum iio_chan_type iio_type)
@@ -660,6 +763,7 @@ index 000000000000..adbcfbc6b97d
 +			   enum bmi323_sensor_type sensor,
 +			   enum bmi323_opr_mode mode)
 +{
++	guard(mutex)(&data->mutex);
 +	return regmap_update_bits(data->regmap, bmi323_hw[sensor].config,
 +				  BMI323_ACC_GYRO_CONF_MODE_MSK,
 +				  FIELD_PREP(BMI323_ACC_GYRO_CONF_MODE_MSK,
@@ -676,26 +780,19 @@ index 000000000000..adbcfbc6b97d
 +{
 +	int ret, feature_status;
 +
-+	mutex_lock(&data->mutex);
 +	ret = regmap_read(data->regmap, BMI323_FEAT_DATA_STATUS,
 +			  &feature_status);
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
-+	if (!FIELD_GET(BMI323_FEAT_DATA_TX_RDY_MSK, feature_status)) {
-+		ret = -EBUSY;
-+		goto unlock_out;
-+	}
++	if (!FIELD_GET(BMI323_FEAT_DATA_TX_RDY_MSK, feature_status))
++		return -EBUSY;
 +
 +	ret = regmap_write(data->regmap, BMI323_FEAT_DATA_ADDR, ext_addr);
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
-+	ret = regmap_write(data->regmap, BMI323_FEAT_DATA_TX, ext_data);
-+
-+unlock_out:
-+	mutex_unlock(&data->mutex);
-+	return ret;
++	return regmap_write(data->regmap, BMI323_FEAT_DATA_TX, ext_data);
 +}
 +
 +/*
@@ -708,26 +805,19 @@ index 000000000000..adbcfbc6b97d
 +{
 +	int ret, feature_status;
 +
-+	mutex_lock(&data->mutex);
 +	ret = regmap_read(data->regmap, BMI323_FEAT_DATA_STATUS,
 +			  &feature_status);
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
-+	if (!FIELD_GET(BMI323_FEAT_DATA_TX_RDY_MSK, feature_status)) {
-+		ret = -EBUSY;
-+		goto unlock_out;
-+	}
++	if (!FIELD_GET(BMI323_FEAT_DATA_TX_RDY_MSK, feature_status))
++		return -EBUSY;
 +
 +	ret = regmap_write(data->regmap, BMI323_FEAT_DATA_ADDR, ext_addr);
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
-+	ret = regmap_read(data->regmap, BMI323_FEAT_DATA_TX, ext_data);
-+
-+unlock_out:
-+	mutex_unlock(&data->mutex);
-+	return ret;
++	return regmap_read(data->regmap, BMI323_FEAT_DATA_TX, ext_data);
 +}
 +
 +static int bmi323_update_ext_reg(struct bmi323_data *data,
@@ -743,17 +833,14 @@ index 000000000000..adbcfbc6b97d
 +
 +	set_mask_bits(&value, mask, ext_data);
 +
-+	ret = bmi323_write_ext_reg(data, ext_addr, value);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
++	return bmi323_write_ext_reg(data, ext_addr, value);
 +}
 +
 +static int bmi323_get_error_status(struct bmi323_data *data)
 +{
 +	int error, ret;
 +
++	guard(mutex)(&data->mutex);
 +	ret = regmap_read(data->regmap, BMI323_ERR_REG, &error);
 +	if (ret)
 +		return ret;
@@ -798,12 +885,9 @@ index 000000000000..adbcfbc6b97d
 +	enum bmi323_irq_pin step_irq;
 +	int ret;
 +
-+	mutex_lock(&data->mutex);
-+	if (!FIELD_GET(BMI323_FEAT_IO0_STP_CNT_MSK, data->feature_events)) {
-+		mutex_unlock(&data->mutex);
++	guard(mutex)(&data->mutex);
++	if (!FIELD_GET(BMI323_FEAT_IO0_STP_CNT_MSK, data->feature_events))
 +		return -EINVAL;
-+	}
-+	mutex_unlock(&data->mutex);
 +
 +	if (state)
 +		step_irq = data->irq_pin;
@@ -817,13 +901,9 @@ index 000000000000..adbcfbc6b97d
 +	if (ret)
 +		return ret;
 +
-+	mutex_lock(&data->mutex);
-+	ret = regmap_update_bits(data->regmap, BMI323_INT_MAP1_REG,
-+				 BMI323_STEP_CNT_MSK,
-+				 FIELD_PREP(BMI323_STEP_CNT_MSK, step_irq));
-+	mutex_unlock(&data->mutex);
-+
-+	return ret;
++	return regmap_update_bits(data->regmap, BMI323_INT_MAP1_REG,
++				  BMI323_STEP_CNT_MSK,
++				  FIELD_PREP(BMI323_STEP_CNT_MSK, step_irq));
 +}
 +
 +static int bmi323_motion_config_reg(enum iio_event_direction dir)
@@ -841,7 +921,8 @@ index 000000000000..adbcfbc6b97d
 +static int bmi323_motion_event_en(struct bmi323_data *data,
 +				  enum iio_event_direction dir, int state)
 +{
-+	int config, ret, msk, raw, field_value = 0;
++	unsigned int state_value = state ? BMI323_FEAT_XYZ_MSK : 0;
++	int config, ret, msk, raw, field_value;
 +	enum bmi323_irq_pin motion_irq;
 +	int irq_msk, irq_field_val;
 +
@@ -856,30 +937,25 @@ index 000000000000..adbcfbc6b97d
 +		raw = 512;
 +		config = BMI323_ANYMO1_REG;
 +		irq_msk = BMI323_MOTION_MSK;
-+		set_mask_bits(&irq_field_val, BMI323_MOTION_MSK,
-+			      FIELD_PREP(BMI323_MOTION_MSK, motion_irq));
-+		set_mask_bits(&field_value, BMI323_FEAT_IO0_XYZ_MOTION_MSK,
-+			      FIELD_PREP(BMI323_FEAT_IO0_XYZ_MOTION_MSK,
-+					 state ? 7 : 0));
++		irq_field_val = FIELD_PREP(BMI323_MOTION_MSK, motion_irq);
++		field_value = FIELD_PREP(BMI323_FEAT_IO0_XYZ_MOTION_MSK,
++					 state_value);
 +		break;
 +	case IIO_EV_DIR_FALLING:
 +		msk = BMI323_FEAT_IO0_XYZ_NOMOTION_MSK;
 +		raw = 0;
 +		config = BMI323_NOMO1_REG;
 +		irq_msk = BMI323_NOMOTION_MSK;
-+		set_mask_bits(&irq_field_val, BMI323_NOMOTION_MSK,
-+			      FIELD_PREP(BMI323_NOMOTION_MSK, motion_irq));
-+		set_mask_bits(&field_value, BMI323_FEAT_IO0_XYZ_NOMOTION_MSK,
-+			      FIELD_PREP(BMI323_FEAT_IO0_XYZ_NOMOTION_MSK,
-+					 state ? 7 : 0));
++		irq_field_val = FIELD_PREP(BMI323_NOMOTION_MSK, motion_irq);
++		field_value = FIELD_PREP(BMI323_FEAT_IO0_XYZ_NOMOTION_MSK,
++					 state_value);
 +		break;
 +	default:
 +		return -EINVAL;
 +	}
 +
-+	mutex_lock(&data->mutex);
++	guard(mutex)(&data->mutex);
 +	ret = bmi323_feature_engine_events(data, msk, state);
-+	mutex_unlock(&data->mutex);
 +	if (ret)
 +		return ret;
 +
@@ -896,17 +972,14 @@ index 000000000000..adbcfbc6b97d
 +	if (ret)
 +		return ret;
 +
-+	mutex_lock(&data->mutex);
 +	ret = regmap_update_bits(data->regmap, BMI323_INT_MAP1_REG, irq_msk,
 +				 irq_field_val);
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
 +	set_mask_bits(&data->feature_events, msk, field_value);
 +
-+unlock_out:
-+	mutex_unlock(&data->mutex);
-+	return ret;
++	return 0;
 +}
 +
 +static int bmi323_tap_event_en(struct bmi323_data *data,
@@ -915,11 +988,11 @@ index 000000000000..adbcfbc6b97d
 +	enum bmi323_irq_pin tap_irq;
 +	int ret, tap_enabled;
 +
-+	mutex_lock(&data->mutex);
++	guard(mutex)(&data->mutex);
++
 +	if (data->odrhz[BMI323_ACCEL] < 200) {
 +		dev_err(data->dev, "Invalid accelrometer parameter\n");
-+		ret = -EINVAL;
-+		goto unlock_out;
++		return -EINVAL;
 +	}
 +
 +	switch (dir) {
@@ -928,7 +1001,7 @@ index 000000000000..adbcfbc6b97d
 +						   BMI323_FEAT_IO0_S_TAP_MSK,
 +						   state);
 +		if (ret)
-+			goto unlock_out;
++			return ret;
 +
 +		set_mask_bits(&data->feature_events, BMI323_FEAT_IO0_S_TAP_MSK,
 +			      FIELD_PREP(BMI323_FEAT_IO0_S_TAP_MSK, state));
@@ -938,14 +1011,13 @@ index 000000000000..adbcfbc6b97d
 +						   BMI323_FEAT_IO0_D_TAP_MSK,
 +						   state);
 +		if (ret)
-+			goto unlock_out;
++			return ret;
 +
 +		set_mask_bits(&data->feature_events, BMI323_FEAT_IO0_D_TAP_MSK,
 +			      FIELD_PREP(BMI323_FEAT_IO0_D_TAP_MSK, state));
 +		break;
 +	default:
-+		ret = -EINVAL;
-+		goto unlock_out;
++		return -EINVAL;
 +	}
 +
 +	tap_enabled = FIELD_GET(BMI323_FEAT_IO0_S_TAP_MSK |
@@ -961,61 +1033,57 @@ index 000000000000..adbcfbc6b97d
 +				 BMI323_TAP_MSK,
 +				 FIELD_PREP(BMI323_TAP_MSK, tap_irq));
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
-+	mutex_unlock(&data->mutex);
++	if (!state)
++		return 0;
 +
-+	if (state) {
-+		ret = bmi323_update_ext_reg(data, BMI323_TAP1_REG,
-+					    BMI323_TAP1_MAX_PEAKS_MSK,
-+					    FIELD_PREP(BMI323_TAP1_MAX_PEAKS_MSK,
-+						       0x04));
-+		if (ret)
-+			return ret;
++	ret = bmi323_update_ext_reg(data, BMI323_TAP1_REG,
++				    BMI323_TAP1_MAX_PEAKS_MSK,
++				    FIELD_PREP(BMI323_TAP1_MAX_PEAKS_MSK,
++					       0x04));
++	if (ret)
++		return ret;
 +
-+		ret = bmi323_update_ext_reg(data, BMI323_TAP1_REG,
-+					    BMI323_TAP1_AXIS_SEL_MSK,
-+					    FIELD_PREP(BMI323_TAP1_AXIS_SEL_MSK,
-+						       0x03));
-+		if (ret)
-+			return ret;
++	ret = bmi323_update_ext_reg(data, BMI323_TAP1_REG,
++				    BMI323_TAP1_AXIS_SEL_MSK,
++				    FIELD_PREP(BMI323_TAP1_AXIS_SEL_MSK,
++					       BMI323_AXIS_XYZ_MSK));
++	if (ret)
++		return ret;
 +
-+		return bmi323_update_ext_reg(data, BMI323_TAP1_REG,
-+					     BMI323_TAP1_TIMOUT_MSK,
-+					     FIELD_PREP(BMI323_TAP1_TIMOUT_MSK,
-+							0));
-+	}
-+
-+	return ret;
-+
-+unlock_out:
-+	mutex_unlock(&data->mutex);
-+	return ret;
++	return bmi323_update_ext_reg(data, BMI323_TAP1_REG,
++				     BMI323_TAP1_TIMOUT_MSK,
++				     FIELD_PREP(BMI323_TAP1_TIMOUT_MSK,
++						0));
 +}
 +
-+static ssize_t in_accel_gesture_tap_max_dur_show(struct device *dev,
-+						 struct device_attribute *attr,
-+						 char *buf)
++static ssize_t in_accel_gesture_tap_wait_dur_show(struct device *dev,
++						  struct device_attribute *attr,
++						  char *buf)
 +{
 +	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
 +	struct bmi323_data *data = iio_priv(indio_dev);
 +	unsigned int reg_value, raw;
 +	int ret, val[2];
 +
-+	ret = bmi323_read_ext_reg(data, BMI323_TAP2_REG, &reg_value);
-+	if (ret)
-+		return ret;
++	scoped_guard(mutex, &data->mutex) {
++		ret = bmi323_read_ext_reg(data, BMI323_TAP2_REG, &reg_value);
++		if (ret)
++			return ret;
++	}
 +
 +	raw = FIELD_GET(BMI323_TAP2_MAX_DUR_MSK, reg_value);
 +	val[0] = raw / BMI323_MAX_GES_DUR_SCALE;
 +	val[1] = BMI323_RAW_TO_MICRO(raw, BMI323_MAX_GES_DUR_SCALE);
 +
-+	return iio_format_value(buf, IIO_VAL_INT_PLUS_MICRO, 2, val);
++	return iio_format_value(buf, IIO_VAL_INT_PLUS_MICRO, ARRAY_SIZE(val),
++				val);
 +}
 +
-+static ssize_t in_accel_gesture_tap_max_dur_store(struct device *dev,
-+						  struct device_attribute *attr,
-+						  const char *buf, size_t len)
++static ssize_t in_accel_gesture_tap_wait_dur_store(struct device *dev,
++						   struct device_attribute *attr,
++						   const char *buf, size_t len)
 +{
 +	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
 +	struct bmi323_data *data = iio_priv(indio_dev);
@@ -1027,9 +1095,10 @@ index 000000000000..adbcfbc6b97d
 +
 +	raw = BMI323_INT_MICRO_TO_RAW(val_int, val_fract,
 +				      BMI323_MAX_GES_DUR_SCALE);
-+	if (raw < 0 || raw > 63)
++	if (!in_range(raw, 0, 64))
 +		return -EINVAL;
 +
++	guard(mutex)(&data->mutex);
 +	ret = bmi323_update_ext_reg(data, BMI323_TAP2_REG,
 +				    BMI323_TAP2_MAX_DUR_MSK,
 +				    FIELD_PREP(BMI323_TAP2_MAX_DUR_MSK, raw));
@@ -1041,42 +1110,45 @@ index 000000000000..adbcfbc6b97d
 +
 +/*
 + * Maximum duration from first tap within the second tap is expected to happen.
-+ * This timeout is applicable only if gesture_tap_timeout is enabled.
++ * This timeout is applicable only if gesture_tap_wait_timeout is enabled.
 + */
-+static IIO_DEVICE_ATTR_RW(in_accel_gesture_tap_max_dur, 0);
++static IIO_DEVICE_ATTR_RW(in_accel_gesture_tap_wait_dur, 0);
 +
-+static ssize_t in_accel_gesture_tap_timeout_show(struct device *dev,
-+						 struct device_attribute *attr,
-+						 char *buf)
++static ssize_t in_accel_gesture_tap_wait_timeout_show(struct device *dev,
++						      struct device_attribute *attr,
++						      char *buf)
 +{
 +	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
 +	struct bmi323_data *data = iio_priv(indio_dev);
 +	unsigned int reg_value, raw;
 +	int ret;
 +
-+	ret = bmi323_read_ext_reg(data, BMI323_TAP1_REG, &reg_value);
-+	if (ret)
-+		return ret;
++	scoped_guard(mutex, &data->mutex) {
++		ret = bmi323_read_ext_reg(data, BMI323_TAP1_REG, &reg_value);
++		if (ret)
++			return ret;
++	}
 +
 +	raw = FIELD_GET(BMI323_TAP1_TIMOUT_MSK, reg_value);
 +
 +	return iio_format_value(buf, IIO_VAL_INT, 1, &raw);
 +}
 +
-+static ssize_t in_accel_gesture_tap_timeout_store(struct device *dev,
-+						  struct device_attribute *attr,
-+						  const char *buf, size_t len)
++static ssize_t in_accel_gesture_tap_wait_timeout_store(struct device *dev,
++						       struct device_attribute *attr,
++						       const char *buf,
++						       size_t len)
 +{
 +	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
 +	struct bmi323_data *data = iio_priv(indio_dev);
-+	int ret, val;
++	bool val;
++	int ret;
 +
-+	if (kstrtoint(buf, 10, &val))
-+		return -EINVAL;
++	ret = kstrtobool(buf, &val);
++	if (ret)
++		return ret;
 +
-+	if (!(val == 0 || val == 1))
-+		return -EINVAL;
-+
++	guard(mutex)(&data->mutex);
 +	ret = bmi323_update_ext_reg(data, BMI323_TAP1_REG,
 +				    BMI323_TAP1_TIMOUT_MSK,
 +				    FIELD_PREP(BMI323_TAP1_TIMOUT_MSK, val));
@@ -1087,9 +1159,9 @@ index 000000000000..adbcfbc6b97d
 +}
 +
 +/* Enable/disable gesture confirmation with wait time */
-+static IIO_DEVICE_ATTR_RW(in_accel_gesture_tap_timeout, 0);
++static IIO_DEVICE_ATTR_RW(in_accel_gesture_tap_wait_timeout, 0);
 +
-+static IIO_CONST_ATTR(in_accel_gesture_tap_max_dur_available,
++static IIO_CONST_ATTR(in_accel_gesture_tap_wait_dur_available,
 +		      "[0.0 0.04 2.52]");
 +
 +static IIO_CONST_ATTR(in_accel_gesture_doubletap_tap2_min_delay_available,
@@ -1110,9 +1182,9 @@ index 000000000000..adbcfbc6b97d
 +	&iio_const_attr_in_accel_gesture_tap_value_available.dev_attr.attr,
 +	&iio_const_attr_in_accel_gesture_tap_reset_timeout_available.dev_attr.attr,
 +	&iio_const_attr_in_accel_gesture_doubletap_tap2_min_delay_available.dev_attr.attr,
-+	&iio_const_attr_in_accel_gesture_tap_max_dur_available.dev_attr.attr,
-+	&iio_dev_attr_in_accel_gesture_tap_timeout.dev_attr.attr,
-+	&iio_dev_attr_in_accel_gesture_tap_max_dur.dev_attr.attr,
++	&iio_const_attr_in_accel_gesture_tap_wait_dur_available.dev_attr.attr,
++	&iio_dev_attr_in_accel_gesture_tap_wait_timeout.dev_attr.attr,
++	&iio_dev_attr_in_accel_gesture_tap_wait_dur.dev_attr.attr,
 +	&iio_const_attr_in_accel_mag_value_available.dev_attr.attr,
 +	&iio_const_attr_in_accel_mag_period_available.dev_attr.attr,
 +	&iio_const_attr_in_accel_mag_hysteresis_available.dev_attr.attr,
@@ -1129,17 +1201,14 @@ index 000000000000..adbcfbc6b97d
 +				     enum iio_event_direction dir, int state)
 +{
 +	struct bmi323_data *data = iio_priv(indio_dev);
-+	int ret;
 +
 +	switch (type) {
 +	case IIO_EV_TYPE_MAG:
-+		ret = bmi323_motion_event_en(data, dir, state);
-+		return ret;
++		return bmi323_motion_event_en(data, dir, state);
 +	case IIO_EV_TYPE_GESTURE:
 +		return bmi323_tap_event_en(data, dir, state);
 +	case IIO_EV_TYPE_CHANGE:
-+		ret = bmi323_step_wtrmrk_en(data, state);
-+		return ret;
++		return bmi323_step_wtrmrk_en(data, state);
 +	default:
 +		return -EINVAL;
 +	}
@@ -1153,9 +1222,10 @@ index 000000000000..adbcfbc6b97d
 +	struct bmi323_data *data = iio_priv(indio_dev);
 +	int ret, value, reg_val;
 +
++	guard(mutex)(&data->mutex);
++
 +	switch (chan->type) {
 +	case IIO_ACCEL:
-+		mutex_lock(&data->mutex);
 +		switch (dir) {
 +		case IIO_EV_DIR_SINGLETAP:
 +			ret = FIELD_GET(BMI323_FEAT_IO0_S_TAP_MSK,
@@ -1179,12 +1249,9 @@ index 000000000000..adbcfbc6b97d
 +			ret = -EINVAL;
 +			break;
 +		}
-+		mutex_unlock(&data->mutex);
 +		return ret;
 +	case IIO_STEPS:
-+		mutex_lock(&data->mutex);
 +		ret = regmap_read(data->regmap, BMI323_INT_MAP1_REG, &reg_val);
-+		mutex_unlock(&data->mutex);
 +		if (ret)
 +			return ret;
 +
@@ -1205,11 +1272,13 @@ index 000000000000..adbcfbc6b97d
 +	unsigned int raw;
 +	int reg;
 +
++	guard(mutex)(&data->mutex);
++
 +	switch (type) {
 +	case IIO_EV_TYPE_GESTURE:
 +		switch (info) {
 +		case IIO_EV_INFO_VALUE:
-+			if (!(val == 0 || val == 1))
++			if (!in_range(val, 0, 2))
 +				return -EINVAL;
 +
 +			raw = BMI323_INT_MICRO_TO_RAW(val, val2,
@@ -1220,7 +1289,7 @@ index 000000000000..adbcfbc6b97d
 +						     FIELD_PREP(BMI323_TAP2_THRES_MSK,
 +								raw));
 +		case IIO_EV_INFO_RESET_TIMEOUT:
-+			if (val != 0 || val2 < 40000 || val2 > 600000)
++			if (val || !in_range(val2, 40000, 560001))
 +				return -EINVAL;
 +
 +			raw = BMI323_INT_MICRO_TO_RAW(val, val2,
@@ -1231,7 +1300,7 @@ index 000000000000..adbcfbc6b97d
 +						     FIELD_PREP(BMI323_TAP3_QT_AFT_GES_MSK,
 +								raw));
 +		case IIO_EV_INFO_TAP2_MIN_DELAY:
-+			if (val != 0 || val2 < 5000 || val2 > 75000)
++			if (val || !in_range(val2, 5000, 70001))
 +				return -EINVAL;
 +
 +			raw = BMI323_INT_MICRO_TO_RAW(val, val2,
@@ -1251,7 +1320,7 @@ index 000000000000..adbcfbc6b97d
 +
 +		switch (info) {
 +		case IIO_EV_INFO_VALUE:
-+			if (val < 0 || val > 7)
++			if (!in_range(val, 0, 8))
 +				return -EINVAL;
 +
 +			raw = BMI323_INT_MICRO_TO_RAW(val, val2,
@@ -1262,7 +1331,7 @@ index 000000000000..adbcfbc6b97d
 +						     FIELD_PREP(BMI323_MO1_SLOPE_TH_MSK,
 +								raw));
 +		case IIO_EV_INFO_PERIOD:
-+			if (val < 0 || val > 162)
++			if (!in_range(val, 0, 163))
 +				return -EINVAL;
 +
 +			raw = BMI323_INT_MICRO_TO_RAW(val, val2,
@@ -1274,7 +1343,7 @@ index 000000000000..adbcfbc6b97d
 +						     FIELD_PREP(BMI323_MO3_DURA_MSK,
 +								raw));
 +		case IIO_EV_INFO_HYSTERESIS:
-+			if (!(val == 0 || val == 1))
++			if (!in_range(val, 0, 2))
 +				return -EINVAL;
 +
 +			raw = BMI323_INT_MICRO_TO_RAW(val, val2,
@@ -1289,7 +1358,7 @@ index 000000000000..adbcfbc6b97d
 +			return -EINVAL;
 +		}
 +	case IIO_EV_TYPE_CHANGE:
-+		if (val < 0 || val > 20460)
++		if (!in_range(val, 0, 20461))
 +			return -EINVAL;
 +
 +		raw = val / 20;
@@ -1312,6 +1381,8 @@ index 000000000000..adbcfbc6b97d
 +	struct bmi323_data *data = iio_priv(indio_dev);
 +	unsigned int raw, reg_value;
 +	int ret, reg;
++
++	guard(mutex)(&data->mutex);
 +
 +	switch (type) {
 +	case IIO_EV_TYPE_GESTURE:
@@ -1411,24 +1482,21 @@ index 000000000000..adbcfbc6b97d
 +static int __bmi323_fifo_flush(struct iio_dev *indio_dev)
 +{
 +	struct bmi323_data *data = iio_priv(indio_dev);
-+	int i, ret, fifo_lvl, frame_count, bit;
-+	__le16 *frame, *channels;
++	int i, ret, fifo_lvl, frame_count, bit, index;
++	__le16 *frame, *pchannels;
 +	u64 sample_period;
 +	s64 tstamp;
 +
-+	mutex_lock(&data->mutex);
++	guard(mutex)(&data->mutex);
 +	ret = regmap_read(data->regmap, BMI323_FIFO_FILL_LEVEL_REG, &fifo_lvl);
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
-+	if (fifo_lvl > BMI323_FIFO_FULL_IN_WORDS)
-+		fifo_lvl = BMI323_FIFO_FULL_IN_WORDS;
++	fifo_lvl = min(fifo_lvl, BMI323_FIFO_FULL_IN_WORDS);
 +
 +	frame_count = fifo_lvl / BMI323_FIFO_FRAME_LENGTH;
-+	if (!frame_count) {
-+		ret = -EINVAL;
-+		goto unlock_out;
-+	}
++	if (!frame_count)
++		return -EINVAL;
 +
 +	if (fifo_lvl % BMI323_FIFO_FRAME_LENGTH)
 +		dev_warn(data->dev, "Bad FIFO alignment\n");
@@ -1450,16 +1518,16 @@ index 000000000000..adbcfbc6b97d
 +				&data->fifo_buff[0],
 +				fifo_lvl * BMI323_BYTES_PER_SAMPLE);
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
 +	for (i = 0; i < frame_count; i++) {
 +		frame = &data->fifo_buff[i * BMI323_FIFO_FRAME_LENGTH];
-+		channels = &data->buffer.channels[0];
++		pchannels = &data->buffer.channels[0];
 +
++		index = 0;
 +		for_each_set_bit(bit, indio_dev->active_scan_mask,
-+				 BMI323_CHAN_MAX) {
-+			channels[bit] = frame[bit];
-+		}
++				 BMI323_CHAN_MAX)
++			pchannels[index++] = frame[bit];
 +
 +		iio_push_to_buffers_with_timestamp(indio_dev, &data->buffer,
 +						   tstamp);
@@ -1467,23 +1535,17 @@ index 000000000000..adbcfbc6b97d
 +		tstamp += sample_period;
 +	}
 +
-+	ret = frame_count;
-+
-+unlock_out:
-+	mutex_unlock(&data->mutex);
-+	return ret;
++	return frame_count;
 +}
 +
 +static int bmi323_set_watermark(struct iio_dev *indio_dev, unsigned int val)
 +{
 +	struct bmi323_data *data = iio_priv(indio_dev);
 +
-+	if (val > BMI323_FIFO_FULL_IN_FRAMES)
-+		val = BMI323_FIFO_FULL_IN_FRAMES;
++	val = min(val, (u32)BMI323_FIFO_FULL_IN_FRAMES);
 +
-+	mutex_lock(&data->mutex);
++	guard(mutex)(&data->mutex);
 +	data->watermark = val;
-+	mutex_unlock(&data->mutex);
 +
 +	return 0;
 +}
@@ -1492,23 +1554,21 @@ index 000000000000..adbcfbc6b97d
 +{
 +	int ret;
 +
-+	mutex_lock(&data->mutex);
++	guard(mutex)(&data->mutex);
 +	ret = regmap_write(data->regmap, BMI323_FIFO_CONF_REG, 0);
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
 +	ret = regmap_update_bits(data->regmap, BMI323_INT_MAP2_REG,
 +				 BMI323_FIFO_WTRMRK_MSK,
 +				 FIELD_PREP(BMI323_FIFO_WTRMRK_MSK, 0));
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
 +	data->fifo_tstamp = 0;
 +	data->state = BMI323_IDLE;
 +
-+unlock_out:
-+	mutex_unlock(&data->mutex);
-+	return ret;
++	return 0;
 +}
 +
 +static int bmi323_buffer_predisable(struct iio_dev *indio_dev)
@@ -1534,43 +1594,40 @@ index 000000000000..adbcfbc6b97d
 +{
 +	int ret;
 +
-+	mutex_lock(&data->mutex);
++	guard(mutex)(&data->mutex);
 +	ret = regmap_update_bits(data->regmap, BMI323_FIFO_CONF_REG,
 +				 BMI323_FIFO_CONF_ACC_GYR_EN_MSK,
 +				 FIELD_PREP(BMI323_FIFO_CONF_ACC_GYR_EN_MSK,
-+					    3));
++					    BMI323_FIFO_ACC_GYR_MSK));
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
 +	ret = regmap_update_bits(data->regmap, BMI323_INT_MAP2_REG,
 +				 BMI323_FIFO_WTRMRK_MSK,
 +				 FIELD_PREP(BMI323_FIFO_WTRMRK_MSK,
 +					    data->irq_pin));
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
 +	ret = bmi323_update_watermark(data);
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
 +	ret = regmap_write(data->regmap, BMI323_FIFO_CTRL_REG,
 +			   BMI323_FIFO_FLUSH_MSK);
 +	if (ret)
-+		goto unlock_out;
++		return ret;
 +
 +	data->state = BMI323_BUFFER_FIFO;
 +
-+unlock_out:
-+	mutex_unlock(&data->mutex);
-+	return ret;
++	return 0;
 +}
 +
 +static int bmi323_buffer_preenable(struct iio_dev *indio_dev)
 +{
 +	struct bmi323_data *data = iio_priv(indio_dev);
-+	int ret = 0;
 +
-+	mutex_lock(&data->mutex);
++	guard(mutex)(&data->mutex);
 +	/*
 +	 * When the ODR of the accelerometer and gyroscope do not match, the
 +	 * maximum ODR value between the accelerometer and gyroscope is used
@@ -1580,11 +1637,10 @@ index 000000000000..adbcfbc6b97d
 +	 */
 +	if (data->odrns[BMI323_ACCEL] != data->odrns[BMI323_GYRO]) {
 +		dev_err(data->dev, "Accelero and Gyro ODR doesn't match\n");
-+		ret = -EINVAL;
++		return -EINVAL;
 +	}
-+	mutex_unlock(&data->mutex);
 +
-+	return ret;
++	return 0;
 +}
 +
 +static int bmi323_buffer_postenable(struct iio_dev *indio_dev)
@@ -1604,12 +1660,12 @@ index 000000000000..adbcfbc6b97d
 +	struct bmi323_data *data = iio_priv(indio_dev);
 +	int wm;
 +
-+	mutex_lock(&data->mutex);
-+	wm = data->watermark;
-+	mutex_unlock(&data->mutex);
++	scoped_guard(mutex, &data->mutex)
++		wm = data->watermark;
 +
 +	return sysfs_emit(buf, "%d\n", wm);
 +}
++static IIO_DEVICE_ATTR_RO(hwfifo_watermark, 0);
 +
 +static ssize_t hwfifo_enabled_show(struct device *dev,
 +				   struct device_attribute *attr,
@@ -1619,14 +1675,11 @@ index 000000000000..adbcfbc6b97d
 +	struct bmi323_data *data = iio_priv(indio_dev);
 +	bool state;
 +
-+	mutex_lock(&data->mutex);
-+	state = data->state == BMI323_BUFFER_FIFO ? true : false;
-+	mutex_unlock(&data->mutex);
++	scoped_guard(mutex, &data->mutex)
++		state = data->state == BMI323_BUFFER_FIFO;
 +
 +	return sysfs_emit(buf, "%d\n", state);
 +}
-+
-+static IIO_DEVICE_ATTR_RO(hwfifo_watermark, 0);
 +static IIO_DEVICE_ATTR_RO(hwfifo_enabled, 0);
 +
 +static const struct iio_dev_attr *bmi323_fifo_attributes[] = {
@@ -1654,16 +1707,14 @@ index 000000000000..adbcfbc6b97d
 +	else
 +		status_addr = BMI323_STATUS_INT2_REG;
 +
-+	mutex_lock(&data->mutex);
-+	ret = regmap_read(data->regmap, status_addr, &status);
-+	mutex_unlock(&data->mutex);
-+	if (ret)
-+		return IRQ_NONE;
-+
-+	if (!status || FIELD_GET(BMI323_STATUS_ERROR_MSK, status)) {
-+		dev_err(data->dev, "status error = 0x%x\n", status);
-+		return IRQ_NONE;
++	scoped_guard(mutex, &data->mutex) {
++		ret = regmap_read(data->regmap, status_addr, &status);
++		if (ret)
++			return IRQ_NONE;
 +	}
++
++	if (!status || FIELD_GET(BMI323_STATUS_ERROR_MSK, status))
++		return IRQ_NONE;
 +
 +	if (FIELD_GET(BMI323_STATUS_FIFO_WTRMRK_MSK, status)) {
 +		data->old_fifo_tstamp = data->fifo_tstamp;
@@ -1698,12 +1749,13 @@ index 000000000000..adbcfbc6b97d
 +			       timestamp);
 +
 +	if (FIELD_GET(BMI323_STATUS_TAP_MSK, status)) {
-+		mutex_lock(&data->mutex);
-+		ret = regmap_read(data->regmap, BMI323_FEAT_EVNT_EXT_REG,
-+				  &feature_event);
-+		mutex_unlock(&data->mutex);
-+		if (ret)
-+			return IRQ_NONE;
++		scoped_guard(mutex, &data->mutex) {
++			ret = regmap_read(data->regmap,
++					  BMI323_FEAT_EVNT_EXT_REG,
++					  &feature_event);
++			if (ret)
++				return IRQ_NONE;
++		}
 +
 +		if (FIELD_GET(BMI323_FEAT_EVNT_EXT_S_MSK, feature_event)) {
 +			iio_push_event(indio_dev,
@@ -1747,14 +1799,12 @@ index 000000000000..adbcfbc6b97d
 +{
 +	struct bmi323_data *data = iio_trigger_get_drvdata(trig);
 +	enum bmi323_irq_pin irq_pin;
-+	int ret;
 +
-+	mutex_lock(&data->mutex);
++	guard(mutex)(&data->mutex);
 +
 +	if (data->state == BMI323_BUFFER_FIFO) {
 +		dev_warn(data->dev, "Can't set trigger when FIFO enabled\n");
-+		ret = -EBUSY;
-+		goto unlock_out;
++		return -EBUSY;
 +	}
 +
 +	if (state) {
@@ -1765,11 +1815,7 @@ index 000000000000..adbcfbc6b97d
 +		irq_pin = BMI323_IRQ_DISABLED;
 +	}
 +
-+	ret = bmi323_set_drdy_irq(data, irq_pin);
-+
-+unlock_out:
-+	mutex_unlock(&data->mutex);
-+	return ret;
++	return bmi323_set_drdy_irq(data, irq_pin);
 +}
 +
 +static const struct iio_trigger_ops bmi323_trigger_ops = {
@@ -1781,47 +1827,53 @@ index 000000000000..adbcfbc6b97d
 +	struct iio_poll_func *pf = p;
 +	struct iio_dev *indio_dev = pf->indio_dev;
 +	struct bmi323_data *data = iio_priv(indio_dev);
-+	int ret;
++	int ret, bit, index = 0;
 +
 +	/* Lock to protect the data->buffer */
-+	mutex_lock(&data->mutex);
-+	ret = regmap_bulk_read(data->regmap, BMI323_ACCEL_X_REG,
-+			       &data->buffer.channels,
-+			       ARRAY_SIZE(data->buffer.channels));
-+	if (ret)
-+		goto unlock_out;
++	guard(mutex)(&data->mutex);
++
++	if (*indio_dev->active_scan_mask == BMI323_ALL_CHAN_MSK) {
++		ret = regmap_bulk_read(data->regmap, BMI323_ACCEL_X_REG,
++				       &data->buffer.channels,
++				       ARRAY_SIZE(data->buffer.channels));
++		if (ret)
++			return IRQ_NONE;
++	} else {
++		for_each_set_bit(bit, indio_dev->active_scan_mask,
++				 BMI323_CHAN_MAX) {
++			ret = regmap_raw_read(data->regmap,
++					      BMI323_ACCEL_X_REG + bit,
++					      &data->buffer.channels[index++],
++					      BMI323_BYTES_PER_SAMPLE);
++			if (ret)
++				return IRQ_NONE;
++		}
++	}
 +
 +	iio_push_to_buffers_with_timestamp(indio_dev, &data->buffer,
 +					   iio_get_time_ns(indio_dev));
-+	mutex_unlock(&data->mutex);
-+	iio_trigger_notify_done(indio_dev->trig);
-+	return IRQ_HANDLED;
 +
-+unlock_out:
-+	mutex_unlock(&data->mutex);
-+	return IRQ_NONE;
++	iio_trigger_notify_done(indio_dev->trig);
++
++	return IRQ_HANDLED;
 +}
 +
 +static int bmi323_set_average(struct bmi323_data *data,
 +			      enum bmi323_sensor_type sensor, int avg)
 +{
-+	int ret, raw;
++	int raw = ARRAY_SIZE(bmi323_accel_gyro_avrg);
 +
-+	for (raw = 0; raw < ARRAY_SIZE(bmi323_accel_gyro_avrg); raw++)
++	while (raw--)
 +		if (avg == bmi323_accel_gyro_avrg[raw])
 +			break;
-+
-+	if (raw >= ARRAY_SIZE(bmi323_accel_gyro_avrg))
++	if (raw < 0)
 +		return -EINVAL;
 +
-+	mutex_lock(&data->mutex);
-+	ret = regmap_update_bits(data->regmap, bmi323_hw[sensor].config,
++	guard(mutex)(&data->mutex);
++	return regmap_update_bits(data->regmap, bmi323_hw[sensor].config,
 +				 BMI323_ACC_GYRO_CONF_AVG_MSK,
 +				 FIELD_PREP(BMI323_ACC_GYRO_CONF_AVG_MSK,
 +					    raw));
-+	mutex_unlock(&data->mutex);
-+
-+	return ret;
 +}
 +
 +static int bmi323_get_average(struct bmi323_data *data,
@@ -1829,73 +1881,23 @@ index 000000000000..adbcfbc6b97d
 +{
 +	int ret, value, raw;
 +
-+	mutex_lock(&data->mutex);
-+	ret = regmap_read(data->regmap, bmi323_hw[sensor].config, &value);
-+	mutex_unlock(&data->mutex);
-+	if (ret)
-+		return ret;
++	scoped_guard(mutex, &data->mutex) {
++		ret = regmap_read(data->regmap, bmi323_hw[sensor].config, &value);
++		if (ret)
++			return ret;
++	}
 +
 +	raw = FIELD_GET(BMI323_ACC_GYRO_CONF_AVG_MSK, value);
 +	*avg = bmi323_accel_gyro_avrg[raw];
 +
-+	return ret;
++	return IIO_VAL_INT;
 +}
-+
-+static ssize_t in_accel_gyro_averaging_show(struct device *dev,
-+					    struct device_attribute *attr,
-+					    char *buf)
-+{
-+	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
-+	struct bmi323_data *data = iio_priv(indio_dev);
-+	int ret, avg;
-+
-+	ret = bmi323_get_average(data, BMI323_ACCEL, &avg);
-+	if (ret)
-+		return ret;
-+
-+	return sysfs_emit(buf, "%d\n", avg);
-+}
-+
-+static ssize_t in_accel_gyro_averaging_store(struct device *dev,
-+					     struct device_attribute *attr,
-+					     const char *buf, size_t len)
-+{
-+	struct iio_dev *indio_dev = dev_to_iio_dev(dev);
-+	struct bmi323_data *data = iio_priv(indio_dev);
-+	int ret, avg;
-+
-+	ret = kstrtoint(buf, 0, &avg);
-+	if (ret)
-+		return ret;
-+
-+	ret = bmi323_set_average(data, BMI323_ACCEL, avg);
-+	if (ret)
-+		return ret;
-+
-+	ret = bmi323_set_average(data, BMI323_GYRO, avg);
-+	if (ret)
-+		return ret;
-+
-+	return len;
-+}
-+
-+static IIO_DEVICE_ATTR_RW(in_accel_gyro_averaging, 0);
-+static IIO_CONST_ATTR(in_accel_gyro_averaging_available, "2 4 8 16 32 64");
-+
-+static struct attribute *bmi323_attributes[] = {
-+	&iio_dev_attr_in_accel_gyro_averaging.dev_attr.attr,
-+	&iio_const_attr_in_accel_gyro_averaging_available.dev_attr.attr,
-+	NULL
-+};
-+
-+static const struct attribute_group bmi323_attrs_group = {
-+	.attrs = bmi323_attributes,
-+};
 +
 +static int bmi323_enable_steps(struct bmi323_data *data, int val)
 +{
 +	int ret;
 +
++	guard(mutex)(&data->mutex);
 +	if (data->odrhz[BMI323_ACCEL] < 200) {
 +		dev_err(data->dev, "Invalid accelrometer parameter\n");
 +		return -EINVAL;
@@ -1909,13 +1911,14 @@ index 000000000000..adbcfbc6b97d
 +	set_mask_bits(&data->feature_events, BMI323_FEAT_IO0_STP_CNT_MSK,
 +		      FIELD_PREP(BMI323_FEAT_IO0_STP_CNT_MSK, val ? 1 : 0));
 +
-+	return ret;
++	return 0;
 +}
 +
 +static int bmi323_read_steps(struct bmi323_data *data, int *val)
 +{
 +	int ret;
 +
++	guard(mutex)(&data->mutex);
 +	if (!FIELD_GET(BMI323_FEAT_IO0_STP_CNT_MSK, data->feature_events))
 +		return -EINVAL;
 +
@@ -1945,12 +1948,13 @@ index 000000000000..adbcfbc6b97d
 +	sensor = bmi323_iio_to_sensor(chan->type);
 +	addr = bmi323_hw[sensor].data + (chan->channel2 - IIO_MOD_X);
 +
-+	ret = regmap_read(data->regmap, addr, &value);
-+	if (ret)
-+		return ret;
++	scoped_guard(mutex, &data->mutex) {
++		ret = regmap_read(data->regmap, addr, &value);
++		if (ret)
++			return ret;
++	}
 +
-+	*val = sign_extend32(le16_to_cpup((const __le16 *)&value),
-+			     chan->scan_type.realbits - 1);
++	*val = sign_extend32(value, chan->scan_type.realbits - 1);
 +
 +	return IIO_VAL_INT;
 +}
@@ -1964,26 +1968,27 @@ index 000000000000..adbcfbc6b97d
 +	if (ret)
 +		return -EINVAL;
 +
-+	ret = regmap_read(data->regmap, BMI323_TEMP_REG, &value);
-+	if (ret)
-+		return ret;
++	scoped_guard(mutex, &data->mutex) {
++		ret = regmap_read(data->regmap, BMI323_TEMP_REG, &value);
++		if (ret)
++			return ret;
++	}
 +
-+	*val = sign_extend32(le16_to_cpup((const __le16 *)&value), 15);
++	*val = sign_extend32(value, 15);
 +
 +	return IIO_VAL_INT;
 +}
 +
-+static int bmi323_get_odr(struct bmi323_data *data, enum iio_chan_type type,
-+			  int *odr, int *uodr)
++static int bmi323_get_odr(struct bmi323_data *data,
++			  enum bmi323_sensor_type sensor, int *odr, int *uodr)
 +{
-+	enum bmi323_sensor_type sensor;
 +	int ret, value, odr_raw;
 +
-+	sensor = bmi323_iio_to_sensor(type);
-+
-+	ret = regmap_read(data->regmap, bmi323_hw[sensor].config, &value);
-+	if (ret)
-+		return ret;
++	scoped_guard(mutex, &data->mutex) {
++		ret = regmap_read(data->regmap, bmi323_hw[sensor].config, &value);
++		if (ret)
++			return ret;
++	}
 +
 +	odr_raw = FIELD_GET(BMI323_ACC_GYRO_CONF_ODR_MSK, value);
 +	*odr = bmi323_acc_gyro_odr[odr_raw - 1][0];
@@ -1998,10 +2003,10 @@ index 000000000000..adbcfbc6b97d
 +{
 +	enum bmi323_opr_mode mode;
 +
-+	if (bmi323_acc_gyro_odr[odr_index][0] <= 25)
-+		mode = ACC_GYRO_MODE_DUTYCYCLE;
-+	else
++	if (bmi323_acc_gyro_odr[odr_index][0] > 25)
 +		mode = ACC_GYRO_MODE_CONTINOUS;
++	else
++		mode = ACC_GYRO_MODE_DUTYCYCLE;
 +
 +	return bmi323_set_mode(data, sensor, mode);
 +}
@@ -2024,6 +2029,7 @@ index 000000000000..adbcfbc6b97d
 +	if (ret)
 +		return -EINVAL;
 +
++	guard(mutex)(&data->mutex);
 +	data->odrhz[sensor] = bmi323_acc_gyro_odr[odr_raw][0];
 +	data->odrns[sensor] = bmi323_acc_gyro_odrns[odr_raw];
 +
@@ -2035,17 +2041,17 @@ index 000000000000..adbcfbc6b97d
 +					     odr_raw));
 +}
 +
-+static int bmi323_get_scale(struct bmi323_data *data, enum iio_chan_type type,
-+			    int *val2)
++static int bmi323_get_scale(struct bmi323_data *data,
++			    enum bmi323_sensor_type sensor, int *val2)
 +{
-+	enum bmi323_sensor_type sensor;
 +	int ret, value, scale_raw;
 +
-+	sensor = bmi323_iio_to_sensor(type);
-+
-+	ret = regmap_read(data->regmap, bmi323_hw[sensor].config, &value);
-+	if (ret)
-+		return ret;
++	scoped_guard(mutex, &data->mutex) {
++		ret = regmap_read(data->regmap, bmi323_hw[sensor].config,
++				  &value);
++		if (ret)
++			return ret;
++	}
 +
 +	scale_raw = FIELD_GET(BMI323_ACC_GYRO_CONF_SCL_MSK, value);
 +	*val2 = bmi323_hw[sensor].scale_table[scale_raw][1];
@@ -2058,9 +2064,6 @@ index 000000000000..adbcfbc6b97d
 +{
 +	int scale_raw;
 +
-+	if (data->state != BMI323_IDLE)
-+		return -EBUSY;
-+
 +	scale_raw = bmi323_hw[sensor].scale_table_len;
 +
 +	while (scale_raw--)
@@ -2070,6 +2073,7 @@ index 000000000000..adbcfbc6b97d
 +	if (scale_raw < 0)
 +		return -EINVAL;
 +
++	guard(mutex)(&data->mutex);
 +	return regmap_update_bits(data->regmap, bmi323_hw[sensor].config,
 +				  BMI323_ACC_GYRO_CONF_SCL_MSK,
 +				  FIELD_PREP(BMI323_ACC_GYRO_CONF_SCL_MSK,
@@ -2095,6 +2099,11 @@ index 000000000000..adbcfbc6b97d
 +		*vals = (const int *)bmi323_hw[sensor].scale_table;
 +		*length = bmi323_hw[sensor].scale_table_len * 2;
 +		return IIO_AVAIL_LIST;
++	case IIO_CHAN_INFO_OVERSAMPLING_RATIO:
++		*type = IIO_VAL_INT;
++		*vals = (const int *)bmi323_accel_gyro_avrg;
++		*length = ARRAY_SIZE(bmi323_accel_gyro_avrg);
++		return IIO_AVAIL_LIST;
 +	default:
 +		return -EINVAL;
 +	}
@@ -2113,10 +2122,8 @@ index 000000000000..adbcfbc6b97d
 +		if (ret)
 +			return ret;
 +
-+		mutex_lock(&data->mutex);
 +		ret = bmi323_set_odr(data, bmi323_iio_to_sensor(chan->type),
 +				     val, val2);
-+		mutex_unlock(&data->mutex);
 +		iio_device_release_direct_mode(indio_dev);
 +		return ret;
 +	case IIO_CHAN_INFO_SCALE:
@@ -2124,27 +2131,35 @@ index 000000000000..adbcfbc6b97d
 +		if (ret)
 +			return ret;
 +
-+		mutex_lock(&data->mutex);
 +		ret = bmi323_set_scale(data, bmi323_iio_to_sensor(chan->type),
 +				       val, val2);
-+		mutex_unlock(&data->mutex);
++		iio_device_release_direct_mode(indio_dev);
++		return ret;
++	case IIO_CHAN_INFO_OVERSAMPLING_RATIO:
++		ret = iio_device_claim_direct_mode(indio_dev);
++		if (ret)
++			return ret;
++
++		ret = bmi323_set_average(data, bmi323_iio_to_sensor(chan->type),
++					 val);
++
 +		iio_device_release_direct_mode(indio_dev);
 +		return ret;
 +	case IIO_CHAN_INFO_ENABLE:
-+		mutex_lock(&data->mutex);
-+		ret = bmi323_enable_steps(data, val);
-+		mutex_unlock(&data->mutex);
-+		return ret;
++		return bmi323_enable_steps(data, val);
 +	case IIO_CHAN_INFO_PROCESSED:
-+		if (val || !FIELD_GET(BMI323_FEAT_IO0_STP_CNT_MSK,
-+				      data->feature_events))
-+			return -EINVAL;
++		scoped_guard(mutex, &data->mutex) {
++			if (val || !FIELD_GET(BMI323_FEAT_IO0_STP_CNT_MSK,
++					      data->feature_events))
++				return -EINVAL;
 +
-+		/* Clear step counter value */
-+		return bmi323_update_ext_reg(data, BMI323_STEP_SC1_REG,
-+					     BMI323_STEP_SC1_RST_CNT_MSK,
-+					     FIELD_PREP(BMI323_STEP_SC1_RST_CNT_MSK,
-+							1));
++			/* Clear step counter value */
++			ret = bmi323_update_ext_reg(data, BMI323_STEP_SC1_REG,
++						    BMI323_STEP_SC1_RST_CNT_MSK,
++						    FIELD_PREP(BMI323_STEP_SC1_RST_CNT_MSK,
++							       1));
++		}
++		return ret;
 +	default:
 +		return -EINVAL;
 +	}
@@ -2159,10 +2174,7 @@ index 000000000000..adbcfbc6b97d
 +
 +	switch (mask) {
 +	case IIO_CHAN_INFO_PROCESSED:
-+		mutex_lock(&data->mutex);
-+		ret = bmi323_read_steps(data, val);
-+		mutex_unlock(&data->mutex);
-+		return ret;
++		return bmi323_read_steps(data, val);
 +	case IIO_CHAN_INFO_RAW:
 +		switch (chan->type) {
 +		case IIO_ACCEL:
@@ -2171,34 +2183,26 @@ index 000000000000..adbcfbc6b97d
 +			if (ret)
 +				return ret;
 +
-+			mutex_lock(&data->mutex);
 +			ret = bmi323_read_axis(data, chan, val);
-+			mutex_unlock(&data->mutex);
 +
 +			iio_device_release_direct_mode(indio_dev);
 +			return ret;
 +		case IIO_TEMP:
-+			mutex_lock(&data->mutex);
-+			ret = bmi323_get_temp_data(data, val);
-+			mutex_unlock(&data->mutex);
-+			return ret;
++			return bmi323_get_temp_data(data, val);
 +		default:
 +			return -EINVAL;
 +		}
 +	case IIO_CHAN_INFO_SAMP_FREQ:
-+		mutex_lock(&data->mutex);
-+		ret = bmi323_get_odr(data, chan->type, val, val2);
-+		mutex_unlock(&data->mutex);
-+		return ret;
++		return bmi323_get_odr(data, bmi323_iio_to_sensor(chan->type),
++				      val, val2);
 +	case IIO_CHAN_INFO_SCALE:
 +		switch (chan->type) {
 +		case IIO_ACCEL:
 +		case IIO_ANGL_VEL:
 +			*val = 0;
-+			mutex_lock(&data->mutex);
-+			ret = bmi323_get_scale(data, chan->type, val2);
-+			mutex_unlock(&data->mutex);
-+			return ret;
++			return bmi323_get_scale(data,
++						bmi323_iio_to_sensor(chan->type),
++						val2);
 +		case IIO_TEMP:
 +			*val = BMI323_TEMP_SCALE / MEGA;
 +			*val2 = BMI323_TEMP_SCALE % MEGA;
@@ -2206,6 +2210,10 @@ index 000000000000..adbcfbc6b97d
 +		default:
 +			return -EINVAL;
 +		}
++	case IIO_CHAN_INFO_OVERSAMPLING_RATIO:
++		return bmi323_get_average(data,
++					  bmi323_iio_to_sensor(chan->type),
++					  val);
 +	case IIO_CHAN_INFO_OFFSET:
 +		switch (chan->type) {
 +		case IIO_TEMP:
@@ -2215,10 +2223,9 @@ index 000000000000..adbcfbc6b97d
 +			return -EINVAL;
 +		}
 +	case IIO_CHAN_INFO_ENABLE:
-+		mutex_lock(&data->mutex);
-+		*val = FIELD_GET(BMI323_FEAT_IO0_STP_CNT_MSK,
-+				 data->feature_events);
-+		mutex_unlock(&data->mutex);
++		scoped_guard(mutex, &data->mutex)
++			*val = FIELD_GET(BMI323_FEAT_IO0_STP_CNT_MSK,
++					 data->feature_events);
 +		return IIO_VAL_INT;
 +	default:
 +		return -EINVAL;
@@ -2229,7 +2236,6 @@ index 000000000000..adbcfbc6b97d
 +	.read_raw = bmi323_read_raw,
 +	.write_raw = bmi323_write_raw,
 +	.read_avail = bmi323_read_avail,
-+	.attrs = &bmi323_attrs_group,
 +	.hwfifo_set_watermark = bmi323_set_watermark,
 +	.write_event_config = bmi323_write_event_config,
 +	.read_event_config = bmi323_read_event_config,
@@ -2245,12 +2251,12 @@ index 000000000000..adbcfbc6b97d
 +	(BIT(BMI323_GYRO_X) | BIT(BMI323_GYRO_Y) | BIT(BMI323_GYRO_Z))
 +
 +static const unsigned long bmi323_avail_scan_masks[] = {
-+	/* 3-axis accel + 3-axis gyro */
-+	BMI323_SCAN_MASK_ACCEL_3AXIS | BMI323_SCAN_MASK_GYRO_3AXIS,
 +	/* 3-axis accel */
 +	BMI323_SCAN_MASK_ACCEL_3AXIS,
 +	/* 3-axis gyro */
 +	BMI323_SCAN_MASK_GYRO_3AXIS,
++	/* 3-axis accel + 3-axis gyro */
++	BMI323_SCAN_MASK_ACCEL_3AXIS | BMI323_SCAN_MASK_GYRO_3AXIS,
 +	0
 +};
 +
@@ -2258,37 +2264,8 @@ index 000000000000..adbcfbc6b97d
 +				 enum bmi323_irq_pin irq_pin,
 +				 bool active_high, bool open_drain, bool latch)
 +{
-+	unsigned int mask, field_value = 0;
++	unsigned int mask, field_value;
 +	int ret;
-+
-+	switch (irq_pin) {
-+	case BMI323_IRQ_INT1:
-+		mask = BMI323_IO_INT1_LVL_OD_OP_MSK;
-+
-+		set_mask_bits(&field_value, BMI323_IO_INT1_LVL_MSK,
-+			      FIELD_PREP(BMI323_IO_INT1_LVL_MSK, active_high));
-+
-+		set_mask_bits(&field_value, BMI323_IO_INT1_OD_MSK,
-+			      FIELD_PREP(BMI323_IO_INT1_OD_MSK, open_drain));
-+
-+		set_mask_bits(&field_value, BMI323_IO_INT1_OP_EN_MSK,
-+			      FIELD_PREP(BMI323_IO_INT1_OP_EN_MSK, 1));
-+		break;
-+	case BMI323_IRQ_INT2:
-+		mask = BMI323_IO_INT2_LVL_OD_OP_MSK;
-+
-+		set_mask_bits(&field_value, BMI323_IO_INT2_LVL_MSK,
-+			      FIELD_PREP(BMI323_IO_INT2_LVL_MSK, active_high));
-+
-+		set_mask_bits(&field_value, BMI323_IO_INT2_OD_MSK,
-+			      FIELD_PREP(BMI323_IO_INT2_OD_MSK, open_drain));
-+
-+		set_mask_bits(&field_value, BMI323_IO_INT2_OP_EN_MSK,
-+			      FIELD_PREP(BMI323_IO_INT2_OP_EN_MSK, 1));
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
 +
 +	ret = regmap_update_bits(data->regmap, BMI323_IO_INT_CONF_REG,
 +				 BMI323_IO_INT_LTCH_MSK,
@@ -2301,6 +2278,25 @@ index 000000000000..adbcfbc6b97d
 +				    FIELD_PREP(BMI323_GEN_HOLD_DUR_MSK, 0));
 +	if (ret)
 +		return ret;
++
++	switch (irq_pin) {
++	case BMI323_IRQ_INT1:
++		mask = BMI323_IO_INT1_LVL_OD_OP_MSK;
++
++		field_value = FIELD_PREP(BMI323_IO_INT1_LVL_MSK, active_high) |
++			      FIELD_PREP(BMI323_IO_INT1_OD_MSK, open_drain) |
++			      FIELD_PREP(BMI323_IO_INT1_OP_EN_MSK, 1);
++		break;
++	case BMI323_IRQ_INT2:
++		mask = BMI323_IO_INT2_LVL_OD_OP_MSK;
++
++		field_value = FIELD_PREP(BMI323_IO_INT2_LVL_MSK, active_high) |
++			      FIELD_PREP(BMI323_IO_INT2_OD_MSK, open_drain) |
++			      FIELD_PREP(BMI323_IO_INT2_OP_EN_MSK, 1);
++		break;
++	default:
++		return -EINVAL;
++	}
 +
 +	return regmap_update_bits(data->regmap, BMI323_IO_INT_CTR_REG, mask,
 +				  field_value);
@@ -2324,20 +2320,18 @@ index 000000000000..adbcfbc6b97d
 +		irq_pin = BMI323_IRQ_INT1;
 +	} else {
 +		irq = fwnode_irq_get_byname(fwnode, "INT2");
-+		if (irq <= 0)
++		if (irq < 0)
 +			return 0;
 +
 +		irq_pin = BMI323_IRQ_INT2;
 +	}
 +
 +	desc = irq_get_irq_data(irq);
-+	if (!desc) {
-+		dev_err(data->dev, "Could not find IRQ %d\n", irq);
-+		return -EINVAL;
-+	}
++	if (!desc)
++		return dev_err_probe(data->dev, -EINVAL,
++				     "Could not find IRQ %d\n", irq);
 +
 +	irq_type = irqd_get_trigger_type(desc);
-+
 +	switch (irq_type) {
 +	case IRQF_TRIGGER_RISING:
 +		latch = false;
@@ -2356,9 +2350,9 @@ index 000000000000..adbcfbc6b97d
 +		active_high = false;
 +		break;
 +	default:
-+		dev_err(data->dev, "Invalid interrupt type 0x%x specified\n",
-+			irq_type);
-+		return -EINVAL;
++		return dev_err_probe(data->dev, -EINVAL,
++				     "Invalid interrupt type 0x%x specified\n",
++				     irq_type);
 +	}
 +
 +	open_drain = fwnode_property_read_bool(fwnode, "drive-open-drain");
@@ -2379,8 +2373,7 @@ index 000000000000..adbcfbc6b97d
 +
 +	ret = devm_request_threaded_irq(data->dev, irq, NULL,
 +					bmi323_irq_thread_handler,
-+					irq_type | IRQF_ONESHOT,
-+					"bmi323-int", indio_dev);
++					IRQF_ONESHOT, "bmi323-int", indio_dev);
 +	if (ret)
 +		return dev_err_probe(data->dev, ret, "Failed to request IRQ\n");
 +
@@ -2391,50 +2384,47 @@ index 000000000000..adbcfbc6b97d
 +
 +	data->irq_pin = irq_pin;
 +
-+	return ret;
++	return 0;
 +}
 +
 +static int bmi323_feature_engine_enable(struct bmi323_data *data, bool en)
 +{
 +	unsigned int feature_status;
-+	int ret, i;
++	int ret;
 +
-+	if (en) {
-+		ret = regmap_write(data->regmap, BMI323_FEAT_IO2_REG,
-+				   0x012c);
-+		if (ret)
-+			return ret;
-+
-+		ret = regmap_write(data->regmap, BMI323_FEAT_IO_STATUS_REG,
-+				   BMI323_FEAT_IO_STATUS_MSK);
-+		if (ret)
-+			return ret;
-+
-+		ret = regmap_write(data->regmap, BMI323_FEAT_CTRL_REG,
-+				   BMI323_FEAT_ENG_EN_MSK);
-+		if (ret)
-+			return ret;
-+
-+		i = 5;
-+		do {
-+			ret = regmap_read(data->regmap, BMI323_FEAT_IO1_REG,
-+					  &feature_status);
-+			if (ret)
-+				return ret;
-+
-+			i--;
-+			mdelay(2);
-+		} while (feature_status != 0x01 && i);
-+
-+		if (feature_status != 0x01) {
-+			dev_err(data->dev, "Failed to enable feature engine\n");
-+			return -EINVAL;
-+		}
-+
-+		return ret;
-+	} else {
++	if (!en)
 +		return regmap_write(data->regmap, BMI323_FEAT_CTRL_REG, 0);
-+	}
++
++	ret = regmap_write(data->regmap, BMI323_FEAT_IO2_REG, 0x012c);
++	if (ret)
++		return ret;
++
++	ret = regmap_write(data->regmap, BMI323_FEAT_IO_STATUS_REG,
++			   BMI323_FEAT_IO_STATUS_MSK);
++	if (ret)
++		return ret;
++
++	ret = regmap_write(data->regmap, BMI323_FEAT_CTRL_REG,
++			   BMI323_FEAT_ENG_EN_MSK);
++	if (ret)
++		return ret;
++
++	/*
++	 * It takes around 4 msec to enable the Feature engine, so check
++	 * the status of the feature engine every 2 msec for a maximum
++	 * of 5 trials.
++	 */
++	ret = regmap_read_poll_timeout(data->regmap, BMI323_FEAT_IO1_REG,
++				       feature_status,
++				       FIELD_GET(BMI323_FEAT_IO1_ERR_MSK,
++						 feature_status) == 1,
++				       BMI323_FEAT_ENG_POLL,
++				       BMI323_FEAT_ENG_TIMEOUT);
++	if (ret)
++		return dev_err_probe(data->dev, -EINVAL,
++				"Failed to enable feature engine\n");
++
++	return 0;
 +}
 +
 +static void bmi323_disable(void *data_ptr)
@@ -2474,14 +2464,20 @@ index 000000000000..adbcfbc6b97d
 +	 */
 +	regmap_read(data->regmap, BMI323_CHIP_ID_REG, &val);
 +
++	ret = regmap_read(data->regmap, BMI323_STATUS_REG, &val);
++	if (ret)
++		return ret;
++
++	if (!FIELD_GET(BMI323_STATUS_POR_MSK, val))
++		return dev_err_probe(data->dev, -EINVAL,
++				     "Sensor initialization error\n");
++
 +	ret = regmap_read(data->regmap, BMI323_CHIP_ID_REG, &val);
 +	if (ret)
 +		return ret;
 +
-+	if ((val & 0xFF) != BMI323_CHIP_ID_VAL) {
-+		dev_err(data->dev, "Chip ID mismatch\n");
-+		return -EINVAL;
-+	}
++	if (FIELD_GET(BMI323_CHIP_ID_MSK, val) != BMI323_CHIP_ID_VAL)
++		return dev_err_probe(data->dev, -EINVAL, "Chip ID mismatch\n");
 +
 +	ret = bmi323_feature_engine_enable(data, true);
 +	if (ret)
@@ -2491,19 +2487,9 @@ index 000000000000..adbcfbc6b97d
 +	if (ret)
 +		return ret;
 +
-+	if (val) {
-+		dev_err(data->dev, "Sensor power error = 0x%x\n", val);
-+		return -EINVAL;
-+	}
-+
-+	ret = regmap_read(data->regmap, BMI323_STATUS_REG, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (val != 0x01) {
-+		dev_err(data->dev, "Sensor initialization error = 0x%x\n", val);
-+		return -EINVAL;
-+	}
++	if (val)
++		return dev_err_probe(data->dev, -EINVAL,
++				     "Sensor power error = 0x%x\n", val);
 +
 +	/*
 +	 * Set the Bandwidth coefficient which defines the 3 dB cutoff
@@ -2511,25 +2497,21 @@ index 000000000000..adbcfbc6b97d
 +	 */
 +	ret = bmi323_set_bw(data, BMI323_ACCEL, BMI323_BW_ODR_BY_2);
 +	if (ret)
-+		return -EINVAL;
++		return ret;
 +
 +	ret = bmi323_set_bw(data, BMI323_GYRO, BMI323_BW_ODR_BY_2);
 +	if (ret)
-+		return -EINVAL;
++		return ret;
 +
 +	ret = bmi323_set_odr(data, BMI323_ACCEL, 25, 0);
 +	if (ret)
-+		return -EINVAL;
++		return ret;
 +
 +	ret = bmi323_set_odr(data, BMI323_GYRO, 25, 0);
 +	if (ret)
-+		return -EINVAL;
-+
-+	ret = devm_add_action_or_reset(data->dev, bmi323_disable, data);
-+	if (ret)
 +		return ret;
 +
-+	return 0;
++	return devm_add_action_or_reset(data->dev, bmi323_disable, data);
 +}
 +
 +int bmi323_core_probe(struct device *dev)
@@ -2541,14 +2523,13 @@ index 000000000000..adbcfbc6b97d
 +	int ret;
 +
 +	regmap = dev_get_regmap(dev, NULL);
-+	if (!regmap) {
-+		dev_err(dev, "No regmap\n");
-+		return -EINVAL;
-+	}
++	if (!regmap)
++		return dev_err_probe(dev, -ENODEV, "Failed to get regmap\n");
 +
 +	indio_dev = devm_iio_device_alloc(dev, sizeof(*data));
 +	if (!indio_dev)
-+		return -ENOMEM;
++		return dev_err_probe(dev, -ENOMEM,
++				     "Failed to allocate device\n");
 +
 +	ret = devm_regulator_bulk_get_enable(dev, ARRAY_SIZE(regulator_names),
 +					     regulator_names);
@@ -2595,7 +2576,7 @@ index 000000000000..adbcfbc6b97d
 +		return dev_err_probe(data->dev, ret,
 +				     "Unable to register iio device\n");
 +
-+	return ret;
++	return 0;
 +}
 +EXPORT_SYMBOL_NS_GPL(bmi323_core_probe, IIO_BMI323);
 +
@@ -2604,10 +2585,10 @@ index 000000000000..adbcfbc6b97d
 +MODULE_LICENSE("GPL");
 diff --git a/drivers/iio/imu/bmi323/bmi323_i2c.c b/drivers/iio/imu/bmi323/bmi323_i2c.c
 new file mode 100644
-index 000000000000..afbaa3d3c638
+index 000000000000..0008e186367d
 --- /dev/null
 +++ b/drivers/iio/imu/bmi323/bmi323_i2c.c
-@@ -0,0 +1,115 @@
+@@ -0,0 +1,121 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * I2C driver for Bosch BMI323 6-Axis IMU.
@@ -2622,6 +2603,11 @@ index 000000000000..afbaa3d3c638
 +
 +#include "bmi323.h"
 +
++struct bmi323_i2c_priv {
++	struct i2c_client *i2c;
++	u8 i2c_rx_buffer[BMI323_FIFO_LENGTH_IN_BYTES + BMI323_I2C_DUMMY];
++};
++
 +/*
 + * From BMI323 datasheet section 4: Notes on the Serial Interface Support.
 + * Each I2C register read operation requires to read two dummy bytes before
@@ -2631,34 +2617,25 @@ index 000000000000..afbaa3d3c638
 +				  size_t reg_size, void *val_buf,
 +				  size_t val_size)
 +{
-+	struct device *dev = context;
-+	struct i2c_client *i2c = to_i2c_client(dev);
++	struct bmi323_i2c_priv *priv = context;
 +	struct i2c_msg msgs[2];
-+	u8 *buff = NULL;
 +	int ret;
 +
-+	buff = kmalloc(val_size + BMI323_I2C_DUMMY, GFP_KERNEL);
-+	if (!buff)
-+		return -ENOMEM;
-+
-+	msgs[0].addr = i2c->addr;
-+	msgs[0].flags = i2c->flags;
++	msgs[0].addr = priv->i2c->addr;
++	msgs[0].flags = priv->i2c->flags;
 +	msgs[0].len = reg_size;
 +	msgs[0].buf = (u8 *)reg_buf;
 +
-+	msgs[1].addr = i2c->addr;
++	msgs[1].addr = priv->i2c->addr;
 +	msgs[1].len = val_size + BMI323_I2C_DUMMY;
-+	msgs[1].buf = (u8 *)buff;
-+	msgs[1].flags = i2c->flags | I2C_M_RD;
++	msgs[1].buf = priv->i2c_rx_buffer;
++	msgs[1].flags = priv->i2c->flags | I2C_M_RD;
 +
-+	ret = i2c_transfer(i2c->adapter, msgs, ARRAY_SIZE(msgs));
-+	if (ret < 0) {
-+		kfree(buff);
++	ret = i2c_transfer(priv->i2c->adapter, msgs, ARRAY_SIZE(msgs));
++	if (ret < 0)
 +		return -EIO;
-+	}
 +
-+	memcpy(val_buf, buff + BMI323_I2C_DUMMY, val_size);
-+	kfree(buff);
++	memcpy(val_buf, priv->i2c_rx_buffer + BMI323_I2C_DUMMY, val_size);
 +
 +	return 0;
 +}
@@ -2666,16 +2643,13 @@ index 000000000000..afbaa3d3c638
 +static int bmi323_regmap_i2c_write(void *context, const void *data,
 +				   size_t count)
 +{
-+	struct device *dev = context;
-+	struct i2c_client *i2c = to_i2c_client(dev);
-+	int ret;
++	struct bmi323_i2c_priv *priv = context;
 +	u8 reg;
 +
 +	reg = *(u8 *)data;
-+	ret = i2c_smbus_write_i2c_block_data(i2c, reg, count - 1,
-+					     data + sizeof(u8));
-+
-+	return ret;
++	return i2c_smbus_write_i2c_block_data(priv->i2c, reg,
++					      count - sizeof(u8),
++					      data + sizeof(u8));
 +}
 +
 +static struct regmap_bus bmi323_regmap_bus = {
@@ -2683,13 +2657,26 @@ index 000000000000..afbaa3d3c638
 +	.write = bmi323_regmap_i2c_write,
 +};
 +
++const struct regmap_config bmi323_i2c_regmap_config = {
++	.reg_bits = 8,
++	.val_bits = 16,
++	.max_register = BMI323_CFG_RES_REG,
++	.val_format_endian = REGMAP_ENDIAN_LITTLE,
++};
++
 +static int bmi323_i2c_probe(struct i2c_client *i2c)
 +{
 +	struct device *dev = &i2c->dev;
++	struct bmi323_i2c_priv *priv;
 +	struct regmap *regmap;
 +
-+	regmap = devm_regmap_init(dev, &bmi323_regmap_bus, dev,
-+				  &bmi323_regmap_config);
++	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
++
++	priv->i2c = i2c;
++	regmap = devm_regmap_init(dev, &bmi323_regmap_bus, priv,
++				  &bmi323_i2c_regmap_config);
 +	if (IS_ERR(regmap))
 +		return dev_err_probe(dev, PTR_ERR(regmap),
 +				     "Failed to initialize I2C Regmap\n");
@@ -2698,7 +2685,7 @@ index 000000000000..afbaa3d3c638
 +}
 +
 +static const struct i2c_device_id bmi323_i2c_ids[] = {
-+	{ "bmi323", 0 },
++	{ "bmi323" },
 +	{ }
 +};
 +MODULE_DEVICE_TABLE(i2c, bmi323_i2c_ids);
@@ -2714,7 +2701,7 @@ index 000000000000..afbaa3d3c638
 +		.name = "bmi323",
 +		.of_match_table = bmi323_of_i2c_match,
 +	},
-+	.probe_new = bmi323_i2c_probe,
++	.probe = bmi323_i2c_probe,
 +	.id_table = bmi323_i2c_ids,
 +};
 +module_i2c_driver(bmi323_i2c_driver);
@@ -2725,10 +2712,10 @@ index 000000000000..afbaa3d3c638
 +MODULE_IMPORT_NS(IIO_BMI323);
 diff --git a/drivers/iio/imu/bmi323/bmi323_spi.c b/drivers/iio/imu/bmi323/bmi323_spi.c
 new file mode 100644
-index 000000000000..2b802a0c6d9d
+index 000000000000..6dc3352dd714
 --- /dev/null
 +++ b/drivers/iio/imu/bmi323/bmi323_spi.c
-@@ -0,0 +1,106 @@
+@@ -0,0 +1,92 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * SPI driver for Bosch BMI323 6-Axis IMU.
@@ -2753,33 +2740,18 @@ index 000000000000..2b802a0c6d9d
 +				  size_t val_size)
 +{
 +	struct spi_device *spi = context;
-+	u8 reg, *buff = NULL;
-+	int ret;
 +
-+	buff = kmalloc(val_size + BMI323_SPI_DUMMY, GFP_KERNEL);
-+	if (!buff)
-+		return -ENOMEM;
-+
-+	reg = *(u8 *)reg_buf | 0x80;
-+	ret = spi_write_then_read(spi, &reg, sizeof(reg), buff,
-+				  val_size + BMI323_SPI_DUMMY);
-+	if (ret) {
-+		kfree(buff);
-+		return ret;
-+	}
-+
-+	memcpy(val_buf, buff + BMI323_SPI_DUMMY, val_size);
-+	kfree(buff);
-+
-+	return ret;
++	return spi_write_then_read(spi, reg_buf, reg_size, val_buf, val_size);
 +}
 +
 +static int bmi323_regmap_spi_write(void *context, const void *data,
 +				   size_t count)
 +{
 +	struct spi_device *spi = context;
++	u8 *data_buff = (u8 *)data;
 +
-+	return spi_write(spi, data, count);
++	data_buff[1] = data_buff[0];
++	return spi_write(spi, data_buff + 1, count - 1);
 +}
 +
 +static struct regmap_bus bmi323_regmap_bus = {
@@ -2787,30 +2759,31 @@ index 000000000000..2b802a0c6d9d
 +	.write = bmi323_regmap_spi_write,
 +};
 +
++const struct regmap_config bmi323_spi_regmap_config = {
++	.reg_bits = 8,
++	.val_bits = 16,
++	.pad_bits = 8,
++	.read_flag_mask = BIT(7),
++	.max_register = BMI323_CFG_RES_REG,
++	.val_format_endian = REGMAP_ENDIAN_LITTLE,
++};
++
 +static int bmi323_spi_probe(struct spi_device *spi)
 +{
 +	struct device *dev = &spi->dev;
 +	struct regmap *regmap;
-+	int dummy;
 +
 +	regmap = devm_regmap_init(dev, &bmi323_regmap_bus, dev,
-+				  &bmi323_regmap_config);
-+
++				  &bmi323_spi_regmap_config);
 +	if (IS_ERR(regmap))
 +		return dev_err_probe(dev, PTR_ERR(regmap),
 +				     "Failed to initialize SPI Regmap\n");
-+
-+	/*
-+	 * Dummy read is required to enable SPI interface after POR.
-+	 * See datasheet section 7.2.1 "Protocol Selection".
-+	 */
-+	regmap_read(regmap, BMI323_CHIP_ID_REG, &dummy);
 +
 +	return bmi323_core_probe(dev);
 +}
 +
 +static const struct spi_device_id bmi323_spi_ids[] = {
-+	{ "bmi323", 0 },
++	{ "bmi323" },
 +	{ }
 +};
 +MODULE_DEVICE_TABLE(spi, bmi323_spi_ids);
@@ -2835,5 +2808,3 @@ index 000000000000..2b802a0c6d9d
 +MODULE_AUTHOR("Jagath Jog J <jagathjog1996@gmail.com>");
 +MODULE_LICENSE("GPL");
 +MODULE_IMPORT_NS(IIO_BMI323);
--- 
-2.20.1
