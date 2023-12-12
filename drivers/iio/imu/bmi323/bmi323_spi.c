@@ -22,33 +22,18 @@ static int bmi323_regmap_spi_read(void *context, const void *reg_buf,
 				  size_t val_size)
 {
 	struct spi_device *spi = context;
-	u8 reg, *buff = NULL;
-	int ret;
 
-	buff = kmalloc(val_size + BMI323_SPI_DUMMY, GFP_KERNEL);
-	if (!buff)
-		return -ENOMEM;
-
-	reg = *(u8 *)reg_buf | 0x80;
-	ret = spi_write_then_read(spi, &reg, sizeof(reg), buff,
-				  val_size + BMI323_SPI_DUMMY);
-	if (ret) {
-		kfree(buff);
-		return ret;
-	}
-
-	memcpy(val_buf, buff + BMI323_SPI_DUMMY, val_size);
-	kfree(buff);
-
-	return ret;
+	return spi_write_then_read(spi, reg_buf, reg_size, val_buf, val_size);
 }
 
 static int bmi323_regmap_spi_write(void *context, const void *data,
 				   size_t count)
 {
 	struct spi_device *spi = context;
+	u8 *data_buff = (u8 *)data;
 
-	return spi_write(spi, data, count);
+	data_buff[1] = data_buff[0];
+	return spi_write(spi, data_buff + 1, count - 1);
 }
 
 static struct regmap_bus bmi323_regmap_bus = {
@@ -56,30 +41,31 @@ static struct regmap_bus bmi323_regmap_bus = {
 	.write = bmi323_regmap_spi_write,
 };
 
+const struct regmap_config bmi323_spi_regmap_config = {
+	.reg_bits = 8,
+	.val_bits = 16,
+	.pad_bits = 8,
+	.read_flag_mask = BIT(7),
+	.max_register = BMI323_CFG_RES_REG,
+	.val_format_endian = REGMAP_ENDIAN_LITTLE,
+};
+
 static int bmi323_spi_probe(struct spi_device *spi)
 {
 	struct device *dev = &spi->dev;
 	struct regmap *regmap;
-	int dummy;
 
 	regmap = devm_regmap_init(dev, &bmi323_regmap_bus, dev,
-				  &bmi323_regmap_config);
-
+				  &bmi323_spi_regmap_config);
 	if (IS_ERR(regmap))
 		return dev_err_probe(dev, PTR_ERR(regmap),
 				     "Failed to initialize SPI Regmap\n");
-
-	/*
-	 * Dummy read is required to enable SPI interface after POR.
-	 * See datasheet section 7.2.1 "Protocol Selection".
-	 */
-	regmap_read(regmap, BMI323_CHIP_ID_REG, &dummy);
 
 	return bmi323_core_probe(dev);
 }
 
 static const struct spi_device_id bmi323_spi_ids[] = {
-	{ "bmi323", 0 },
+	{ "bmi323" },
 	{ }
 };
 MODULE_DEVICE_TABLE(spi, bmi323_spi_ids);
