@@ -14,8 +14,8 @@ index 1105918..d665a6e 100644
  	struct iio_dev *indio_dev;
  	int ret;
 
-+	if (dmi_match(DMI_BOARD_NAME, "RC71L"))
-+		return -ENODEV; // Abort loading bmc150 for ASUS ROG ALLY
++	if (dmi_match(DMI_BOARD_NAME, "RC71L") || dmi_match(DMI_BOARD_NAME, "Air Plus"))
++		return -ENODEV; // Abort loading bmc150 for ASUS ROG ALLY, Ayaneo Air Plus
  	indio_dev = devm_iio_device_alloc(dev, sizeof(*data));
  	if (!indio_dev)
  		return -ENOMEM;
