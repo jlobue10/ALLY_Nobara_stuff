@@ -1,0 +1,1829 @@
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+
+Allows use of:
+
+	CLASS(iio_claim_direct, claimed_dev)(indio_dev);
+	if (IS_ERR(claimed_dev))
+		return PTR_ERR(claimed_dev);
+
+	st = iio_priv(claimed_dev);
+
+to automatically call iio_device_release_direct_mode() based on scope.
+Typically seen in combination with local device specific locks which
+are already have automated cleanup options via guard(mutex)(&st->lock)
+and scoped_guard().  Using both together allows most error handling to
+be automated.
+
+Note that whilst this pattern results in a struct iio_dev *claimed_dev
+that can be used, it is not necessary to do so as long as that pointer
+has been checked for errors as in the example.
+
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Reviewed-by: Nuno Sa <nuno.sa@analog.com>
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+---
+ drivers/iio/industrialio-core.c |  4 ++++
+ include/linux/iio/iio.h         | 25 +++++++++++++++++++++++++
+ 2 files changed, 29 insertions(+)
+
+diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
+index c77745b594bd..93bfad105eb5 100644
+--- a/drivers/iio/industrialio-core.c
++++ b/drivers/iio/industrialio-core.c
+@@ -2065,6 +2065,10 @@ EXPORT_SYMBOL_GPL(iio_device_claim_direct_mode);
+  */
+ void iio_device_release_direct_mode(struct iio_dev *indio_dev)
+ {
++	/* Auto cleanup can result in this being called with an ERR_PTR */
++	if (IS_ERR(indio_dev))
++		return;
++
+ 	mutex_unlock(&to_iio_dev_opaque(indio_dev)->mlock);
+ }
+ EXPORT_SYMBOL_GPL(iio_device_release_direct_mode);
+diff --git a/include/linux/iio/iio.h b/include/linux/iio/iio.h
+index d0ce3b71106a..11c42170fda1 100644
+--- a/include/linux/iio/iio.h
++++ b/include/linux/iio/iio.h
+@@ -9,6 +9,7 @@
+ 
+ #include <linux/device.h>
+ #include <linux/cdev.h>
++#include <linux/cleanup.h>
+ #include <linux/slab.h>
+ #include <linux/iio/types.h>
+ /* IIO TODO LIST */
+@@ -644,6 +645,30 @@ int __devm_iio_device_register(struct device *dev, struct iio_dev *indio_dev,
+ int iio_push_event(struct iio_dev *indio_dev, u64 ev_code, s64 timestamp);
+ int iio_device_claim_direct_mode(struct iio_dev *indio_dev);
+ void iio_device_release_direct_mode(struct iio_dev *indio_dev);
++/*
++ * Auto cleanup version of iio_device_claim_direct_mode,
++ *
++ *	CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++ *	if (IS_ERR(claimed_dev))
++ *		return PTR_ERR(claimed_dev);
++ *
++ *	st = iio_priv(claimed_dev);
++ *	....
++ */
++DEFINE_CLASS(iio_claim_direct, struct iio_dev *,
++	     iio_device_release_direct_mode(_T),
++	     ({
++			struct iio_dev *dev;
++			int d = iio_device_claim_direct_mode(_T);
++
++			if (d < 0)
++				dev = ERR_PTR(d);
++			else
++				dev = _T;
++			dev;
++	     }),
++	     struct iio_dev *_T);
++
+ int iio_device_claim_buffer_mode(struct iio_dev *indio_dev);
+ void iio_device_release_buffer_mode(struct iio_dev *indio_dev);
+ 
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+
+As this driver is faking buffered access there isn't strictly any need
+to prevent direct access whilst it is running. However, we do want this
+to look like real devices where such restrictions are commonly needed.
+Adding such protections also allow testing the automated cleanup via
+
+CLASS(iio_claim_direct, claimed_dev)(indio_dev);
+if (IS_ERR(claimed_dev))
+	return PTR_ERR(claimed_dev);
+
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/iio/dummy/iio_simple_dummy.c | 145 ++++++++++++++-------------
+ 1 file changed, 74 insertions(+), 71 deletions(-)
+
+diff --git a/drivers/iio/dummy/iio_simple_dummy.c b/drivers/iio/dummy/iio_simple_dummy.c
+index c24f609c2ade..e412f6a84fc3 100644
+--- a/drivers/iio/dummy/iio_simple_dummy.c
++++ b/drivers/iio/dummy/iio_simple_dummy.c
+@@ -282,66 +282,73 @@ static int iio_dummy_read_raw(struct iio_dev *indio_dev,
+ 			      int *val2,
+ 			      long mask)
+ {
++	/*
++	 * Whilst it can be elegant to use the claimed device for this, it's not necessary
++	 * where we have a mixture of paths accessing under that protection, to prevent
++	 * access that might disrupt the buffered flow, and those that only care about
++	 * protection of the device specific state.
++	 */
+ 	struct iio_dummy_state *st = iio_priv(indio_dev);
+-	int ret = -EINVAL;
+ 
+-	mutex_lock(&st->lock);
+ 	switch (mask) {
+-	case IIO_CHAN_INFO_RAW: /* magic value - channel value read */
++	case IIO_CHAN_INFO_RAW: { /* magic value - channel value read */
++		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++		if (IS_ERR(claimed_dev))
++			return PTR_ERR(claimed_dev);
++		guard(mutex)(&st->lock);
++
+ 		switch (chan->type) {
+ 		case IIO_VOLTAGE:
+ 			if (chan->output) {
+ 				/* Set integer part to cached value */
+ 				*val = st->dac_val;
+-				ret = IIO_VAL_INT;
++				return IIO_VAL_INT;
+ 			} else if (chan->differential) {
+ 				if (chan->channel == 1)
+ 					*val = st->differential_adc_val[0];
+ 				else
+ 					*val = st->differential_adc_val[1];
+-				ret = IIO_VAL_INT;
++				return IIO_VAL_INT;
+ 			} else {
+ 				*val = st->single_ended_adc_val;
+-				ret = IIO_VAL_INT;
++				return IIO_VAL_INT;
+ 			}
+-			break;
++
+ 		case IIO_ACCEL:
+ 			*val = st->accel_val;
+-			ret = IIO_VAL_INT;
+-			break;
++			return IIO_VAL_INT;
+ 		default:
+-			break;
++			return -EINVAL;
+ 		}
+-		break;
+-	case IIO_CHAN_INFO_PROCESSED:
++	}
++	case IIO_CHAN_INFO_PROCESSED: {
++		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++		if (IS_ERR(claimed_dev))
++			return PTR_ERR(claimed_dev);
++		guard(mutex)(&st->lock);
+ 		switch (chan->type) {
+ 		case IIO_STEPS:
+ 			*val = st->steps;
+-			ret = IIO_VAL_INT;
+-			break;
++			return IIO_VAL_INT;
+ 		case IIO_ACTIVITY:
+ 			switch (chan->channel2) {
+ 			case IIO_MOD_RUNNING:
+ 				*val = st->activity_running;
+-				ret = IIO_VAL_INT;
+-				break;
++				return IIO_VAL_INT;
+ 			case IIO_MOD_WALKING:
+ 				*val = st->activity_walking;
+-				ret = IIO_VAL_INT;
+-				break;
++				return IIO_VAL_INT;
+ 			default:
+-				break;
++				return -EINVAL;
+ 			}
+-			break;
+ 		default:
+-			break;
++			return -EINVAL;
+ 		}
+-		break;
++	}
+ 	case IIO_CHAN_INFO_OFFSET:
+ 		/* only single ended adc -> 7 */
+ 		*val = 7;
+-		ret = IIO_VAL_INT;
+-		break;
++		return IIO_VAL_INT;
+ 	case IIO_CHAN_INFO_SCALE:
+ 		switch (chan->type) {
+ 		case IIO_VOLTAGE:
+@@ -350,60 +357,57 @@ static int iio_dummy_read_raw(struct iio_dev *indio_dev,
+ 				/* only single ended adc -> 0.001333 */
+ 				*val = 0;
+ 				*val2 = 1333;
+-				ret = IIO_VAL_INT_PLUS_MICRO;
+-				break;
++				return IIO_VAL_INT_PLUS_MICRO;
+ 			case 1:
+ 				/* all differential adc -> 0.000001344 */
+ 				*val = 0;
+ 				*val2 = 1344;
+-				ret = IIO_VAL_INT_PLUS_NANO;
++				return IIO_VAL_INT_PLUS_NANO;
++			default:
++				return -EINVAL;
+ 			}
+-			break;
+ 		default:
+-			break;
++			return -EINVAL;
+ 		}
+-		break;
+-	case IIO_CHAN_INFO_CALIBBIAS:
++	case IIO_CHAN_INFO_CALIBBIAS: {
++		guard(mutex)(&st->lock);
+ 		/* only the acceleration axis - read from cache */
+ 		*val = st->accel_calibbias;
+-		ret = IIO_VAL_INT;
+-		break;
+-	case IIO_CHAN_INFO_CALIBSCALE:
++		return IIO_VAL_INT;
++	}
++	case IIO_CHAN_INFO_CALIBSCALE: {
++		guard(mutex)(&st->lock);
+ 		*val = st->accel_calibscale->val;
+ 		*val2 = st->accel_calibscale->val2;
+-		ret = IIO_VAL_INT_PLUS_MICRO;
+-		break;
++		return IIO_VAL_INT_PLUS_MICRO;
++	}
+ 	case IIO_CHAN_INFO_SAMP_FREQ:
+ 		*val = 3;
+ 		*val2 = 33;
+-		ret = IIO_VAL_INT_PLUS_NANO;
+-		break;
+-	case IIO_CHAN_INFO_ENABLE:
++		return IIO_VAL_INT_PLUS_NANO;
++	case IIO_CHAN_INFO_ENABLE: {
++		guard(mutex)(&st->lock);
+ 		switch (chan->type) {
+ 		case IIO_STEPS:
+ 			*val = st->steps_enabled;
+-			ret = IIO_VAL_INT;
+-			break;
++			return IIO_VAL_INT;
+ 		default:
+-			break;
++			return -EINVAL;
+ 		}
+-		break;
+-	case IIO_CHAN_INFO_CALIBHEIGHT:
++	}
++	case IIO_CHAN_INFO_CALIBHEIGHT: {
++		guard(mutex)(&st->lock);
+ 		switch (chan->type) {
+ 		case IIO_STEPS:
+ 			*val = st->height;
+-			ret = IIO_VAL_INT;
+-			break;
++			return IIO_VAL_INT;
+ 		default:
+-			break;
++			return -EINVAL;
+ 		}
+-		break;
+-
++	}
+ 	default:
+-		break;
++		return -EINVAL;
+ 	}
+-	mutex_unlock(&st->lock);
+-	return ret;
+ }
+ 
+ /**
+@@ -436,10 +440,10 @@ static int iio_dummy_write_raw(struct iio_dev *indio_dev,
+ 			if (chan->output == 0)
+ 				return -EINVAL;
+ 
+-			/* Locking not required as writing single value */
+-			mutex_lock(&st->lock);
+-			st->dac_val = val;
+-			mutex_unlock(&st->lock);
++			scoped_guard(mutex, &st->lock) {
++				/* Locking not required as writing single value */
++				st->dac_val = val;
++			}
+ 			return 0;
+ 		default:
+ 			return -EINVAL;
+@@ -447,9 +451,9 @@ static int iio_dummy_write_raw(struct iio_dev *indio_dev,
+ 	case IIO_CHAN_INFO_PROCESSED:
+ 		switch (chan->type) {
+ 		case IIO_STEPS:
+-			mutex_lock(&st->lock);
+-			st->steps = val;
+-			mutex_unlock(&st->lock);
++			scoped_guard(mutex, &st->lock) {
++				st->steps = val;
++			}
+ 			return 0;
+ 		case IIO_ACTIVITY:
+ 			if (val < 0)
+@@ -470,30 +474,29 @@ static int iio_dummy_write_raw(struct iio_dev *indio_dev,
+ 		default:
+ 			return -EINVAL;
+ 		}
+-	case IIO_CHAN_INFO_CALIBSCALE:
+-		mutex_lock(&st->lock);
++	case IIO_CHAN_INFO_CALIBSCALE: {
++		guard(mutex)(&st->lock);
+ 		/* Compare against table - hard matching here */
+ 		for (i = 0; i < ARRAY_SIZE(dummy_scales); i++)
+ 			if (val == dummy_scales[i].val &&
+ 			    val2 == dummy_scales[i].val2)
+ 				break;
+ 		if (i == ARRAY_SIZE(dummy_scales))
+-			ret = -EINVAL;
+-		else
+-			st->accel_calibscale = &dummy_scales[i];
+-		mutex_unlock(&st->lock);
++			return  -EINVAL;
++		st->accel_calibscale = &dummy_scales[i];
+ 		return ret;
++	}
+ 	case IIO_CHAN_INFO_CALIBBIAS:
+-		mutex_lock(&st->lock);
+-		st->accel_calibbias = val;
+-		mutex_unlock(&st->lock);
++		scoped_guard(mutex, &st->lock) {
++			st->accel_calibbias = val;
++		}
+ 		return 0;
+ 	case IIO_CHAN_INFO_ENABLE:
+ 		switch (chan->type) {
+ 		case IIO_STEPS:
+-			mutex_lock(&st->lock);
+-			st->steps_enabled = val;
+-			mutex_unlock(&st->lock);
++			scoped_guard(mutex, &st->lock) {
++				st->steps_enabled = val;
++			}
+ 			return 0;
+ 		default:
+ 			return -EINVAL;
+
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+
+Switching to the CLASS based cleanup for iio_device_direct_mode_claim()
+and to guard() based unlocking of mutexes simplifies error handling
+by allowing direct returns when an error is encountered.
+
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/iio/accel/adxl367.c | 214 ++++++++++++++----------------------
+ 1 file changed, 80 insertions(+), 134 deletions(-)
+
+diff --git a/drivers/iio/accel/adxl367.c b/drivers/iio/accel/adxl367.c
+index 90b7ae6d42b7..50022f6b0f07 100644
+--- a/drivers/iio/accel/adxl367.c
++++ b/drivers/iio/accel/adxl367.c
+@@ -339,22 +339,17 @@ static int adxl367_set_act_threshold(struct adxl367_state *st,
+ {
+ 	int ret;
+ 
+-	mutex_lock(&st->lock);
++	guard(mutex)(&st->lock);
+ 
+ 	ret = adxl367_set_measure_en(st, false);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = _adxl367_set_act_threshold(st, act, threshold);
+ 	if (ret)
+-		goto out;
+-
+-	ret = adxl367_set_measure_en(st, true);
+-
+-out:
+-	mutex_unlock(&st->lock);
++		return ret;
+ 
+-	return ret;
++	return adxl367_set_measure_en(st, true);
+ }
+ 
+ static int adxl367_set_act_proc_mode(struct adxl367_state *st,
+@@ -482,25 +477,26 @@ static int adxl367_set_fifo_watermark(struct adxl367_state *st,
+ static int adxl367_set_range(struct iio_dev *indio_dev,
+ 			     enum adxl367_range range)
+ {
+-	struct adxl367_state *st = iio_priv(indio_dev);
++	struct adxl367_state *st;
+ 	int ret;
+ 
+-	ret = iio_device_claim_direct_mode(indio_dev);
+-	if (ret)
+-		return ret;
++	CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++	if (IS_ERR(claimed_dev))
++		return PTR_ERR(claimed_dev);
+ 
+-	mutex_lock(&st->lock);
++	st = iio_priv(claimed_dev);
++	guard(mutex)(&st->lock);
+ 
+ 	ret = adxl367_set_measure_en(st, false);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = regmap_update_bits(st->regmap, ADXL367_REG_FILTER_CTL,
+ 				 ADXL367_FILTER_CTL_RANGE_MASK,
+ 				 FIELD_PREP(ADXL367_FILTER_CTL_RANGE_MASK,
+ 					    range));
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	adxl367_scale_act_thresholds(st, st->range, range);
+ 
+@@ -508,25 +504,20 @@ static int adxl367_set_range(struct iio_dev *indio_dev,
+ 	ret = _adxl367_set_act_threshold(st, ADXL367_ACTIVITY,
+ 					 st->act_threshold);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = _adxl367_set_act_threshold(st, ADXL367_INACTIVITY,
+ 					 st->inact_threshold);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = adxl367_set_measure_en(st, true);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	st->range = range;
+ 
+-out:
+-	mutex_unlock(&st->lock);
+-
+-	iio_device_release_direct_mode(indio_dev);
+-
+-	return ret;
++	return 0;
+ }
+ 
+ static int adxl367_time_ms_to_samples(struct adxl367_state *st, unsigned int ms)
+@@ -587,11 +578,11 @@ static int adxl367_set_act_time_ms(struct adxl367_state *st,
+ {
+ 	int ret;
+ 
+-	mutex_lock(&st->lock);
++	guard(mutex)(&st->lock);
+ 
+ 	ret = adxl367_set_measure_en(st, false);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	if (act == ADXL367_ACTIVITY)
+ 		ret = _adxl367_set_act_time_ms(st, ms);
+@@ -599,14 +590,9 @@ static int adxl367_set_act_time_ms(struct adxl367_state *st,
+ 		ret = _adxl367_set_inact_time_ms(st, ms);
+ 
+ 	if (ret)
+-		goto out;
+-
+-	ret = adxl367_set_measure_en(st, true);
+-
+-out:
+-	mutex_unlock(&st->lock);
++		return ret;
+ 
+-	return ret;
++	return adxl367_set_measure_en(st, true);
+ }
+ 
+ static int _adxl367_set_odr(struct adxl367_state *st, enum adxl367_odr odr)
+@@ -636,31 +622,25 @@ static int _adxl367_set_odr(struct adxl367_state *st, enum adxl367_odr odr)
+ 
+ static int adxl367_set_odr(struct iio_dev *indio_dev, enum adxl367_odr odr)
+ {
+-	struct adxl367_state *st = iio_priv(indio_dev);
++	struct adxl367_state *st;
+ 	int ret;
+ 
+-	ret = iio_device_claim_direct_mode(indio_dev);
+-	if (ret)
+-		return ret;
++	CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++	if (IS_ERR(claimed_dev))
++		return PTR_ERR(claimed_dev);
++	st = iio_priv(claimed_dev);
+ 
+-	mutex_lock(&st->lock);
++	guard(mutex)(&st->lock);
+ 
+ 	ret = adxl367_set_measure_en(st, false);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = _adxl367_set_odr(st, odr);
+ 	if (ret)
+-		goto out;
+-
+-	ret = adxl367_set_measure_en(st, true);
+-
+-out:
+-	mutex_unlock(&st->lock);
+-
+-	iio_device_release_direct_mode(indio_dev);
++		return ret;;
+ 
+-	return ret;
++	return adxl367_set_measure_en(st, true);
+ }
+ 
+ static int adxl367_set_temp_adc_en(struct adxl367_state *st, unsigned int reg,
+@@ -749,36 +729,34 @@ static int adxl367_read_sample(struct iio_dev *indio_dev,
+ 			       struct iio_chan_spec const *chan,
+ 			       int *val)
+ {
+-	struct adxl367_state *st = iio_priv(indio_dev);
++	struct adxl367_state *st;
+ 	u16 sample;
+ 	int ret;
+ 
+-	ret = iio_device_claim_direct_mode(indio_dev);
+-	if (ret)
+-		return ret;
++	CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++	if (IS_ERR(claimed_dev))
++		return PTR_ERR(claimed_dev);
++	st = iio_priv(claimed_dev);
+ 
+-	mutex_lock(&st->lock);
++	guard(mutex)(&st->lock);
+ 
+ 	ret = adxl367_set_temp_adc_reg_en(st, chan->address, true);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = regmap_bulk_read(st->regmap, chan->address, &st->sample_buf,
+ 			       sizeof(st->sample_buf));
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	sample = FIELD_GET(ADXL367_DATA_MASK, be16_to_cpu(st->sample_buf));
+ 	*val = sign_extend32(sample, chan->scan_type.realbits - 1);
+ 
+ 	ret = adxl367_set_temp_adc_reg_en(st, chan->address, false);
++	if (ret)
++		return ret;
+ 
+-out:
+-	mutex_unlock(&st->lock);
+-
+-	iio_device_release_direct_mode(indio_dev);
+-
+-	return ret ?: IIO_VAL_INT;
++	return IIO_VAL_INT;
+ }
+ 
+ static int adxl367_get_status(struct adxl367_state *st, u8 *status,
+@@ -886,12 +864,12 @@ static int adxl367_read_raw(struct iio_dev *indio_dev,
+ 		return adxl367_read_sample(indio_dev, chan, val);
+ 	case IIO_CHAN_INFO_SCALE:
+ 		switch (chan->type) {
+-		case IIO_ACCEL:
+-			mutex_lock(&st->lock);
++		case IIO_ACCEL: {
++			guard(mutex)(&st->lock);
+ 			*val = adxl367_range_scale_tbl[st->range][0];
+ 			*val2 = adxl367_range_scale_tbl[st->range][1];
+-			mutex_unlock(&st->lock);
+ 			return IIO_VAL_INT_PLUS_NANO;
++		}
+ 		case IIO_TEMP:
+ 			*val = 1000;
+ 			*val2 = ADXL367_TEMP_PER_C;
+@@ -914,12 +892,12 @@ static int adxl367_read_raw(struct iio_dev *indio_dev,
+ 		default:
+ 			return -EINVAL;
+ 		}
+-	case IIO_CHAN_INFO_SAMP_FREQ:
+-		mutex_lock(&st->lock);
++	case IIO_CHAN_INFO_SAMP_FREQ: {
++		guard(mutex)(&st->lock);
+ 		*val = adxl367_samp_freq_tbl[st->odr][0];
+ 		*val2 = adxl367_samp_freq_tbl[st->odr][1];
+-		mutex_unlock(&st->lock);
+ 		return IIO_VAL_INT_PLUS_MICRO;
++	}
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -1004,18 +982,15 @@ static int adxl367_read_event_value(struct iio_dev *indio_dev,
+ {
+ 	struct adxl367_state *st = iio_priv(indio_dev);
+ 
++	guard(mutex)(&st->lock);
+ 	switch (info) {
+ 	case IIO_EV_INFO_VALUE: {
+ 		switch (dir) {
+ 		case IIO_EV_DIR_RISING:
+-			mutex_lock(&st->lock);
+ 			*val = st->act_threshold;
+-			mutex_unlock(&st->lock);
+ 			return IIO_VAL_INT;
+ 		case IIO_EV_DIR_FALLING:
+-			mutex_lock(&st->lock);
+ 			*val = st->inact_threshold;
+-			mutex_unlock(&st->lock);
+ 			return IIO_VAL_INT;
+ 		default:
+ 			return -EINVAL;
+@@ -1024,15 +999,11 @@ static int adxl367_read_event_value(struct iio_dev *indio_dev,
+ 	case IIO_EV_INFO_PERIOD:
+ 		switch (dir) {
+ 		case IIO_EV_DIR_RISING:
+-			mutex_lock(&st->lock);
+ 			*val = st->act_time_ms;
+-			mutex_unlock(&st->lock);
+ 			*val2 = 1000;
+ 			return IIO_VAL_FRACTIONAL;
+ 		case IIO_EV_DIR_FALLING:
+-			mutex_lock(&st->lock);
+ 			*val = st->inact_time_ms;
+-			mutex_unlock(&st->lock);
+ 			*val2 = 1000;
+ 			return IIO_VAL_FRACTIONAL;
+ 		default:
+@@ -1110,7 +1081,7 @@ static int adxl367_write_event_config(struct iio_dev *indio_dev,
+ 				      enum iio_event_direction dir,
+ 				      int state)
+ {
+-	struct adxl367_state *st = iio_priv(indio_dev);
++	struct adxl367_state *st;
+ 	enum adxl367_activity_type act;
+ 	int ret;
+ 
+@@ -1125,33 +1096,27 @@ static int adxl367_write_event_config(struct iio_dev *indio_dev,
+ 		return -EINVAL;
+ 	}
+ 
+-	ret = iio_device_claim_direct_mode(indio_dev);
+-	if (ret)
+-		return ret;
++	CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++	if (IS_ERR(claimed_dev))
++		return PTR_ERR(claimed_dev);
++	st = iio_priv(claimed_dev);
+ 
+-	mutex_lock(&st->lock);
++	guard(mutex)(&st->lock);
+ 
+ 	ret = adxl367_set_measure_en(st, false);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = adxl367_set_act_interrupt_en(st, act, state);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = adxl367_set_act_en(st, act, state ? ADCL367_ACT_REF_ENABLED
+ 						: ADXL367_ACT_DISABLED);
+ 	if (ret)
+-		goto out;
+-
+-	ret = adxl367_set_measure_en(st, true);
+-
+-out:
+-	mutex_unlock(&st->lock);
+-
+-	iio_device_release_direct_mode(indio_dev);
++		return ret;
+ 
+-	return ret;
++	return adxl367_set_measure_en(st, true);
+ }
+ 
+ static ssize_t adxl367_get_fifo_enabled(struct device *dev,
+@@ -1176,9 +1141,8 @@ static ssize_t adxl367_get_fifo_watermark(struct device *dev,
+ 	struct adxl367_state *st = iio_priv(dev_to_iio_dev(dev));
+ 	unsigned int fifo_watermark;
+ 
+-	mutex_lock(&st->lock);
++	guard(mutex)(&st->lock);
+ 	fifo_watermark = st->fifo_watermark;
+-	mutex_unlock(&st->lock);
+ 
+ 	return sysfs_emit(buf, "%d\n", fifo_watermark);
+ }
+@@ -1207,22 +1171,17 @@ static int adxl367_set_watermark(struct iio_dev *indio_dev, unsigned int val)
+ 	if (val > ADXL367_FIFO_MAX_WATERMARK)
+ 		return -EINVAL;
+ 
+-	mutex_lock(&st->lock);
++	guard(mutex)(&st->lock);
+ 
+ 	ret = adxl367_set_measure_en(st, false);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = adxl367_set_fifo_watermark(st, val);
+ 	if (ret)
+-		goto out;
+-
+-	ret = adxl367_set_measure_en(st, true);
+-
+-out:
+-	mutex_unlock(&st->lock);
++		return ret;
+ 
+-	return ret;
++	return adxl367_set_measure_en(st, true);
+ }
+ 
+ static bool adxl367_find_mask_fifo_format(const unsigned long *scan_mask,
+@@ -1253,27 +1212,24 @@ static int adxl367_update_scan_mode(struct iio_dev *indio_dev,
+ 	if (!adxl367_find_mask_fifo_format(active_scan_mask, &fifo_format))
+ 		return -EINVAL;
+ 
+-	mutex_lock(&st->lock);
++	guard(mutex)(&st->lock);
+ 
+ 	ret = adxl367_set_measure_en(st, false);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = adxl367_set_fifo_format(st, fifo_format);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = adxl367_set_measure_en(st, true);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	st->fifo_set_size = bitmap_weight(active_scan_mask,
+ 					  indio_dev->masklength);
+ 
+-out:
+-	mutex_unlock(&st->lock);
+-
+-	return ret;
++	return 0;
+ }
+ 
+ static int adxl367_buffer_postenable(struct iio_dev *indio_dev)
+@@ -1281,31 +1237,26 @@ static int adxl367_buffer_postenable(struct iio_dev *indio_dev)
+ 	struct adxl367_state *st = iio_priv(indio_dev);
+ 	int ret;
+ 
+-	mutex_lock(&st->lock);
++	guard(mutex)(&st->lock);
+ 
+ 	ret = adxl367_set_temp_adc_mask_en(st, indio_dev->active_scan_mask,
+ 					   true);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = adxl367_set_measure_en(st, false);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = adxl367_set_fifo_watermark_interrupt_en(st, true);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = adxl367_set_fifo_mode(st, ADXL367_FIFO_MODE_STREAM);
+ 	if (ret)
+-		goto out;
+-
+-	ret = adxl367_set_measure_en(st, true);
+-
+-out:
+-	mutex_unlock(&st->lock);
++		return ret;
+ 
+-	return ret;
++	return adxl367_set_measure_en(st, true);
+ }
+ 
+ static int adxl367_buffer_predisable(struct iio_dev *indio_dev)
+@@ -1313,31 +1264,26 @@ static int adxl367_buffer_predisable(struct iio_dev *indio_dev)
+ 	struct adxl367_state *st = iio_priv(indio_dev);
+ 	int ret;
+ 
+-	mutex_lock(&st->lock);
++	guard(mutex)(&st->lock);
+ 
+ 	ret = adxl367_set_measure_en(st, false);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = adxl367_set_fifo_mode(st, ADXL367_FIFO_MODE_DISABLED);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = adxl367_set_fifo_watermark_interrupt_en(st, false);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = adxl367_set_measure_en(st, true);
+ 	if (ret)
+-		goto out;
+-
+-	ret = adxl367_set_temp_adc_mask_en(st, indio_dev->active_scan_mask,
+-					   false);
+-
+-out:
+-	mutex_unlock(&st->lock);
++		return ret;
+ 
+-	return ret;
++	return adxl367_set_temp_adc_mask_en(st, indio_dev->active_scan_mask,
++					    false);
+ }
+ 
+ static const struct iio_buffer_setup_ops adxl367_buffer_ops = {
+
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+
+Similar to existing use of guard() in this driver,
+CLASS(iio_claim_direct, claimed_dev)(indio_Dev);
+if (IS_ERR(claimed_dev))
+	return PTR_ERR(claimed_dev);
+
+will ensure that scope based cleanup occurs.
+
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/iio/imu/bmi323/bmi323_core.c | 61 ++++++++++++----------------
+ 1 file changed, 27 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/iio/imu/bmi323/bmi323_core.c b/drivers/iio/imu/bmi323/bmi323_core.c
+index 0bd5dedd9a63..c9784ad01d44 100644
+--- a/drivers/iio/imu/bmi323/bmi323_core.c
++++ b/drivers/iio/imu/bmi323/bmi323_core.c
+@@ -1671,34 +1671,30 @@ static int bmi323_write_raw(struct iio_dev *indio_dev,
+ 	int ret;
+ 
+ 	switch (mask) {
+-	case IIO_CHAN_INFO_SAMP_FREQ:
+-		ret = iio_device_claim_direct_mode(indio_dev);
+-		if (ret)
+-			return ret;
++	case IIO_CHAN_INFO_SAMP_FREQ: {
++		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++		if (IS_ERR(claimed_dev))
++			return PTR_ERR(claimed_dev);
+ 
+-		ret = bmi323_set_odr(data, bmi323_iio_to_sensor(chan->type),
+-				     val, val2);
+-		iio_device_release_direct_mode(indio_dev);
+-		return ret;
+-	case IIO_CHAN_INFO_SCALE:
+-		ret = iio_device_claim_direct_mode(indio_dev);
+-		if (ret)
+-			return ret;
+-
+-		ret = bmi323_set_scale(data, bmi323_iio_to_sensor(chan->type),
+-				       val, val2);
+-		iio_device_release_direct_mode(indio_dev);
+-		return ret;
+-	case IIO_CHAN_INFO_OVERSAMPLING_RATIO:
+-		ret = iio_device_claim_direct_mode(indio_dev);
+-		if (ret)
+-			return ret;
++		return bmi323_set_odr(data, bmi323_iio_to_sensor(chan->type),
++				      val, val2);
++	}
++	case IIO_CHAN_INFO_SCALE: {
++		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++		if (IS_ERR(claimed_dev))
++			return PTR_ERR(claimed_dev);
+ 
+-		ret = bmi323_set_average(data, bmi323_iio_to_sensor(chan->type),
+-					 val);
++		return bmi323_set_scale(data, bmi323_iio_to_sensor(chan->type),
++					val, val2);
++	}
++	case IIO_CHAN_INFO_OVERSAMPLING_RATIO: {
++		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++		if (IS_ERR(claimed_dev))
++			return PTR_ERR(claimed_dev);
+ 
+-		iio_device_release_direct_mode(indio_dev);
+-		return ret;
++		return bmi323_set_average(data, bmi323_iio_to_sensor(chan->type),
++					  val);
++	}
+ 	case IIO_CHAN_INFO_ENABLE:
+ 		return bmi323_enable_steps(data, val);
+ 	case IIO_CHAN_INFO_PROCESSED:
+@@ -1724,7 +1720,6 @@ static int bmi323_read_raw(struct iio_dev *indio_dev,
+ 			   int *val2, long mask)
+ {
+ 	struct bmi323_data *data = iio_priv(indio_dev);
+-	int ret;
+ 
+ 	switch (mask) {
+ 	case IIO_CHAN_INFO_PROCESSED:
+@@ -1732,15 +1727,13 @@ static int bmi323_read_raw(struct iio_dev *indio_dev,
+ 	case IIO_CHAN_INFO_RAW:
+ 		switch (chan->type) {
+ 		case IIO_ACCEL:
+-		case IIO_ANGL_VEL:
+-			ret = iio_device_claim_direct_mode(indio_dev);
+-			if (ret)
+-				return ret;
++		case IIO_ANGL_VEL: {
++			CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++			if (IS_ERR(claimed_dev))
++				return PTR_ERR(claimed_dev);
+ 
+-			ret = bmi323_read_axis(data, chan, val);
+-
+-			iio_device_release_direct_mode(indio_dev);
+-			return ret;
++			return bmi323_read_axis(data, chan, val);
++		}
+ 		case IIO_TEMP:
+ 			return bmi323_get_temp_data(data, val);
+ 		default:
+
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+
+This simplifies error return paths.
+
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/iio/adc/max1363.c | 63 ++++++++++++++++-----------------------
+ 1 file changed, 26 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/iio/adc/max1363.c b/drivers/iio/adc/max1363.c
+index 7c2a98b8c3a9..d0f4302807d0 100644
+--- a/drivers/iio/adc/max1363.c
++++ b/drivers/iio/adc/max1363.c
+@@ -363,10 +363,11 @@ static int max1363_read_single_chan(struct iio_dev *indio_dev,
+ 	struct max1363_state *st = iio_priv(indio_dev);
+ 	struct i2c_client *client = st->client;
+ 
+-	ret = iio_device_claim_direct_mode(indio_dev);
+-	if (ret)
+-		return ret;
+-	mutex_lock(&st->lock);
++	CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++	if (IS_ERR(claimed_dev))
++		return PTR_ERR(claimed_dev);
++
++	guard(mutex)(&st->lock);
+ 
+ 	/*
+ 	 * If monitor mode is enabled, the method for reading a single
+@@ -375,10 +376,8 @@ static int max1363_read_single_chan(struct iio_dev *indio_dev,
+ 	 *
+ 	 * Also, cannot read directly if buffered capture enabled.
+ 	 */
+-	if (st->monitor_on) {
+-		ret = -EBUSY;
+-		goto error_ret;
+-	}
++	if (st->monitor_on)
++		return -EBUSY;
+ 
+ 	/* Check to see if current scan mode is correct */
+ 	if (st->current_mode != &max1363_mode_table[chan->address]) {
+@@ -386,33 +385,27 @@ static int max1363_read_single_chan(struct iio_dev *indio_dev,
+ 		st->current_mode = &max1363_mode_table[chan->address];
+ 		ret = max1363_set_scan_mode(st);
+ 		if (ret < 0)
+-			goto error_ret;
++			return ret;
+ 	}
+ 	if (st->chip_info->bits != 8) {
+ 		/* Get reading */
+ 		data = st->recv(client, rxbuf, 2);
+-		if (data < 0) {
+-			ret = data;
+-			goto error_ret;
+-		}
++		if (data < 0)
++			return data;
++
+ 		data = (rxbuf[1] | rxbuf[0] << 8) &
+ 		  ((1 << st->chip_info->bits) - 1);
+ 	} else {
+ 		/* Get reading */
+ 		data = st->recv(client, rxbuf, 1);
+-		if (data < 0) {
+-			ret = data;
+-			goto error_ret;
+-		}
++		if (data < 0)
++			return data;
++
+ 		data = rxbuf[0];
+ 	}
+ 	*val = data;
+ 
+-error_ret:
+-	mutex_unlock(&st->lock);
+-	iio_device_release_direct_mode(indio_dev);
+-	return ret;
+-
++	return 0;
+ }
+ 
+ static int max1363_read_raw(struct iio_dev *indio_dev,
+@@ -710,9 +703,8 @@ static ssize_t max1363_monitor_store_freq(struct device *dev,
+ 	if (!found)
+ 		return -EINVAL;
+ 
+-	mutex_lock(&st->lock);
+-	st->monitor_speed = i;
+-	mutex_unlock(&st->lock);
++	scoped_guard(mutex, &st->lock)
++		st->monitor_speed = i;
+ 
+ 	return 0;
+ }
+@@ -815,12 +807,11 @@ static int max1363_read_event_config(struct iio_dev *indio_dev,
+ 	int val;
+ 	int number = chan->channel;
+ 
+-	mutex_lock(&st->lock);
++	guard(mutex)(&st->lock);
+ 	if (dir == IIO_EV_DIR_FALLING)
+ 		val = (1 << number) & st->mask_low;
+ 	else
+ 		val = (1 << number) & st->mask_high;
+-	mutex_unlock(&st->lock);
+ 
+ 	return val;
+ }
+@@ -967,10 +958,11 @@ static int max1363_write_event_config(struct iio_dev *indio_dev,
+ 	u16 unifiedmask;
+ 	int number = chan->channel;
+ 
+-	ret = iio_device_claim_direct_mode(indio_dev);
+-	if (ret)
+-		return ret;
+-	mutex_lock(&st->lock);
++	CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++	if (IS_ERR(claimed_dev))
++		return PTR_ERR(claimed_dev);
++
++	guard(mutex)(&st->lock);
+ 
+ 	unifiedmask = st->mask_low | st->mask_high;
+ 	if (dir == IIO_EV_DIR_FALLING) {
+@@ -981,7 +973,7 @@ static int max1363_write_event_config(struct iio_dev *indio_dev,
+ 			ret = __max1363_check_event_mask((1 << number),
+ 							 unifiedmask);
+ 			if (ret)
+-				goto error_ret;
++				return ret;
+ 			st->mask_low |= (1 << number);
+ 		}
+ 	} else {
+@@ -991,17 +983,14 @@ static int max1363_write_event_config(struct iio_dev *indio_dev,
+ 			ret = __max1363_check_event_mask((1 << number),
+ 							 unifiedmask);
+ 			if (ret)
+-				goto error_ret;
++				return ret;
+ 			st->mask_high |= (1 << number);
+ 		}
+ 	}
+ 
+ 	max1363_monitor_mode_update(st, !!(st->mask_high | st->mask_low));
+-error_ret:
+-	mutex_unlock(&st->lock);
+-	iio_device_release_direct_mode(indio_dev);
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ /*
+
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+
+This simplifies error handling paths and generallly removes a bunch
+of boilerplate.
+
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/iio/proximity/sx9360.c | 117 ++++++++++++---------------------
+ 1 file changed, 43 insertions(+), 74 deletions(-)
+
+diff --git a/drivers/iio/proximity/sx9360.c b/drivers/iio/proximity/sx9360.c
+index 2c4e14a4fe9f..1ffb1abd1bfa 100644
+--- a/drivers/iio/proximity/sx9360.c
++++ b/drivers/iio/proximity/sx9360.c
+@@ -322,25 +322,22 @@ static int sx9360_read_raw(struct iio_dev *indio_dev,
+ 			   int *val, int *val2, long mask)
+ {
+ 	struct sx_common_data *data = iio_priv(indio_dev);
+-	int ret;
+ 
+ 	switch (mask) {
+-	case IIO_CHAN_INFO_RAW:
+-		ret = iio_device_claim_direct_mode(indio_dev);
+-		if (ret)
+-			return ret;
++	case IIO_CHAN_INFO_RAW: {
++		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++		if (IS_ERR(claimed_dev))
++			return PTR_ERR(claimed_dev);
+ 
+-		ret = sx_common_read_proximity(data, chan, val);
+-		iio_device_release_direct_mode(indio_dev);
+-		return ret;
+-	case IIO_CHAN_INFO_HARDWAREGAIN:
+-		ret = iio_device_claim_direct_mode(indio_dev);
+-		if (ret)
+-			return ret;
++		return sx_common_read_proximity(data, chan, val);
++	}
++	case IIO_CHAN_INFO_HARDWAREGAIN: {
++		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++		if (IS_ERR(claimed_dev))
++			return PTR_ERR(claimed_dev);
+ 
+-		ret = sx9360_read_gain(data, chan, val);
+-		iio_device_release_direct_mode(indio_dev);
+-		return ret;
++		return sx9360_read_gain(data, chan, val);
++	}
+ 	case IIO_CHAN_INFO_SAMP_FREQ:
+ 		return sx9360_read_samp_freq(data, val, val2);
+ 	default:
+@@ -387,19 +384,15 @@ static int sx9360_read_avail(struct iio_dev *indio_dev,
+ static int sx9360_set_samp_freq(struct sx_common_data *data,
+ 				int val, int val2)
+ {
+-	int ret, reg;
++	int reg;
+ 	__be16 buf;
+ 
+ 	reg = val * 8192 / SX9360_FOSC_HZ + val2 * 8192 / (SX9360_FOSC_MHZ);
+ 	buf = cpu_to_be16(reg);
+-	mutex_lock(&data->mutex);
+-
+-	ret = regmap_bulk_write(data->regmap, SX9360_REG_GNRL_CTRL1, &buf,
+-				sizeof(buf));
+-
+-	mutex_unlock(&data->mutex);
++	guard(mutex)(&data->mutex);
+ 
+-	return ret;
++	return regmap_bulk_write(data->regmap, SX9360_REG_GNRL_CTRL1, &buf,
++				 sizeof(buf));
+ }
+ 
+ static int sx9360_read_thresh(struct sx_common_data *data, int *val)
+@@ -510,7 +503,6 @@ static int sx9360_read_event_val(struct iio_dev *indio_dev,
+ static int sx9360_write_thresh(struct sx_common_data *data, int _val)
+ {
+ 	unsigned int val = _val;
+-	int ret;
+ 
+ 	if (val >= 1)
+ 		val = int_sqrt(2 * val);
+@@ -518,11 +510,8 @@ static int sx9360_write_thresh(struct sx_common_data *data, int _val)
+ 	if (val > 0xff)
+ 		return -EINVAL;
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_write(data->regmap, SX9360_REG_PROX_CTRL5, val);
+-	mutex_unlock(&data->mutex);
+-
+-	return ret;
++	guard(mutex)(&data->mutex);
++	return regmap_write(data->regmap, SX9360_REG_PROX_CTRL5, val);
+ }
+ 
+ static int sx9360_write_hysteresis(struct sx_common_data *data, int _val)
+@@ -546,18 +535,14 @@ static int sx9360_write_hysteresis(struct sx_common_data *data, int _val)
+ 		return -EINVAL;
+ 
+ 	hyst = FIELD_PREP(SX9360_REG_PROX_CTRL4_HYST_MASK, hyst);
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, SX9360_REG_PROX_CTRL4,
+-				 SX9360_REG_PROX_CTRL4_HYST_MASK, hyst);
+-	mutex_unlock(&data->mutex);
+-
+-	return ret;
++	guard(mutex)(&data->mutex);
++	return regmap_update_bits(data->regmap, SX9360_REG_PROX_CTRL4,
++				  SX9360_REG_PROX_CTRL4_HYST_MASK, hyst);
+ }
+ 
+ static int sx9360_write_far_debounce(struct sx_common_data *data, int _val)
+ {
+ 	unsigned int regval, val = _val;
+-	int ret;
+ 
+ 	if (val > 0)
+ 		val = ilog2(val);
+@@ -566,19 +551,15 @@ static int sx9360_write_far_debounce(struct sx_common_data *data, int _val)
+ 
+ 	regval = FIELD_PREP(SX9360_REG_PROX_CTRL4_FAR_DEBOUNCE_MASK, val);
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, SX9360_REG_PROX_CTRL4,
+-				 SX9360_REG_PROX_CTRL4_FAR_DEBOUNCE_MASK,
+-				 regval);
+-	mutex_unlock(&data->mutex);
+-
+-	return ret;
++	guard(mutex)(&data->mutex);
++	return regmap_update_bits(data->regmap, SX9360_REG_PROX_CTRL4,
++				  SX9360_REG_PROX_CTRL4_FAR_DEBOUNCE_MASK,
++				  regval);
+ }
+ 
+ static int sx9360_write_close_debounce(struct sx_common_data *data, int _val)
+ {
+ 	unsigned int regval, val = _val;
+-	int ret;
+ 
+ 	if (val > 0)
+ 		val = ilog2(val);
+@@ -587,13 +568,10 @@ static int sx9360_write_close_debounce(struct sx_common_data *data, int _val)
+ 
+ 	regval = FIELD_PREP(SX9360_REG_PROX_CTRL4_CLOSE_DEBOUNCE_MASK, val);
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, SX9360_REG_PROX_CTRL4,
+-				 SX9360_REG_PROX_CTRL4_CLOSE_DEBOUNCE_MASK,
+-				 regval);
+-	mutex_unlock(&data->mutex);
+-
+-	return ret;
++	guard(mutex)(&data->mutex);
++	return regmap_update_bits(data->regmap, SX9360_REG_PROX_CTRL4,
++				  SX9360_REG_PROX_CTRL4_CLOSE_DEBOUNCE_MASK,
++				  regval);
+ }
+ 
+ static int sx9360_write_event_val(struct iio_dev *indio_dev,
+@@ -630,19 +608,15 @@ static int sx9360_write_gain(struct sx_common_data *data,
+ 			     const struct iio_chan_spec *chan, int val)
+ {
+ 	unsigned int gain, reg;
+-	int ret;
+ 
+ 	gain = ilog2(val);
+ 	reg = SX9360_REG_PROX_CTRL0_PHR + chan->channel;
+ 	gain = FIELD_PREP(SX9360_REG_PROX_CTRL0_GAIN_MASK, gain);
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, reg,
+-				 SX9360_REG_PROX_CTRL0_GAIN_MASK,
+-				 gain);
+-	mutex_unlock(&data->mutex);
+-
+-	return ret;
++	guard(mutex)(&data->mutex);
++	return regmap_update_bits(data->regmap, reg,
++				  SX9360_REG_PROX_CTRL0_GAIN_MASK,
++				  gain);
+ }
+ 
+ static int sx9360_write_raw(struct iio_dev *indio_dev,
+@@ -827,21 +801,17 @@ static int sx9360_suspend(struct device *dev)
+ 
+ 	disable_irq_nosync(data->client->irq);
+ 
+-	mutex_lock(&data->mutex);
++	guard(mutex)(&data->mutex);
+ 	ret = regmap_read(data->regmap, SX9360_REG_GNRL_CTRL0, &regval);
++	if (ret < 0)
++		return ret;
+ 
+ 	data->suspend_ctrl =
+ 		FIELD_GET(SX9360_REG_GNRL_CTRL0_PHEN_MASK, regval);
+ 
+-	if (ret < 0)
+-		goto out;
+ 
+ 	/* Disable all phases, send the device to sleep. */
+-	ret = regmap_write(data->regmap, SX9360_REG_GNRL_CTRL0, 0);
+-
+-out:
+-	mutex_unlock(&data->mutex);
+-	return ret;
++	return regmap_write(data->regmap, SX9360_REG_GNRL_CTRL0, 0);
+ }
+ 
+ static int sx9360_resume(struct device *dev)
+@@ -849,14 +819,13 @@ static int sx9360_resume(struct device *dev)
+ 	struct sx_common_data *data = iio_priv(dev_get_drvdata(dev));
+ 	int ret;
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, SX9360_REG_GNRL_CTRL0,
+-				 SX9360_REG_GNRL_CTRL0_PHEN_MASK,
++	scoped_guard(mutex, &data->mutex) {
++		ret = regmap_update_bits(data->regmap, SX9360_REG_GNRL_CTRL0,
++					 SX9360_REG_GNRL_CTRL0_PHEN_MASK,
+ 				 data->suspend_ctrl);
+-	mutex_unlock(&data->mutex);
+-	if (ret)
+-		return ret;
+-
++		if (ret)
++			return ret;
++	}
+ 	enable_irq(data->client->irq);
+ 	return 0;
+ }
+
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+
+This simplifies error handling paths and generallly removes a bunch
+of boilerplate.
+
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/iio/proximity/sx9324.c | 113 +++++++++++++--------------------
+ 1 file changed, 44 insertions(+), 69 deletions(-)
+
+diff --git a/drivers/iio/proximity/sx9324.c b/drivers/iio/proximity/sx9324.c
+index ac2ed2da21cc..836feb6ae0c4 100644
+--- a/drivers/iio/proximity/sx9324.c
++++ b/drivers/iio/proximity/sx9324.c
+@@ -429,25 +429,22 @@ static int sx9324_read_raw(struct iio_dev *indio_dev,
+ 			   int *val, int *val2, long mask)
+ {
+ 	struct sx_common_data *data = iio_priv(indio_dev);
+-	int ret;
+ 
+ 	switch (mask) {
+-	case IIO_CHAN_INFO_RAW:
+-		ret = iio_device_claim_direct_mode(indio_dev);
+-		if (ret)
+-			return ret;
++	case IIO_CHAN_INFO_RAW: {
++		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++		if (IS_ERR(claimed_dev))
++			return PTR_ERR(claimed_dev);
+ 
+-		ret = sx_common_read_proximity(data, chan, val);
+-		iio_device_release_direct_mode(indio_dev);
+-		return ret;
+-	case IIO_CHAN_INFO_HARDWAREGAIN:
+-		ret = iio_device_claim_direct_mode(indio_dev);
+-		if (ret)
+-			return ret;
++		return sx_common_read_proximity(data, chan, val);
++	}
++	case IIO_CHAN_INFO_HARDWAREGAIN: {
++		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++		if (IS_ERR(claimed_dev))
++			return PTR_ERR(claimed_dev);
+ 
+-		ret = sx9324_read_gain(data, chan, val);
+-		iio_device_release_direct_mode(indio_dev);
+-		return ret;
++		return sx9324_read_gain(data, chan, val);
++	}
+ 	case IIO_CHAN_INFO_SAMP_FREQ:
+ 		return sx9324_read_samp_freq(data, val, val2);
+ 	default:
+@@ -484,7 +481,7 @@ static int sx9324_read_avail(struct iio_dev *indio_dev,
+ static int sx9324_set_samp_freq(struct sx_common_data *data,
+ 				int val, int val2)
+ {
+-	int i, ret;
++	int i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(sx9324_samp_freq_table); i++)
+ 		if (val == sx9324_samp_freq_table[i].val &&
+@@ -494,15 +491,11 @@ static int sx9324_set_samp_freq(struct sx_common_data *data,
+ 	if (i == ARRAY_SIZE(sx9324_samp_freq_table))
+ 		return -EINVAL;
+ 
+-	mutex_lock(&data->mutex);
++	guard(mutex)(&data->mutex);
+ 
+-	ret = regmap_update_bits(data->regmap,
+-				 SX9324_REG_GNRL_CTRL0,
+-				 SX9324_REG_GNRL_CTRL0_SCANPERIOD_MASK, i);
+-
+-	mutex_unlock(&data->mutex);
+-
+-	return ret;
++	return regmap_update_bits(data->regmap,
++				  SX9324_REG_GNRL_CTRL0,
++				  SX9324_REG_GNRL_CTRL0_SCANPERIOD_MASK, i);
+ }
+ 
+ static int sx9324_read_thresh(struct sx_common_data *data,
+@@ -623,7 +616,6 @@ static int sx9324_write_thresh(struct sx_common_data *data,
+ 			       const struct iio_chan_spec *chan, int _val)
+ {
+ 	unsigned int reg, val = _val;
+-	int ret;
+ 
+ 	reg = SX9324_REG_PROX_CTRL6 + chan->channel / 2;
+ 
+@@ -633,11 +625,9 @@ static int sx9324_write_thresh(struct sx_common_data *data,
+ 	if (val > 0xff)
+ 		return -EINVAL;
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_write(data->regmap, reg, val);
+-	mutex_unlock(&data->mutex);
++	guard(mutex)(&data->mutex);
+ 
+-	return ret;
++	return regmap_write(data->regmap, reg, val);
+ }
+ 
+ static int sx9324_write_hysteresis(struct sx_common_data *data,
+@@ -662,18 +652,15 @@ static int sx9324_write_hysteresis(struct sx_common_data *data,
+ 		return -EINVAL;
+ 
+ 	hyst = FIELD_PREP(SX9324_REG_PROX_CTRL5_HYST_MASK, hyst);
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, SX9324_REG_PROX_CTRL5,
+-				 SX9324_REG_PROX_CTRL5_HYST_MASK, hyst);
+-	mutex_unlock(&data->mutex);
++	guard(mutex)(&data->mutex);
+ 
+-	return ret;
++	return regmap_update_bits(data->regmap, SX9324_REG_PROX_CTRL5,
++				  SX9324_REG_PROX_CTRL5_HYST_MASK, hyst);
+ }
+ 
+ static int sx9324_write_far_debounce(struct sx_common_data *data, int _val)
+ {
+ 	unsigned int regval, val = _val;
+-	int ret;
+ 
+ 	if (val > 0)
+ 		val = ilog2(val);
+@@ -682,19 +669,16 @@ static int sx9324_write_far_debounce(struct sx_common_data *data, int _val)
+ 
+ 	regval = FIELD_PREP(SX9324_REG_PROX_CTRL5_FAR_DEBOUNCE_MASK, val);
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, SX9324_REG_PROX_CTRL5,
+-				 SX9324_REG_PROX_CTRL5_FAR_DEBOUNCE_MASK,
+-				 regval);
+-	mutex_unlock(&data->mutex);
++	guard(mutex)(&data->mutex);
+ 
+-	return ret;
++	return regmap_update_bits(data->regmap, SX9324_REG_PROX_CTRL5,
++				  SX9324_REG_PROX_CTRL5_FAR_DEBOUNCE_MASK,
++				  regval);
+ }
+ 
+ static int sx9324_write_close_debounce(struct sx_common_data *data, int _val)
+ {
+ 	unsigned int regval, val = _val;
+-	int ret;
+ 
+ 	if (val > 0)
+ 		val = ilog2(val);
+@@ -703,13 +687,11 @@ static int sx9324_write_close_debounce(struct sx_common_data *data, int _val)
+ 
+ 	regval = FIELD_PREP(SX9324_REG_PROX_CTRL5_CLOSE_DEBOUNCE_MASK, val);
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, SX9324_REG_PROX_CTRL5,
+-				 SX9324_REG_PROX_CTRL5_CLOSE_DEBOUNCE_MASK,
+-				 regval);
+-	mutex_unlock(&data->mutex);
++	guard(mutex)(&data->mutex);
+ 
+-	return ret;
++	return regmap_update_bits(data->regmap, SX9324_REG_PROX_CTRL5,
++				  SX9324_REG_PROX_CTRL5_CLOSE_DEBOUNCE_MASK,
++				  regval);
+ }
+ 
+ static int sx9324_write_event_val(struct iio_dev *indio_dev,
+@@ -746,7 +728,6 @@ static int sx9324_write_gain(struct sx_common_data *data,
+ 			     const struct iio_chan_spec *chan, int val)
+ {
+ 	unsigned int gain, reg;
+-	int ret;
+ 
+ 	reg = SX9324_REG_PROX_CTRL0 + chan->channel / 2;
+ 
+@@ -756,13 +737,11 @@ static int sx9324_write_gain(struct sx_common_data *data,
+ 
+ 	gain = FIELD_PREP(SX9324_REG_PROX_CTRL0_GAIN_MASK, gain);
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, reg,
+-				 SX9324_REG_PROX_CTRL0_GAIN_MASK,
+-				 gain);
+-	mutex_unlock(&data->mutex);
++	guard(mutex)(&data->mutex);
+ 
+-	return ret;
++	return regmap_update_bits(data->regmap, reg,
++				  SX9324_REG_PROX_CTRL0_GAIN_MASK,
++				  gain);
+ }
+ 
+ static int sx9324_write_raw(struct iio_dev *indio_dev,
+@@ -1081,21 +1060,17 @@ static int sx9324_suspend(struct device *dev)
+ 
+ 	disable_irq_nosync(data->client->irq);
+ 
+-	mutex_lock(&data->mutex);
++	guard(mutex)(&data->mutex);
+ 	ret = regmap_read(data->regmap, SX9324_REG_GNRL_CTRL1, &regval);
++	if (ret < 0)
++		return ret;
+ 
+ 	data->suspend_ctrl =
+ 		FIELD_GET(SX9324_REG_GNRL_CTRL1_PHEN_MASK, regval);
+ 
+-	if (ret < 0)
+-		goto out;
+ 
+ 	/* Disable all phases, send the device to sleep. */
+-	ret = regmap_write(data->regmap, SX9324_REG_GNRL_CTRL1, 0);
+-
+-out:
+-	mutex_unlock(&data->mutex);
+-	return ret;
++	return regmap_write(data->regmap, SX9324_REG_GNRL_CTRL1, 0);
+ }
+ 
+ static int sx9324_resume(struct device *dev)
+@@ -1103,12 +1078,12 @@ static int sx9324_resume(struct device *dev)
+ 	struct sx_common_data *data = iio_priv(dev_get_drvdata(dev));
+ 	int ret;
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_write(data->regmap, SX9324_REG_GNRL_CTRL1,
+-			   data->suspend_ctrl | SX9324_REG_GNRL_CTRL1_PAUSECTRL);
+-	mutex_unlock(&data->mutex);
+-	if (ret)
+-		return ret;
++	scoped_guard(mutex, &data->mutex) {
++		ret = regmap_write(data->regmap, SX9324_REG_GNRL_CTRL1,
++				   data->suspend_ctrl | SX9324_REG_GNRL_CTRL1_PAUSECTRL);
++		if (ret)
++			return ret;
++	}
+ 
+ 	enable_irq(data->client->irq);
+ 	return 0;
+
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+
+This simplifies error handling paths and generallly removes a bunch
+of boilerplate.
+
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/iio/proximity/sx9310.c | 120 +++++++++++++--------------------
+ 1 file changed, 45 insertions(+), 75 deletions(-)
+
+diff --git a/drivers/iio/proximity/sx9310.c b/drivers/iio/proximity/sx9310.c
+index 0d230a0dff56..5e5436791550 100644
+--- a/drivers/iio/proximity/sx9310.c
++++ b/drivers/iio/proximity/sx9310.c
+@@ -337,28 +337,25 @@ static int sx9310_read_raw(struct iio_dev *indio_dev,
+ 			   int *val2, long mask)
+ {
+ 	struct sx_common_data *data = iio_priv(indio_dev);
+-	int ret;
+ 
+ 	if (chan->type != IIO_PROXIMITY)
+ 		return -EINVAL;
+ 
+ 	switch (mask) {
+-	case IIO_CHAN_INFO_RAW:
+-		ret = iio_device_claim_direct_mode(indio_dev);
+-		if (ret)
+-			return ret;
++	case IIO_CHAN_INFO_RAW: {
++		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++		if (IS_ERR(claimed_dev))
++			return PTR_ERR(claimed_dev);
+ 
+-		ret = sx_common_read_proximity(data, chan, val);
+-		iio_device_release_direct_mode(indio_dev);
+-		return ret;
+-	case IIO_CHAN_INFO_HARDWAREGAIN:
+-		ret = iio_device_claim_direct_mode(indio_dev);
+-		if (ret)
+-			return ret;
++		return sx_common_read_proximity(data, chan, val);
++	}
++	case IIO_CHAN_INFO_HARDWAREGAIN: {
++		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
++		if (IS_ERR(claimed_dev))
++			return PTR_ERR(claimed_dev);
+ 
+-		ret = sx9310_read_gain(data, chan, val);
+-		iio_device_release_direct_mode(indio_dev);
+-		return ret;
++		return sx9310_read_gain(data, chan, val);
++	}
+ 	case IIO_CHAN_INFO_SAMP_FREQ:
+ 		return sx9310_read_samp_freq(data, val, val2);
+ 	default:
+@@ -546,12 +543,10 @@ static int sx9310_write_thresh(struct sx_common_data *data,
+ 		return -EINVAL;
+ 
+ 	regval = FIELD_PREP(SX9310_REG_PROX_CTRL8_9_PTHRESH_MASK, regval);
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, reg,
+-				 SX9310_REG_PROX_CTRL8_9_PTHRESH_MASK, regval);
+-	mutex_unlock(&data->mutex);
+ 
+-	return ret;
++	guard(mutex)(&data->mutex);
++	return regmap_update_bits(data->regmap, reg,
++				  SX9310_REG_PROX_CTRL8_9_PTHRESH_MASK, regval);
+ }
+ 
+ static int sx9310_write_hysteresis(struct sx_common_data *data,
+@@ -576,17 +571,14 @@ static int sx9310_write_hysteresis(struct sx_common_data *data,
+ 		return -EINVAL;
+ 
+ 	hyst = FIELD_PREP(SX9310_REG_PROX_CTRL10_HYST_MASK, hyst);
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, SX9310_REG_PROX_CTRL10,
+-				 SX9310_REG_PROX_CTRL10_HYST_MASK, hyst);
+-	mutex_unlock(&data->mutex);
+ 
+-	return ret;
++	guard(mutex)(&data->mutex);
++	return regmap_update_bits(data->regmap, SX9310_REG_PROX_CTRL10,
++				  SX9310_REG_PROX_CTRL10_HYST_MASK, hyst);
+ }
+ 
+ static int sx9310_write_far_debounce(struct sx_common_data *data, int val)
+ {
+-	int ret;
+ 	unsigned int regval;
+ 
+ 	if (val > 0)
+@@ -596,18 +588,14 @@ static int sx9310_write_far_debounce(struct sx_common_data *data, int val)
+ 
+ 	regval = FIELD_PREP(SX9310_REG_PROX_CTRL10_FAR_DEBOUNCE_MASK, val);
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, SX9310_REG_PROX_CTRL10,
+-				 SX9310_REG_PROX_CTRL10_FAR_DEBOUNCE_MASK,
+-				 regval);
+-	mutex_unlock(&data->mutex);
+-
+-	return ret;
++	guard(mutex)(&data->mutex);
++	return regmap_update_bits(data->regmap, SX9310_REG_PROX_CTRL10,
++				  SX9310_REG_PROX_CTRL10_FAR_DEBOUNCE_MASK,
++				  regval);
+ }
+ 
+ static int sx9310_write_close_debounce(struct sx_common_data *data, int val)
+ {
+-	int ret;
+ 	unsigned int regval;
+ 
+ 	if (val > 0)
+@@ -617,13 +605,10 @@ static int sx9310_write_close_debounce(struct sx_common_data *data, int val)
+ 
+ 	regval = FIELD_PREP(SX9310_REG_PROX_CTRL10_CLOSE_DEBOUNCE_MASK, val);
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, SX9310_REG_PROX_CTRL10,
+-				 SX9310_REG_PROX_CTRL10_CLOSE_DEBOUNCE_MASK,
+-				 regval);
+-	mutex_unlock(&data->mutex);
+-
+-	return ret;
++	guard(mutex)(&data->mutex);
++	return regmap_update_bits(data->regmap, SX9310_REG_PROX_CTRL10,
++				  SX9310_REG_PROX_CTRL10_CLOSE_DEBOUNCE_MASK,
++				  regval);
+ }
+ 
+ static int sx9310_write_event_val(struct iio_dev *indio_dev,
+@@ -658,7 +643,7 @@ static int sx9310_write_event_val(struct iio_dev *indio_dev,
+ 
+ static int sx9310_set_samp_freq(struct sx_common_data *data, int val, int val2)
+ {
+-	int i, ret;
++	int i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(sx9310_samp_freq_table); i++)
+ 		if (val == sx9310_samp_freq_table[i].val &&
+@@ -668,23 +653,17 @@ static int sx9310_set_samp_freq(struct sx_common_data *data, int val, int val2)
+ 	if (i == ARRAY_SIZE(sx9310_samp_freq_table))
+ 		return -EINVAL;
+ 
+-	mutex_lock(&data->mutex);
+-
+-	ret = regmap_update_bits(
++	guard(mutex)(&data->mutex);
++	return regmap_update_bits(
+ 		data->regmap, SX9310_REG_PROX_CTRL0,
+ 		SX9310_REG_PROX_CTRL0_SCANPERIOD_MASK,
+ 		FIELD_PREP(SX9310_REG_PROX_CTRL0_SCANPERIOD_MASK, i));
+-
+-	mutex_unlock(&data->mutex);
+-
+-	return ret;
+ }
+ 
+ static int sx9310_write_gain(struct sx_common_data *data,
+ 			     const struct iio_chan_spec *chan, int val)
+ {
+ 	unsigned int gain, mask;
+-	int ret;
+ 
+ 	gain = ilog2(val);
+ 
+@@ -703,12 +682,9 @@ static int sx9310_write_gain(struct sx_common_data *data,
+ 		return -EINVAL;
+ 	}
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_update_bits(data->regmap, SX9310_REG_PROX_CTRL3, mask,
+-				 gain);
+-	mutex_unlock(&data->mutex);
+-
+-	return ret;
++	guard(mutex)(&data->mutex);
++	return regmap_update_bits(data->regmap, SX9310_REG_PROX_CTRL3, mask,
++				  gain);
+ }
+ 
+ static int sx9310_write_raw(struct iio_dev *indio_dev,
+@@ -969,22 +945,18 @@ static int sx9310_suspend(struct device *dev)
+ 
+ 	disable_irq_nosync(data->client->irq);
+ 
+-	mutex_lock(&data->mutex);
++	guard(mutex)(&data->mutex);
+ 	ret = regmap_read(data->regmap, SX9310_REG_PROX_CTRL0,
+ 			  &data->suspend_ctrl);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ctrl0 = data->suspend_ctrl & ~SX9310_REG_PROX_CTRL0_SENSOREN_MASK;
+ 	ret = regmap_write(data->regmap, SX9310_REG_PROX_CTRL0, ctrl0);
+ 	if (ret)
+-		goto out;
+-
+-	ret = regmap_write(data->regmap, SX9310_REG_PAUSE, 0);
++		return ret;
+ 
+-out:
+-	mutex_unlock(&data->mutex);
+-	return ret;
++	return regmap_write(data->regmap, SX9310_REG_PAUSE, 0);
+ }
+ 
+ static int sx9310_resume(struct device *dev)
+@@ -992,18 +964,16 @@ static int sx9310_resume(struct device *dev)
+ 	struct sx_common_data *data = iio_priv(dev_get_drvdata(dev));
+ 	int ret;
+ 
+-	mutex_lock(&data->mutex);
+-	ret = regmap_write(data->regmap, SX9310_REG_PAUSE, 1);
+-	if (ret)
+-		goto out;
+-
+-	ret = regmap_write(data->regmap, SX9310_REG_PROX_CTRL0,
+-			   data->suspend_ctrl);
++	scoped_guard(mutex, &data->mutex) {
++		ret = regmap_write(data->regmap, SX9310_REG_PAUSE, 1);
++		if (ret)
++			return ret;
+ 
+-out:
+-	mutex_unlock(&data->mutex);
+-	if (ret)
+-		return ret;
++		ret = regmap_write(data->regmap, SX9310_REG_PROX_CTRL0,
++				   data->suspend_ctrl);
++		if (ret)
++			return ret;
++	}
+ 
+ 	enable_irq(data->client->irq);
+ 	return 0;
