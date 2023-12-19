@@ -2101,6 +2101,10 @@ EXPORT_SYMBOL_GPL(iio_device_claim_buffer_mode);
  */
 void iio_device_release_buffer_mode(struct iio_dev *indio_dev)
 {
+	/* Auto cleanup can result in this being called with an ERR_PTR */
+	if (IS_ERR(indio_dev))
+		return;
+
 	mutex_unlock(&to_iio_dev_opaque(indio_dev)->mlock);
 }
 EXPORT_SYMBOL_GPL(iio_device_release_buffer_mode);
