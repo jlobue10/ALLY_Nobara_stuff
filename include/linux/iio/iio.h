@@ -9,6 +9,7 @@
 
 #include <linux/device.h>
 #include <linux/cdev.h>
+#include <linux/cleanup.h>
 #include <linux/slab.h>
 #include <linux/iio/types.h>
 /* IIO TODO LIST */
@@ -634,6 +635,30 @@ int __devm_iio_device_register(struct device *dev, struct iio_dev *indio_dev,
 int iio_push_event(struct iio_dev *indio_dev, u64 ev_code, s64 timestamp);
 int iio_device_claim_direct_mode(struct iio_dev *indio_dev);
 void iio_device_release_direct_mode(struct iio_dev *indio_dev);
+/*
+ * Auto cleanup version of iio_device_claim_direct_mode,
+ *
+ *	CLASS(iio_claim_direct, claimed_dev)(indio_dev);
+ *	if (IS_ERR(claimed_dev))
+ *		return PTR_ERR(claimed_dev);
+ *
+ *	st = iio_priv(claimed_dev);
+ *	....
+ */
+DEFINE_CLASS(iio_claim_direct, struct iio_dev *,
+	     iio_device_release_direct_mode(_T),
+	     ({
+			struct iio_dev *dev;
+			int d = iio_device_claim_direct_mode(_T);
+
+			if (d < 0)
+				dev = ERR_PTR(d);
+			else
+				dev = _T;
+			dev;
+	     }),
+	     struct iio_dev *_T);
+
 int iio_device_claim_buffer_mode(struct iio_dev *indio_dev);
 void iio_device_release_buffer_mode(struct iio_dev *indio_dev);
 
