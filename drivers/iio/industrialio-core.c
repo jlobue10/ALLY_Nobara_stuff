@@ -13,7 +13,6 @@
 #include <linux/cdev.h>
 #include <linux/debugfs.h>
 #include <linux/device.h>
-#include <linux/dmi.h>
 #include <linux/err.h>
 #include <linux/fs.h>
 #include <linux/idr.h>
@@ -616,8 +615,6 @@ int iio_read_mount_matrix(struct device *dev, struct iio_mount_matrix *matrix)
 	int err;
 
 	err = device_property_read_string_array(dev, "mount-matrix", matrix->rotation, len);
-	if (dmi_match(DMI_BOARD_NAME, "RC71L"))
-		err = device_property_read_string_array(dev, "RBUF, Package (0x03)", matrix->rotation, len); // ROG ALLY mount matrix
 	if (err == len)
 		return 0;
 
@@ -2104,10 +2101,6 @@ EXPORT_SYMBOL_GPL(iio_device_claim_buffer_mode);
  */
 void iio_device_release_buffer_mode(struct iio_dev *indio_dev)
 {
-	/* Auto cleanup can result in this being called with an ERR_PTR */
-	if (IS_ERR(indio_dev))
-		return;
-
 	mutex_unlock(&to_iio_dev_opaque(indio_dev)->mlock);
 }
 EXPORT_SYMBOL_GPL(iio_device_release_buffer_mode);
