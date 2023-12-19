@@ -55,6 +55,7 @@ index 202e55b..d625781 100644
 +
  int iio_device_claim_buffer_mode(struct iio_dev *indio_dev);
  void iio_device_release_buffer_mode(struct iio_dev *indio_dev);
+ 
 diff --git a/drivers/iio/dummy/iio_simple_dummy.c b/drivers/iio/dummy/iio_simple_dummy.c
 index c24f609..cd07e0e 100644
 --- a/drivers/iio/dummy/iio_simple_dummy.c
