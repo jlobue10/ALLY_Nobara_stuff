@@ -1672,27 +1672,25 @@ static int bmi323_write_raw(struct iio_dev *indio_dev,
 
 	switch (mask) {
 	case IIO_CHAN_INFO_SAMP_FREQ: {
-		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
-		if (IS_ERR(claimed_dev))
-			return PTR_ERR(claimed_dev);
-
-		return bmi323_set_odr(data, bmi323_iio_to_sensor(chan->type),
-				      val, val2);
+		iio_device_claim_direct_scoped(return -EBUSY, indio_dev)
+			return bmi323_set_odr(data,
+					      bmi323_iio_to_sensor(chan->type),
+					      val, val2);
+		return -EINVAL;
 	}
 	case IIO_CHAN_INFO_SCALE: {
-		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
-		if (IS_ERR(claimed_dev))
-			return PTR_ERR(claimed_dev);
-
-		return bmi323_set_scale(data, bmi323_iio_to_sensor(chan->type),
-					val, val2);
+		iio_device_claim_direct_scoped(return -EBUSY, indio_dev)
+			return bmi323_set_scale(data,
+						bmi323_iio_to_sensor(chan->type),
+						val, val2);
+		return -EINVAL;
 	}
 	case IIO_CHAN_INFO_OVERSAMPLING_RATIO: {
-		CLASS(iio_claim_direct, claimed_dev)(indio_dev);
-		if (IS_ERR(claimed_dev))
-			return PTR_ERR(claimed_dev);
-		return bmi323_set_average(data, bmi323_iio_to_sensor(chan->type),
-					  val);
+		iio_device_claim_direct_scoped(return -EBUSY, indio_dev)
+			return bmi323_set_average(data,
+						  bmi323_iio_to_sensor(chan->type),
+						  val);
+		return -EINVAL;
 	}
 	case IIO_CHAN_INFO_ENABLE:
 		return bmi323_enable_steps(data, val);
@@ -1728,11 +1726,10 @@ static int bmi323_read_raw(struct iio_dev *indio_dev,
 		switch (chan->type) {
 		case IIO_ACCEL:
 		case IIO_ANGL_VEL: {
-			CLASS(iio_claim_direct, claimed_dev)(indio_dev);
-			if (IS_ERR(claimed_dev))
-				return PTR_ERR(claimed_dev);
-
-			return bmi323_read_axis(data, chan, val);
+			iio_device_claim_direct_scoped(return -EBUSY,
+						       indio_dev)
+				return bmi323_read_axis(data, chan, val);
+			return -EINVAL;
 		}
 		case IIO_TEMP:
 			return bmi323_get_temp_data(data, val);
