@@ -13,6 +13,7 @@
 #include <linux/cdev.h>
 #include <linux/debugfs.h>
 #include <linux/device.h>
+#include <linux/dmi.h>
 #include <linux/err.h>
 #include <linux/fs.h>
 #include <linux/idr.h>
@@ -571,11 +572,27 @@ static const struct iio_mount_matrix iio_mount_idmatrix = {
 	}
 };
 
+static const struct iio_mount_matrix iio_mount_flip_x_matrix = {
+	.rotation = {
+		"-1", "0", "0",
+		"0", "1", "0",
+		"0", "0", "1"
+	}
+};
+
 static int iio_setup_mount_idmatrix(const struct device *dev,
 				    struct iio_mount_matrix *matrix)
 {
 	*matrix = iio_mount_idmatrix;
 	dev_info(dev, "mounting matrix not found: using identity...\n");
+	return 0;
+}
+
+static int iio_setup_mount_flip_x_matrix(const struct device *dev,
+				    struct iio_mount_matrix *matrix)
+{
+	*matrix = iio_mount_flip_x_matrix;
+	dev_info(dev, "using flipped X-axis mounting matrix...\n");
 	return 0;
 }
 
@@ -615,6 +632,8 @@ int iio_read_mount_matrix(struct device *dev, struct iio_mount_matrix *matrix)
 	int err;
 
 	err = device_property_read_string_array(dev, "mount-matrix", matrix->rotation, len);
+	if (dmi_match(DMI_BOARD_NAME, "RC71L"))
+		return iio_setup_mount_flip_x_matrix(dev, matrix);
 	if (err == len)
 		return 0;
 
