@@ -14,11 +14,11 @@ index d752e9c..b495dba 100644
  	}
  };
  
-+static const struct iio_mount_matrix iio_mount_flip_x_matrix = {
++static const struct iio_mount_matrix iio_mount_flip_x_z_matrix = {
 +	.rotation = {
 +		"-1", "0", "0",
 +		"0", "1", "0",
-+		"0", "0", "1"
++		"0", "0", "-1"
 +	}
 +};
 +
@@ -29,10 +29,10 @@ index d752e9c..b495dba 100644
  	return 0;
  }
  
-+static int iio_setup_mount_flip_x_matrix(const struct device *dev,
++static int iio_setup_mount_flip_x_z_matrix(const struct device *dev,
 +				    struct iio_mount_matrix *matrix)
 +{
-+	*matrix = iio_mount_flip_x_matrix;
++	*matrix = iio_mount_flip_x_z_matrix;
 +	dev_info(dev, "using flipped X-axis mounting matrix...\n");
 +	return 0;
 +}
@@ -45,7 +45,7 @@ index d752e9c..b495dba 100644
  
  	err = device_property_read_string_array(dev, "mount-matrix", matrix->rotation, len);
 +	if (dmi_match(DMI_BOARD_NAME, "RC71L"))
-+		return iio_setup_mount_flip_x_matrix(dev, matrix);
++		return iio_setup_mount_flip_x_z_matrix(dev, matrix);
  	if (err == len)
  		return 0;
  
