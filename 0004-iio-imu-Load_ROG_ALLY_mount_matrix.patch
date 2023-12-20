@@ -33,7 +33,7 @@ index d752e9c..b495dba 100644
 +				    struct iio_mount_matrix *matrix)
 +{
 +	*matrix = iio_mount_flip_x_z_matrix;
-+	dev_info(dev, "using flipped X-axis mounting matrix...\n");
++	dev_info(dev, "using flipped X-axis and flipped Z-axis mounting matrix...\n");
 +	return 0;
 +}
 +
