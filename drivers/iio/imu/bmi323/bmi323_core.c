@@ -10,7 +10,6 @@
 #include <linux/bitfield.h>
 #include <linux/cleanup.h>
 #include <linux/device.h>
-#include <linux/dmi.h>
 #include <linux/interrupt.h>
 #include <linux/minmax.h>
 #include <linux/module.h>
@@ -1871,8 +1870,6 @@ static int bmi323_trigger_probe(struct bmi323_data *data,
 		return -ENODEV;
 
 	irq = fwnode_irq_get_byname(fwnode, "INT1");
-	if (dmi_match(DMI_BOARD_NAME, "RC71L"))
-		irq = 1; // force IRQ INT1 for ASUS ROG ALLY
 	if (irq > 0) {
 		irq_pin = BMI323_IRQ_INT1;
 	} else {
