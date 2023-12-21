@@ -50,7 +50,7 @@ index 0bd5ded..ded8596 100644
  	open_drain = fwnode_property_read_bool(fwnode, "drive-open-drain");
 -
 +	if (dmi_match(DMI_BOARD_NAME, "RC71L"))
-++		open_drain = false; // forcing whether open drain (true) or push-pull (false) for ROG ALLY
++		open_drain = false; // forcing whether open drain (true) or push-pull (false) for ROG ALLY
  	ret = bmi323_int_pin_config(data, irq_pin, active_high, open_drain,
  				    latch);
  	if (ret)
