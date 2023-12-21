@@ -286,6 +286,9 @@ static const int bmi323_acc_gyro_odr[][2] = {
 	{ 200, 0 },
 	{ 400, 0 },
 	{ 800, 0 },
+	{ 1600, 0},
+	{ 3200, 0},
+	{ 6400, 0},
 };
 
 static const int bmi323_acc_gyro_odrns[] = {
@@ -1872,11 +1875,13 @@ static int bmi323_trigger_probe(struct bmi323_data *data,
 
 	irq = fwnode_irq_get_byname(fwnode, "INT1");
 	if (dmi_match(DMI_BOARD_NAME, "RC71L"))
-		irq = 1; // force IRQ INT1 for ASUS ROG ALLY
+		irq = 0; // force IRQ INT1 for ASUS ROG ALLY
 	if (irq > 0) {
 		irq_pin = BMI323_IRQ_INT1;
 	} else {
 		irq = fwnode_irq_get_byname(fwnode, "INT2");
+		if (dmi_match(DMI_BOARD_NAME, "RC71L"))
+			irq = 2; // force IRQ INT2 for ASUS ROG ALLY
 		if (irq < 0)
 			return 0;
 
