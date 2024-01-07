@@ -51,7 +51,8 @@ make
 %install
 mkdir -p %{buildroot}/usr/bin
 cp %{_builddir}/ROGueENEMY/build/rogue-enemy %{buildroot}/usr/bin/rogue-enemy
-
+cp %{_builddir}/ROGueENEMY/build/stray-ally %{buildroot}/usr/bin/stray-ally
+cp %{_builddir}/ROGueENEMY/build/allynone %{buildroot}/usr/bin/allynone
 mkdir -p %{buildroot}/etc/systemd/system/
 mkdir -p %{buildroot}/usr/lib/udev/rules.d/
 mkdir -p %{buildroot}/etc/ROGueENEMY
@@ -86,6 +87,8 @@ systemctl daemon-reload
 /etc/systemd/system/rogue-enemy.service
 /etc/systemd/system/stray-ally.service
 /usr/bin/rogue-enemy
+/usr/bin/stray-ally
+/usr/bin/allynone
 /usr/lib/udev/rules.d/80-playstation.rules
 /usr/lib/udev/rules.d/80-playstation-no-libinput.rules
 /usr/lib/udev/rules.d/99-js-block.rules
