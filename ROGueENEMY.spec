@@ -55,13 +55,13 @@ mkdir -p %{buildroot}/usr/bin
 cp %{_builddir}/ROGueENEMY/build/rogue-enemy %{buildroot}/usr/bin/rogue-enemy
 cp %{_builddir}/ROGueENEMY/build/stray-ally %{buildroot}/usr/bin/stray-ally
 cp %{_builddir}/ROGueENEMY/build/allynone %{buildroot}/usr/bin/allynone
-mkdir -p %{buildroot}/etc/systemd/system/
-mkdir -p %{buildroot}/etc/systemd/system-preset/
+mkdir -p %{buildroot}/usr/lib/systemd/system/
+mkdir -p %{buildroot}/usr/lib/systemd/system-preset/
 mkdir -p %{buildroot}/usr/lib/udev/rules.d/
 mkdir -p %{buildroot}/etc/ROGueENEMY
 
-install -m 644 %{SOURCE1} %{buildroot}/etc/systemd/system/
-install -m 644 %{SOURCE2} %{buildroot}/etc/systemd/system/
+install -m 644 %{SOURCE1} %{buildroot}/usr/lib/systemd/system/
+install -m 644 %{SOURCE2} %{buildroot}/usr/lib/systemd/system/
 install -m 644 %{SOURCE3} %{buildroot}/usr/lib/udev/rules.d/
 install -m 644 %{SOURCE4} %{buildroot}/usr/lib/udev/rules.d/
 install -m 644 %{SOURCE5} %{buildroot}/usr/lib/udev/rules.d/
@@ -69,7 +69,7 @@ install -m 644 %{SOURCE6} %{buildroot}/usr/lib/udev/rules.d/
 install -m 644 %{SOURCE7} %{buildroot}/etc/ROGueENEMY/config.cfg
 install -m 755 %{SOURCE8} %{buildroot}/usr/bin/
 install -m 755 %{SOURCE9} %{buildroot}/usr/bin/
-install -m 644 %{SOURCE10} %{buildroot}/etc/systemd/system-preset/
+install -m 644 %{SOURCE10} %{buildroot}/usr/lib/systemd/system-preset/
 
 %post
 udevadm control --reload-rules
@@ -82,9 +82,9 @@ udevadm trigger
 %systemd_preun stray-ally.service
 
 %files
-/etc/systemd/system/rogue-enemy.service
-/etc/systemd/system/stray-ally.service
-/etc/systemd/system-preset/99-rogue-enemy.preset
+/usr/lib/systemd/system/rogue-enemy.service
+/usr/lib/systemd/system/stray-ally.service
+/usr/lib/systemd/system-preset/99-rogue-enemy.preset
 /usr/bin/rogue-enemy
 /usr/bin/stray-ally
 /usr/bin/allynone
