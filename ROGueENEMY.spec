@@ -75,10 +75,10 @@ install -m 644 %{SOURCE10} %{buildroot}/usr/lib/systemd/system-preset/
 udevadm control --reload-rules
 udevadm trigger
 systemctl daemon-reload
-systemctl enable --now rogue-enemy.servce
-systemctl enable --now stray-ally.service
-%systemd_post rogue-enemy.service
-%systemd_post stray-ally.service
+systemctl enable rogue-enemy.service
+systemctl start rogue-enemy.service
+systemctl enable stray-ally.service
+systemctl start stray-ally.service
 
 %preun
 systemctl disable --now rogue-enemy.servce
