@@ -76,8 +76,13 @@ udevadm control --reload-rules
 udevadm trigger
 %systemd_post rogue-enemy.service
 %systemd_post stray-ally.service
+systemctl daemon-reload
+systemctl enable --now rogue-enemy.servce
+systemctl enable --now stray-ally.service
 
 %preun
+systemctl disable --now rogue-enemy.servce
+systemctl disable --now stray-ally.service
 %systemd_preun rogue-enemy.service
 %systemd_preun stray-ally.service
 
