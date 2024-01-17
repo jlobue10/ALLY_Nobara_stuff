@@ -1,7 +1,7 @@
 %global _name   rogue-enemy
 
 Name:           rogue-enemy
-Version:        2.1.1
+Version:        2.2.1
 Release:        1%{?dist}
 Summary:        Convert ROG Ally [RC71L] input to DualShock4 or DualSense and allows mode switching with a long CC press
 
@@ -81,8 +81,10 @@ systemctl enable stray-ally.service
 systemctl start stray-ally.service
 
 %preun
-systemctl disable --now rogue-enemy.servce
-systemctl disable --now stray-ally.service
+systemctl stop rogue-enemy.servce
+systemctl disable rogue-enemy.servce
+systemctl stop stray-ally.service
+systemctl disable stray-ally.service
 %systemd_preun rogue-enemy.service
 %systemd_preun stray-ally.service
 
@@ -102,5 +104,8 @@ systemctl disable --now stray-ally.service
 /usr/bin/rogue-enemy_iio_buffer_on.sh
 
 %changelog
-* Sun Jan 7 2024 Denis Benato <dbenato.denis96@gmail.com> [2.0.0-1]
+* Mon Jan 15 2024 Denis Benato <dbenato.denis96@gmail.com> [2.2.1-1]
+- Updated polling mode for gyro data
+
+* Sun Jan 7 2024 Denis Benato <dbenato.denis96@gmail.com> [2.1.1-1]
 - Initial package
