@@ -104,8 +104,8 @@ systemctl disable stray-ally.service
 /usr/bin/rogue-enemy_iio_buffer_on.sh
 
 %changelog
-* Mon Jan 15 2024 Denis Benato <dbenato.denis96@gmail.com> [2.2.1-1]
+* Mon Jan 15 2024 Denis Benato <benato.denis96@gmail.com> [2.2.1-1]
 - Updated polling mode for gyro data
 
-* Sun Jan 7 2024 Denis Benato <dbenato.denis96@gmail.com> [2.1.1-1]
+* Sun Jan 7 2024 Denis Benato <benato.denis96@gmail.com> [2.1.1-1]
 - Initial package
