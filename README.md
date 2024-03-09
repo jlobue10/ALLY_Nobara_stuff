@@ -3,9 +3,7 @@ Compilation of fixes for the ROG ALLY when using Nobara (side buttons, volume bu
 
 All credit should go to the original authors and developers. Many of these original fixes were done by ChimeraOS devs. I'm mainly recreating the same fixes that the ChimeraOS devs have done for ChimeraOS and Arch, but for Nobara (Fedora) and packaging them together in one place.
 
-I highly recommend using this [repo's utility](https://github.com/corando98/steam-patch) so that the side buttons function like they would on the Steam Deck in `gamescope-session` or big picture mode in desktop view.
-
-Rogue-enemy will give you a virtual Playstation controller with gyro support.
+Rogue-enemy or Handheld Daemon will give you a virtual Playstation controller with gyro support.
 
 ## **Custom kernel script Installation (please use RPMs instead... left online for my own testing...)**
 
