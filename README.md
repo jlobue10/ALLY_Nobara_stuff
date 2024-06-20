@@ -1,3 +1,7 @@
+# README Needs Updating
+
+Most everything has been baked in to stock Nobara for quite some time now (as of June 2024). Many thanks to GloriousEggroll for the fantastic distro (Nobara) and many others such as Matt Schwartz, NeroReflex, Luke Jones, ChimeraOS devs and anybody else who may have contributed to the very good Linux experience on the ASUS ROG ALLY.
+
 # ALLY_Nobara_fixes
 Compilation of fixes for the ROG ALLY when using Nobara (side buttons, volume buttons and audio).
 
