@@ -1,6 +1,6 @@
 # README Needs Updating
 
-Most everything has been baked in to stock Nobara for quite some time now (as of June 2024). Many thanks to GloriousEggroll for the fantastic distro (Nobara) and many others such as Matt Schwartz, NeroReflex, Luke Jones, ChimeraOS devs and anybody else who may have contributed to the very good Linux experience on the ASUS ROG ALLY.
+Most everything has been baked in to stock Nobara for quite some time now (as of June 2024). Many thanks to GloriousEggroll for the fantastic distro (Nobara) and many others such as Matt Schwartz, NeroReflex, Luke Jones, ChimeraOS devs and anybody else who may have contributed to the very good Linux experience on the ASUS ROG ALLY. THis repo is now mainly maintained for historical purposes and providing Zen4 LTO compiled kernels that are as close to Nobara stock kernels as possible while trying to also have relevant up-to-date patches from Luke Jones.
 
 # ALLY_Nobara_fixes
 Compilation of fixes for the ROG ALLY when using Nobara (side buttons, volume buttons and audio).
