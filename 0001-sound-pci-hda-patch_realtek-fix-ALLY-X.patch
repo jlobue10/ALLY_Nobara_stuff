@@ -1,7 +1,7 @@
 From 3cef6dcf8b5a637511d5a9d7c832e0d0a7d79274 Mon Sep 17 00:00:00 2001
 From: Jonathan LoBue <jlobue10@gmail.com>
 Date: Sat, 13 Jul 2024 00:12:06 -0700
-Subject: [PATCH] Update patch_realtek.c
+Subject: [PATCH] Fix ROG ALLY X audio
 
 Patch to test fixing TAS2781 amp getting bound properly to i2c
 for ASUS ROG ALLY X.
@@ -11,10 +11,18 @@ for ASUS ROG ALLY X.
  1 file changed, 7 insertions(+)
 
 diff --git a/sound/pci/hda/patch_realtek.c b/sound/pci/hda/patch_realtek.c
-index c0e12e6..7a6c0ff 100644
+index c0e12e6..e969f56 100644
 --- a/sound/pci/hda/patch_realtek.c
 +++ b/sound/pci/hda/patch_realtek.c
-@@ -8856,6 +8856,12 @@ static const struct hda_fixup alc269_fixups[] = {
+@@ -7435,6 +7435,7 @@ enum {
+ 	ALC285_FIXUP_THINKPAD_X1_GEN7,
+ 	ALC285_FIXUP_THINKPAD_HEADSET_JACK,
+ 	ALC294_FIXUP_ASUS_ALLY,
++	ALC294_FIXUP_ASUS_ALLY_X,
+ 	ALC294_FIXUP_ASUS_ALLY_PINS,
+ 	ALC294_FIXUP_ASUS_ALLY_VERBS,
+ 	ALC294_FIXUP_ASUS_ALLY_SPEAKER,
+@@ -8856,6 +8857,12 @@ static const struct hda_fixup alc269_fixups[] = {
  		.chained = true,
  		.chain_id = ALC294_FIXUP_ASUS_ALLY_PINS
  	},
@@ -27,7 +35,7 @@ index c0e12e6..7a6c0ff 100644
  	[ALC294_FIXUP_ASUS_ALLY_PINS] = {
  		.type = HDA_FIXUP_PINS,
  		.v.pins = (const struct hda_pintbl[]) {
-@@ -10145,6 +10151,7 @@ static const struct snd_pci_quirk alc269_fixup_tbl[] = {
+@@ -10145,6 +10152,7 @@ static const struct snd_pci_quirk alc269_fixup_tbl[] = {
  	SND_PCI_QUIRK(0x1043, 0x1740, "ASUS UX430UA", ALC295_FIXUP_ASUS_DACS),
  	SND_PCI_QUIRK(0x1043, 0x17d1, "ASUS UX431FL", ALC294_FIXUP_ASUS_DUAL_SPK),
  	SND_PCI_QUIRK(0x1043, 0x17f3, "ROG Ally NR2301L/X", ALC294_FIXUP_ASUS_ALLY),
