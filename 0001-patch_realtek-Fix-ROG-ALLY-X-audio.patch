@@ -8,7 +8,7 @@ for the ROG ALLY X, while keeping the other Realtek
 codec and pin portions from original ROG ALLY.
 
 Add proper credit and tag lines before submitting...
-THis patch is for sharing and testing (6.10.1)
+This patch is for sharing and testing (6.10.1)
 ---
  sound/pci/hda/patch_realtek.c | 8 ++++++++
  1 file changed, 8 insertions(+)
