@@ -1,7 +1,7 @@
 From ac9fa29b679959fc58c9180942a74e6687a63584 Mon Sep 17 00:00:00 2001
 From: Jonathan LoBue <jlobue10@gmail.com>
 Date: Thu, 25 Jul 2024 08:22:38 -0700
-Subject: [PATCH] patch_realtek: Fix ROG ALLY X audio
+Subject: [PATCH] ALSA: hda/realtek: tas2781: Fix ROG ALLY X audio
 
 Fix the loading of the proper TI TAS2781 amplifier
 for the ROG ALLY X, while keeping the other Realtek
