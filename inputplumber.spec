@@ -8,7 +8,7 @@ Summary:        InputPlumber is an open source input routing and control daemon 
 License:        GPLv3+
 URL:            https://github.com/ShadowBlip/InputPlumber
 
-BuildRequires:  libevdev-devel libiio-devel
+BuildRequires:  libevdev-devel libiio-devel git make cargo libudev-devel llvm-devel clang-devel
 Requires:       libevdev libiio
 Recommends:     steam gamescope-session linuxconsoletools
 Provides:       inputplumber
