@@ -140,7 +140,7 @@ module_param(fnlock_default, bool, 0444);
 /* Controls the power state of the USB0 hub on ROG Ally which input is on */
 #define ASUS_USB0_PWR_EC0_CSEE "\\_SB.PCI0.SBRG.EC0.CSEE"
 /* 300ms so far seems to produce a reliable result on AC and battery */
-#define ASUS_USB0_PWR_EC0_CSEE_WAIT 1500
+#define ASUS_USB0_PWR_EC0_CSEE_WAIT 3000
 
 static const char * const ashs_ids[] = { "ATK4001", "ATK4002", NULL };
 
