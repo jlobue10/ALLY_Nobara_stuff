@@ -140,7 +140,7 @@ module_param(fnlock_default, bool, 0444);
 /* Controls the power state of the USB0 hub on ROG Ally which input is on */
 #define ASUS_USB0_PWR_EC0_CSEE "\\_SB.PCI0.SBRG.EC0.CSEE"
 /* 300ms so far seems to produce a reliable result on AC and battery */
-#define ASUS_USB0_PWR_EC0_CSEE_WAIT 1500
+#define ASUS_USB0_PWR_EC0_CSEE_WAIT 1000
 
 static const char * const ashs_ids[] = { "ATK4001", "ATK4002", NULL };
 
@@ -270,6 +270,8 @@ struct asus_wmi {
 
 	/* The ROG Ally device requires the MCU USB device be disconnected before suspend */
 	bool ally_mcu_usb_switch;
+	bool ally_mcu_powersave_on;
+	int ally_mcu_delay;
 
 	enum fan_type fan_type;
 	enum fan_type gpu_fan_type;
@@ -1427,55 +1429,28 @@ static DEVICE_ATTR_RW(nv_temp_target);
 #endif
 
 /* Ally MCU Powersave ********************************************************/
-#if IS_ENABLED(CONFIG_ASUS_WMI_BIOS)
 static ssize_t mcu_powersave_show(struct device *dev,
 				   struct device_attribute *attr, char *buf)
 {
 	struct asus_wmi *asus = dev_get_drvdata(dev);
-	int result;
-
-	result = asus_wmi_get_devstate_simple(asus, ASUS_WMI_DEVID_MCU_POWERSAVE);
-	if (result < 0)
-		return result;
-
-	asus_wmi_show_deprecated();
-
-	return sysfs_emit(buf, "%d\n", result);
+	return sysfs_emit(buf, "%d\n", asus->ally_mcu_delay);
 }
 
 static ssize_t mcu_powersave_store(struct device *dev,
 				    struct device_attribute *attr,
 				    const char *buf, size_t count)
 {
-	int result, err;
+	int result;
 	u32 enable;
-
 	struct asus_wmi *asus = dev_get_drvdata(dev);
-
 	result = kstrtou32(buf, 10, &enable);
 	if (result)
 		return result;
-
-	if (enable > 1)
-		return -EINVAL;
-
-	err = asus_wmi_set_devstate(ASUS_WMI_DEVID_MCU_POWERSAVE, enable, &result);
-	if (err) {
-		pr_warn("Failed to set MCU powersave: %d\n", err);
-		return err;
-	}
-
-	if (result > 1) {
-		pr_warn("Failed to set MCU powersave (result): 0x%x\n", result);
-		return -EIO;
-	}
-
+	asus->ally_mcu_delay = enable;
 	sysfs_notify(&asus->platform_device->dev.kobj, NULL, "mcu_powersave");
-
 	return count;
 }
 static DEVICE_ATTR_RW(mcu_powersave);
-#endif
 
 /* Battery ********************************************************************/
 
@@ -4832,6 +4807,7 @@ static int asus_wmi_add(struct platform_device *pdev)
 		asus->gpu_mux_dev = ASUS_WMI_DEVID_GPU_MUX_VIVO;
 	#endif
 
+	asus->ally_mcu_delay = ASUS_USB0_PWR_EC0_CSEE_WAIT;
 	asus->ally_mcu_usb_switch = acpi_has_method(NULL, ASUS_USB0_PWR_EC0_CSEE)
 						&& dmi_check_system(asus_ally_mcu_quirk);
 
@@ -5025,12 +5001,31 @@ static int asus_hotk_resume_early(struct device *device)
 		if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
 			dev_err(device, "ROG Ally MCU failed to connect USB dev\n");
 		else
-			msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
+			msleep(asus->ally_mcu_delay);
+		dev_info(device, "Ally resume_early CSEE. mcu_powersave=%d, delay=%d\n", asus->ally_mcu_powersave_on, asus->ally_mcu_delay);
 	}
 	return 0;
 }
 
-/* Removing suspend helper function for testing different s2idle approach */
+static int asus_hotk_prepare(struct device *device)
+{
+	struct asus_wmi *asus = dev_get_drvdata(device);
+	int result;
+
+	if (asus->ally_mcu_usb_switch) {
+		result = asus_wmi_get_devstate_simple(asus, ASUS_WMI_DEVID_MCU_POWERSAVE);
+		if (result < 0)
+			return result;
+
+		/* sleep required to ensure USB0 is disabled before sleep continues */
+		if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB7)))
+			dev_err(device, "ROG Ally MCU failed to disconnect USB dev\n");
+		else
+			msleep(asus->ally_mcu_delay);
+		dev_info(device, "Ally prepare CSEE. mcu_powersave=%d, delay=%d\n", result, asus->ally_mcu_delay);
+	}
+	return 0;
+}
 
 static int asus_hotk_restore(struct device *device)
 {
