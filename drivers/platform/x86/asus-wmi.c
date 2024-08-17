@@ -4996,14 +4996,17 @@ static int asus_hotk_resume_early(struct device *device)
 {
 	struct asus_wmi *asus = dev_get_drvdata(device);
 
+	/* Suspend Resume experimenting on ROG ALLY/ ALLY X continues */
+	/*
 	if (asus->ally_mcu_usb_switch) {
-		/* sleep required to prevent USB0 being yanked then reappearing rapidly */
+		// sleep required to prevent USB0 being yanked then reappearing rapidly
 		if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
 			dev_err(device, "ROG Ally MCU failed to connect USB dev\n");
 		else
 			msleep(asus->ally_mcu_delay);
 		dev_info(device, "Ally resume_early CSEE. mcu_powersave=%d, delay=%d\n", asus->ally_mcu_powersave_on, asus->ally_mcu_delay);
 	}
+	*/
 	return 0;
 }
 
