@@ -5012,21 +5012,18 @@ static int asus_hotk_prepare(struct device *device)
 	struct asus_wmi *asus = dev_get_drvdata(device);
 	int result;
 
-	/* Removing ALLY suspend helper function for testing different s2idle approach */
-	/*
 	if (asus->ally_mcu_usb_switch) {
 		result = asus_wmi_get_devstate_simple(asus, ASUS_WMI_DEVID_MCU_POWERSAVE);
 		if (result < 0)
 			return result;
 
-		// sleep required to ensure USB0 is disabled before sleep continues
+		/* sleep required to ensure USB0 is disabled before sleep continues */
 		if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB7)))
 			dev_err(device, "ROG Ally MCU failed to disconnect USB dev\n");
 		else
 			msleep(asus->ally_mcu_delay);
 		dev_info(device, "Ally prepare CSEE. mcu_powersave=%d, delay=%d\n", result, asus->ally_mcu_delay);
 	}
-	*/
 	return 0;
 }
 
