@@ -5020,41 +5020,28 @@ static int asus_hotk_resume_early(struct device *device)
 {
 	struct asus_wmi *asus = dev_get_drvdata(device);
 
-	/*commenting out for testing
 	if (asus->ally_mcu_usb_switch) {
-		// sleep required to prevent USB0 being yanked then reappearing rapidly
+		/* sleep required to prevent USB0 being yanked then reappearing rapidly */
 		if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
 			dev_err(device, "ROG Ally MCU failed to connect USB dev\n");
 		else
 			msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
 	}
-	*/
 	return 0;
 }
 
 static int asus_hotk_prepare(struct device *device)
 {
 	struct asus_wmi *asus = dev_get_drvdata(device);
-	/* commenting out for testing
+
 	if (asus->ally_mcu_usb_switch) {
-		// sleep required to ensure USB0 is disabled before sleep continues
+		/* sleep required to ensure USB0 is disabled before sleep continues */
 		if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB7)))
 			dev_err(device, "ROG Ally MCU failed to disconnect USB dev\n");
 		else
 			msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
 	}
-	*/
 	return 0;
-}
-
-void asus_hotk_complete(struct device *device)
-{
-	struct asus_wmi *asus = dev_get_drvdata(device);
-	if (asus->ally_mcu_usb_switch) {
-		// Send Screen ON through MCU signal path to recover the device from certain edge cases
-		if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
-			dev_err(device, "ROG Ally MCU failed to connect USB dev in the complete step\n");
-	}
 }
 
 static int asus_hotk_restore(struct device *device)
@@ -5103,7 +5090,6 @@ static const struct dev_pm_ops asus_pm_ops = {
 	.resume = asus_hotk_resume,
 	.resume_early = asus_hotk_resume_early,
 	.prepare = asus_hotk_prepare,
-	.complete = asus_hotk_complete,
 };
 
 /* Registration ***************************************************************/
