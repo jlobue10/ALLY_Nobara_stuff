@@ -18,7 +18,6 @@
 #include <linux/debugfs.h>
 #include <linux/delay.h>
 #include <linux/dmi.h>
-#include <linux/errno.h>
 #include <linux/fb.h>
 #include <linux/hwmon.h>
 #include <linux/hwmon-sysfs.h>
@@ -34,7 +33,6 @@
 #include <linux/platform_data/x86/asus-wmi.h>
 #include <linux/platform_device.h>
 #include <linux/platform_profile.h>
-#include <linux/pm.h>
 #include <linux/power_supply.h>
 #include <linux/rfkill.h>
 #include <linux/seq_file.h>
@@ -147,9 +145,6 @@ module_param(fnlock_default, bool, 0444);
 static const char * const ashs_ids[] = { "ATK4001", "ATK4002", NULL };
 
 static int throttle_thermal_policy_write(struct asus_wmi *);
-
-static int ac_state_before_suspend = -EINVAL;
-static int ac_state_after_suspend = -EINVAL;
 
 static const struct dmi_system_id asus_ally_mcu_quirk[] = {
 	{
@@ -5027,16 +5022,10 @@ static int asus_hotk_resume_early(struct device *device)
 
 	if (asus->ally_mcu_usb_switch) {
 		/* sleep required to prevent USB0 being yanked then reappearing rapidly */
-		ac_state_after_suspend = -EINVAL;
-		ac_state_after_suspend = power_supply_is_system_supplied();
-		printk(KERN_INFO "AC state after suspend: %d\n", ac_state_after_suspend);
-		if (ac_state_before_suspend != ac_state_after_suspend) {
-			printk(KERN_INFO "AC state changed during suspend.\n");
-			if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
-				dev_err(device, "ROG Ally MCU failed to connect USB dev\n");
-			//else
-				//msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
-		}
+		if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
+			dev_err(device, "ROG Ally MCU failed to connect USB dev\n");
+		else
+			msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
 	}
 	return 0;
 }
@@ -5047,14 +5036,10 @@ static int asus_hotk_prepare(struct device *device)
 
 	if (asus->ally_mcu_usb_switch) {
 		/* sleep required to ensure USB0 is disabled before sleep continues */
-		/*
 		if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB7)))
 			dev_err(device, "ROG Ally MCU failed to disconnect USB dev\n");
 		else
 			msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
-		*/
-		ac_state_before_suspend = power_supply_is_system_supplied();
-		printk(KERN_INFO "AC state before suspend: %d\n", ac_state_before_suspend);
 	}
 	return 0;
 }
