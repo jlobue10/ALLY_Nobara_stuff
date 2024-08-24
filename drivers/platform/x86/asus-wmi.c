@@ -5079,6 +5079,7 @@ static void asus_ally_s2idle_restore(void)
 			if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
 				pr_err("ROG Ally MCU failed to connect USB dev\n");
 
+		msleep(1500);
 	}
 }
 
