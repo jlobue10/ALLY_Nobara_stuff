@@ -11,7 +11,10 @@
  * Copyright (C) 2005 Dmitry Torokhov <dtor@mail.ru>
  */
 
+#include "linux/usb/ch9.h"
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+
+#include "linux/printk.h"
 
 #include <linux/acpi.h>
 #include <linux/backlight.h>
@@ -97,6 +100,12 @@ module_param(fnlock_default, bool, 0444);
 #define ASUS_THROTTLE_THERMAL_POLICY_OVERBOOST	1
 #define ASUS_THROTTLE_THERMAL_POLICY_SILENT	2
 
+#define ASUS_THROTTLE_THERMAL_POLICY_DEFAULT_VIVO	0
+#define ASUS_THROTTLE_THERMAL_POLICY_SILENT_VIVO	1
+#define ASUS_THROTTLE_THERMAL_POLICY_OVERBOOST_VIVO	2
+
+#define PLATFORM_PROFILE_MAX 2
+
 #define USB_INTEL_XUSB2PR		0xD0
 #define PCI_DEVICE_ID_INTEL_LYNXPOINT_LP_XHCI	0x9c31
 
@@ -137,28 +146,11 @@ module_param(fnlock_default, bool, 0444);
 #define ASUS_MINI_LED_2024_STRONG	0x01
 #define ASUS_MINI_LED_2024_OFF		0x02
 
-/* Controls the power state of the USB0 hub on ROG Ally which input is on */
 #define ASUS_USB0_PWR_EC0_CSEE "\\_SB.PCI0.SBRG.EC0.CSEE"
-/* 300ms so far seems to produce a reliable result on AC and battery */
-#define ASUS_USB0_PWR_EC0_CSEE_WAIT 500
 
 static const char * const ashs_ids[] = { "ATK4001", "ATK4002", NULL };
 
 static int throttle_thermal_policy_write(struct asus_wmi *);
-
-static const struct dmi_system_id asus_ally_mcu_quirk[] = {
-	{
-		.matches = {
-			DMI_MATCH(DMI_BOARD_NAME, "RC71L"),
-		},
-	},
-	{
-		.matches = {
-			DMI_MATCH(DMI_BOARD_NAME, "RC72L"),
-		},
-	},
-	{ },
-};
 
 static bool ashs_present(void)
 {
@@ -268,9 +260,6 @@ struct asus_wmi {
 	u32 tablet_switch_dev_id;
 	bool tablet_switch_inverted;
 
-	/* The ROG Ally device requires the MCU USB device be disconnected before suspend */
-	bool ally_mcu_usb_switch;
-
 	enum fan_type fan_type;
 	enum fan_type gpu_fan_type;
 	enum fan_type mid_fan_type;
@@ -303,8 +292,8 @@ struct asus_wmi {
 	u32 kbd_rgb_dev;
 	bool kbd_rgb_state_available;
 
-	bool throttle_thermal_policy_available;
 	u8 throttle_thermal_policy_mode;
+	u32 throttle_thermal_policy_dev;
 
 	bool cpu_fan_curve_available;
 	bool gpu_fan_curve_available;
@@ -329,6 +318,9 @@ struct asus_wmi {
 
 	struct asus_wmi_driver *driver;
 };
+
+static bool ally_mcu_usb_switch;
+static int ally_suspended_power_state;
 
 #if IS_ENABLED(CONFIG_ASUS_WMI_BIOS)
 static void asus_wmi_show_deprecated(void)
@@ -573,10 +565,12 @@ int asus_wmi_get_devstate_dsts(u32 dev_id, u32 *retval)
 	int err;
 
 	err = asus_wmi_evaluate_method(ASUS_WMI_METHODID_DSTS, dev_id, 0, retval);
+	*retval &= ~ASUS_WMI_DSTS_PRESENCE_BIT;
+
 	if (err)
 		return err;
 	/* Be explicit about retval */
-	if (*retval == 0xFFFFFFFE || *retval == 0)
+	if (*retval == ASUS_WMI_UNSUPPORTED_METHOD)
 		return -ENODEV;
 
 	return 0;
@@ -3276,7 +3270,7 @@ static int fan_curve_get_factory_default(struct asus_wmi *asus, u32 fan_dev)
 	int err, fan_idx;
 	u8 mode = 0;
 
-	if (asus->throttle_thermal_policy_available)
+	if (asus->throttle_thermal_policy_dev)
 		mode = asus->throttle_thermal_policy_mode;
 	/* DEVID_<C/G>PU_FAN_CURVE is switched for OVERBOOST vs SILENT */
 	if (mode == 2)
@@ -3483,7 +3477,7 @@ static ssize_t fan_curve_enable_store(struct device *dev,
 		 * For machines with throttle this is the only way to reset fans
 		 * to default mode of operation (does not erase curve data).
 		 */
-		if (asus->throttle_thermal_policy_available) {
+		if (asus->throttle_thermal_policy_dev) {
 			err = throttle_thermal_policy_write(asus);
 			if (err)
 				return err;
@@ -3700,8 +3694,8 @@ static const struct attribute_group asus_fan_curve_attr_group = {
 __ATTRIBUTE_GROUPS(asus_fan_curve_attr);
 
 /*
- * Must be initialised after throttle_thermal_policy_check_present() as
- * we check the status of throttle_thermal_policy_available during init.
+ * Must be initialised after throttle_thermal_policy_dev is set as
+ * we check the status of throttle_thermal_policy_dev during init.
  */
 static int asus_wmi_custom_fan_curve_init(struct asus_wmi *asus)
 {
@@ -3751,38 +3745,13 @@ static int asus_wmi_custom_fan_curve_init(struct asus_wmi *asus)
 }
 
 /* Throttle thermal policy ****************************************************/
-
-static int throttle_thermal_policy_check_present(struct asus_wmi *asus)
-{
-	u32 result;
-	int err;
-
-	asus->throttle_thermal_policy_available = false;
-
-	err = asus_wmi_get_devstate(asus,
-				    ASUS_WMI_DEVID_THROTTLE_THERMAL_POLICY,
-				    &result);
-	if (err) {
-		if (err == -ENODEV)
-			return 0;
-		return err;
-	}
-
-	if (result & ASUS_WMI_DSTS_PRESENCE_BIT)
-		asus->throttle_thermal_policy_available = true;
-
-	return 0;
-}
-
 static int throttle_thermal_policy_write(struct asus_wmi *asus)
 {
-	int err;
-	u8 value;
+	u8 value = asus->throttle_thermal_policy_mode;
 	u32 retval;
+	int err;
 
-	value = asus->throttle_thermal_policy_mode;
-
-	err = asus_wmi_set_devstate(ASUS_WMI_DEVID_THROTTLE_THERMAL_POLICY,
+	err = asus_wmi_set_devstate(asus->throttle_thermal_policy_dev,
 				    value, &retval);
 
 	sysfs_notify(&asus->platform_device->dev.kobj, NULL,
@@ -3812,7 +3781,7 @@ static int throttle_thermal_policy_write(struct asus_wmi *asus)
 
 static int throttle_thermal_policy_set_default(struct asus_wmi *asus)
 {
-	if (!asus->throttle_thermal_policy_available)
+	if (!asus->throttle_thermal_policy_dev)
 		return 0;
 
 	asus->throttle_thermal_policy_mode = ASUS_THROTTLE_THERMAL_POLICY_DEFAULT;
@@ -3824,7 +3793,7 @@ static int throttle_thermal_policy_switch_next(struct asus_wmi *asus)
 	u8 new_mode = asus->throttle_thermal_policy_mode + 1;
 	int err;
 
-	if (new_mode > ASUS_THROTTLE_THERMAL_POLICY_SILENT)
+	if (new_mode > PLATFORM_PROFILE_MAX)
 		new_mode = ASUS_THROTTLE_THERMAL_POLICY_DEFAULT;
 
 	asus->throttle_thermal_policy_mode = new_mode;
@@ -3863,7 +3832,7 @@ static ssize_t throttle_thermal_policy_store(struct device *dev,
 	if (result < 0)
 		return result;
 
-	if (new_mode > ASUS_THROTTLE_THERMAL_POLICY_SILENT)
+	if (new_mode > PLATFORM_PROFILE_MAX)
 		return -EINVAL;
 
 	asus->throttle_thermal_policy_mode = new_mode;
@@ -3880,10 +3849,52 @@ static ssize_t throttle_thermal_policy_store(struct device *dev,
 	return count;
 }
 
-// Throttle thermal policy: 0 - default, 1 - overboost, 2 - silent
+/*
+ * Throttle thermal policy: 0 - default, 1 - overboost, 2 - silent
+ */
 static DEVICE_ATTR_RW(throttle_thermal_policy);
 
 /* Platform profile ***********************************************************/
+static int asus_wmi_platform_profile_to_vivo(struct asus_wmi *asus, int mode)
+{
+	bool vivo;
+
+	vivo = asus->throttle_thermal_policy_dev == ASUS_WMI_DEVID_THROTTLE_THERMAL_POLICY_VIVO;
+
+	if (vivo) {
+		switch (mode) {
+		case ASUS_THROTTLE_THERMAL_POLICY_DEFAULT:
+			return ASUS_THROTTLE_THERMAL_POLICY_DEFAULT_VIVO;
+		case ASUS_THROTTLE_THERMAL_POLICY_OVERBOOST:
+			return ASUS_THROTTLE_THERMAL_POLICY_OVERBOOST_VIVO;
+		case ASUS_THROTTLE_THERMAL_POLICY_SILENT:
+			return ASUS_THROTTLE_THERMAL_POLICY_SILENT_VIVO;
+		}
+	}
+
+	return mode;
+}
+
+static int asus_wmi_platform_profile_mode_from_vivo(struct asus_wmi *asus, int mode)
+{
+	bool vivo;
+
+	vivo = asus->throttle_thermal_policy_dev == ASUS_WMI_DEVID_THROTTLE_THERMAL_POLICY_VIVO;
+
+	if (vivo) {
+		switch (mode) {
+		case ASUS_THROTTLE_THERMAL_POLICY_DEFAULT_VIVO:
+			return ASUS_THROTTLE_THERMAL_POLICY_DEFAULT;
+		case ASUS_THROTTLE_THERMAL_POLICY_OVERBOOST_VIVO:
+			return ASUS_THROTTLE_THERMAL_POLICY_OVERBOOST;
+		case ASUS_THROTTLE_THERMAL_POLICY_SILENT_VIVO:
+			return ASUS_THROTTLE_THERMAL_POLICY_SILENT;
+		}
+	}
+
+	return mode;
+}
+
 static int asus_wmi_platform_profile_get(struct platform_profile_handler *pprof,
 					enum platform_profile_option *profile)
 {
@@ -3891,10 +3902,9 @@ static int asus_wmi_platform_profile_get(struct platform_profile_handler *pprof,
 	int tp;
 
 	asus = container_of(pprof, struct asus_wmi, platform_profile_handler);
-
 	tp = asus->throttle_thermal_policy_mode;
 
-	switch (tp) {
+	switch (asus_wmi_platform_profile_mode_from_vivo(asus, tp)) {
 	case ASUS_THROTTLE_THERMAL_POLICY_DEFAULT:
 		*profile = PLATFORM_PROFILE_BALANCED;
 		break;
@@ -3933,7 +3943,7 @@ static int asus_wmi_platform_profile_set(struct platform_profile_handler *pprof,
 		return -EOPNOTSUPP;
 	}
 
-	asus->throttle_thermal_policy_mode = tp;
+	asus->throttle_thermal_policy_mode = asus_wmi_platform_profile_to_vivo(asus, tp);
 	return throttle_thermal_policy_write(asus);
 }
 
@@ -3946,7 +3956,7 @@ static int platform_profile_setup(struct asus_wmi *asus)
 	 * Not an error if a component platform_profile relies on is unavailable
 	 * so early return, skipping the setup of platform_profile.
 	 */
-	if (!asus->throttle_thermal_policy_available)
+	if (!asus->throttle_thermal_policy_dev)
 		return 0;
 
 	dev_info(dev, "Using throttle_thermal_policy for platform_profile support\n");
@@ -4366,7 +4376,7 @@ static void asus_wmi_handle_event_code(int code, struct asus_wmi *asus)
 	if (code == NOTIFY_KBD_FBM || code == NOTIFY_KBD_TTP) {
 		if (asus->fan_boost_mode_available)
 			fan_boost_mode_switch_next(asus);
-		if (asus->throttle_thermal_policy_available)
+		if (asus->throttle_thermal_policy_dev)
 			throttle_thermal_policy_switch_next(asus);
 		return;
 
@@ -4529,8 +4539,6 @@ static umode_t asus_sysfs_is_visible(struct kobject *kobj,
 		devid = ASUS_WMI_DEVID_ALS_ENABLE;
 	else if (attr == &dev_attr_fan_boost_mode.attr)
 		ok = asus->fan_boost_mode_available;
-	else if (attr == &dev_attr_throttle_thermal_policy.attr)
-		ok = asus->throttle_thermal_policy_available;
 
 	#if IS_ENABLED(CONFIG_ASUS_WMI_BIOS)
 	if (attr == &dev_attr_charge_mode.attr)
@@ -4543,6 +4551,10 @@ static umode_t asus_sysfs_is_visible(struct kobject *kobj,
 		ok = asus->dgpu_disable_available;
 	else if (attr == &dev_attr_gpu_mux_mode.attr)
 		ok = asus->gpu_mux_dev != 0;
+	else if (attr == &dev_attr_fan_boost_mode.attr)
+		ok = asus->fan_boost_mode_available;
+	else if (attr == &dev_attr_throttle_thermal_policy.attr)
+		ok = asus->throttle_thermal_policy_dev != 0;
 	else if (attr == &dev_attr_ppt_pl2_sppt.attr)
 		devid = ASUS_WMI_DEVID_PPT_PL2_SPPT;
 	else if (attr == &dev_attr_ppt_pl1_spl.attr)
@@ -4807,6 +4819,7 @@ static int asus_wmi_add(struct platform_device *pdev)
 	if (err)
 		goto fail_platform;
 
+	ally_mcu_usb_switch = dmi_check_system(asus_ally_mcu_quirk);
 	/* ensure defaults for tunables */
 	#if IS_ENABLED(CONFIG_ASUS_WMI_BIOS)
 	asus->ppt_pl2_sppt = 5;
@@ -4830,10 +4843,12 @@ static int asus_wmi_add(struct platform_device *pdev)
 		asus->gpu_mux_dev = ASUS_WMI_DEVID_GPU_MUX;
 	else if (asus_wmi_dev_is_present(asus, ASUS_WMI_DEVID_GPU_MUX_VIVO))
 		asus->gpu_mux_dev = ASUS_WMI_DEVID_GPU_MUX_VIVO;
-	#endif
 
-	asus->ally_mcu_usb_switch = acpi_has_method(NULL, ASUS_USB0_PWR_EC0_CSEE)
-						&& dmi_check_system(asus_ally_mcu_quirk);
+	if (asus_wmi_dev_is_present(asus, ASUS_WMI_DEVID_THROTTLE_THERMAL_POLICY))
+		asus->throttle_thermal_policy_dev = ASUS_WMI_DEVID_THROTTLE_THERMAL_POLICY;
+	else if (asus_wmi_dev_is_present(asus, ASUS_WMI_DEVID_THROTTLE_THERMAL_POLICY_VIVO))
+		asus->throttle_thermal_policy_dev = ASUS_WMI_DEVID_THROTTLE_THERMAL_POLICY_VIVO;
+	#endif /* CONFIG_ASUS_WMI_BIOS */
 
 	if (asus_wmi_dev_is_present(asus, ASUS_WMI_DEVID_TUF_RGB_MODE))
 		asus->kbd_rgb_dev = ASUS_WMI_DEVID_TUF_RGB_MODE;
@@ -4843,12 +4858,6 @@ static int asus_wmi_add(struct platform_device *pdev)
 	err = fan_boost_mode_check_present(asus);
 	if (err)
 		goto fail_fan_boost_mode;
-
-	err = throttle_thermal_policy_check_present(asus);
-	if (err)
-		goto fail_throttle_thermal_policy;
-	else
-		throttle_thermal_policy_set_default(asus);
 
 	err = platform_profile_setup(asus);
 	if (err && err != -EEXIST)
@@ -4944,7 +4953,6 @@ fail_hwmon:
 fail_input:
 	asus_wmi_sysfs_exit(asus->platform_device);
 fail_sysfs:
-fail_throttle_thermal_policy:
 fail_custom_fan_curve:
 fail_platform_profile_setup:
 	if (asus->platform_profile_support)
@@ -5016,48 +5024,6 @@ static int asus_hotk_resume(struct device *device)
 	return 0;
 }
 
-static int asus_hotk_resume_early(struct device *device)
-{
-	struct asus_wmi *asus = dev_get_drvdata(device);
-	/* commenting out for testing
-	if (asus->ally_mcu_usb_switch) {
-		// sleep required to prevent USB0 being yanked then reappearing rapidly
-		if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
-			dev_err(device, "ROG Ally MCU failed to connect USB dev\n");
-		else
-			msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
-	}
-	*/
-	return 0;
-}
-
-static int asus_hotk_prepare(struct device *device)
-{
-	struct asus_wmi *asus = dev_get_drvdata(device);
-	/* commenting out for testing
-	if (asus->ally_mcu_usb_switch) {
-		// sleep required to ensure USB0 is disabled before sleep continues
-		if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB7)))
-			dev_err(device, "ROG Ally MCU failed to disconnect USB dev\n");
-		else
-			msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
-	}
-	*/
-	return 0;
-}
-
-void asus_hotk_complete(struct device *device)
-{
-	struct asus_wmi *asus = dev_get_drvdata(device);
-	if (asus->ally_mcu_usb_switch) {
-		pr_info("Delaying by %d milliseconds", ASUS_USB0_PWR_EC0_CSEE_WAIT);
-		msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
-		pr_info("Sending Screen ON command for USB0 device in the complete step.\n");
-		if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
-			dev_err(device, "ROG Ally MCU failed to connect USB dev in the complete step\n");
-	}
-}
-
 static int asus_hotk_restore(struct device *device)
 {
 	struct asus_wmi *asus = dev_get_drvdata(device);
@@ -5098,13 +5064,50 @@ static int asus_hotk_restore(struct device *device)
 	return 0;
 }
 
+static void asus_ally_s2idle_restore(void)
+{
+	int powersave = 0;
+	int power_state;
+
+	if (ally_mcu_usb_switch) {
+		platform_suspend_screen_on();
+
+		power_state = power_supply_is_system_supplied();
+		asus_wmi_get_devstate_dsts(ASUS_WMI_DEVID_MCU_POWERSAVE, &powersave);
+
+		if (powersave && (!power_state || ally_suspended_power_state != power_state))
+			if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
+				pr_err("ROG Ally MCU failed to connect USB dev\n");
+
+	}
+}
+
+static int asus_hotk_prepare(struct device *device)
+{
+	int powersave = 0;
+	int power_state;
+
+	if (ally_mcu_usb_switch) {
+		platform_suspend_screen_off();
+
+		ally_suspended_power_state = power_state = power_supply_is_system_supplied();
+		asus_wmi_get_devstate_dsts(ASUS_WMI_DEVID_MCU_POWERSAVE, &powersave);
+
+		if (powersave)
+			msleep(2000);
+	}
+	return 0;
+}
+
+static struct acpi_s2idle_dev_ops asus_ally_s2idle_dev_ops = {
+	.restore = asus_ally_s2idle_restore,
+};
+
 static const struct dev_pm_ops asus_pm_ops = {
 	.thaw = asus_hotk_thaw,
 	.restore = asus_hotk_restore,
 	.resume = asus_hotk_resume,
-	.resume_early = asus_hotk_resume_early,
 	.prepare = asus_hotk_prepare,
-	.complete = asus_hotk_complete,
 };
 
 /* Registration ***************************************************************/
@@ -5113,7 +5116,7 @@ static int asus_wmi_probe(struct platform_device *pdev)
 {
 	struct platform_driver *pdrv = to_platform_driver(pdev->dev.driver);
 	struct asus_wmi_driver *wdrv = to_asus_wmi_driver(pdrv);
-	int ret;
+	int ret, err;
 
 	if (!wmi_has_guid(ASUS_WMI_MGMT_GUID)) {
 		pr_warn("ASUS Management GUID not found\n");
@@ -5130,6 +5133,10 @@ static int asus_wmi_probe(struct platform_device *pdev)
 		if (ret)
 			return ret;
 	}
+
+	err = acpi_register_lps0_dev(&asus_ally_s2idle_dev_ops);
+	if (err)
+		pr_warn("failed to register LPS0 sleep handler in asus-wmi\n");
 
 	return asus_wmi_add(pdev);
 }
@@ -5163,6 +5170,7 @@ EXPORT_SYMBOL_GPL(asus_wmi_register_driver);
 
 void asus_wmi_unregister_driver(struct asus_wmi_driver *driver)
 {
+	acpi_unregister_lps0_dev(&asus_ally_s2idle_dev_ops);
 	platform_device_unregister(driver->platform_device);
 	platform_driver_unregister(&driver->platform_driver);
 	used = false;
