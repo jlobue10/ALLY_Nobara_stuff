@@ -5075,11 +5075,9 @@ static void asus_ally_s2idle_restore(void)
 		power_state = power_supply_is_system_supplied();
 		asus_wmi_get_devstate_dsts(ASUS_WMI_DEVID_MCU_POWERSAVE, &powersave);
 
-		if (powersave && (!power_state || ally_suspended_power_state != power_state)) {
-			msleep(1500);
+		if (powersave && (!power_state || ally_suspended_power_state != power_state))
 			if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
 				pr_err("ROG Ally MCU failed to connect USB dev\n");
-		}
 
 	}
 }
@@ -5101,6 +5099,18 @@ static int asus_hotk_prepare(struct device *device)
 	return 0;
 }
 
+void asus_hotk_complete(struct device *device)
+{
+    struct asus_wmi *asus = dev_get_drvdata(device);
+    if (asus->ally_mcu_usb_switch) {
+	//pr_info("Delaying by %d milliseconds", ASUS_USB0_PWR_EC0_CSEE_WAIT);
+        //msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
+        pr_info("Sending Screen ON command for N-Key device in the dev_pm_ops complete stage.\n");
+        if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
+            dev_err(device, "ROG Ally MCU failed to connect USB device in the complete step\n");
+    }
+}
+
 static struct acpi_s2idle_dev_ops asus_ally_s2idle_dev_ops = {
 	.restore = asus_ally_s2idle_restore,
 };
@@ -5110,6 +5120,7 @@ static const struct dev_pm_ops asus_pm_ops = {
 	.restore = asus_hotk_restore,
 	.resume = asus_hotk_resume,
 	.prepare = asus_hotk_prepare,
+	.complete = asus_hotk_complete,
 };
 
 /* Registration ***************************************************************/
