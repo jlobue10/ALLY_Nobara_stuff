@@ -5070,15 +5070,41 @@ static void asus_ally_s2idle_restore(void)
 	int power_state;
 
 	if (ally_mcu_usb_switch) {
+		/* Call here so it is as early as possible */
 		platform_suspend_screen_on();
 
 		power_state = power_supply_is_system_supplied();
 		asus_wmi_get_devstate_dsts(ASUS_WMI_DEVID_MCU_POWERSAVE, &powersave);
-
+		/* These are the only states we need to do this for */
 		if (powersave && (!power_state || ally_suspended_power_state != power_state))
 			if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
 				pr_err("ROG Ally MCU failed to connect USB dev\n");
+	}
+}
 
+static void asus_ally_s2idle_check(void)
+{
+	int powersave = 0;
+	int power_state;
+
+	if (ally_mcu_usb_switch) {
+		power_state = power_supply_is_system_supplied();
+		asus_wmi_get_devstate_dsts(ASUS_WMI_DEVID_MCU_POWERSAVE, &powersave);
+
+		/* Wake the device fully if AC plugged in. Prevents many issues */
+		if (power_state > 0 && ally_suspended_power_state != power_state) {
+			pm_system_wakeup();
+			return;
+		}
+
+		/*
+		 * Required to ensure device is in good state on proper resume. The device
+		 * does a partial wake on AC unplug and this can leave an Ally X in bad state.
+		 */
+		if (ally_suspended_power_state != power_state) {
+			acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB7);
+			msleep(500);
+		}
 	}
 }
 
@@ -5092,27 +5118,16 @@ static int asus_hotk_prepare(struct device *device)
 
 		ally_suspended_power_state = power_state = power_supply_is_system_supplied();
 		asus_wmi_get_devstate_dsts(ASUS_WMI_DEVID_MCU_POWERSAVE, &powersave);
-
+		/* Certain operations in firmware appear to be slow when powersave is on */
 		if (powersave)
 			msleep(2000);
 	}
 	return 0;
 }
 
-void asus_hotk_complete(struct device *device)
-{
-    struct asus_wmi *asus = dev_get_drvdata(device);
-    if (asus->ally_mcu_usb_switch) {
-	//pr_info("Delaying by %d milliseconds", ASUS_USB0_PWR_EC0_CSEE_WAIT);
-        //msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
-        pr_info("Sending Screen ON command for N-Key device in the dev_pm_ops complete stage.\n");
-        if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
-            dev_err(device, "ROG Ally MCU failed to connect USB device in the complete step\n");
-    }
-}
-
 static struct acpi_s2idle_dev_ops asus_ally_s2idle_dev_ops = {
 	.restore = asus_ally_s2idle_restore,
+	.check = asus_ally_s2idle_check,
 };
 
 static const struct dev_pm_ops asus_pm_ops = {
@@ -5120,7 +5135,6 @@ static const struct dev_pm_ops asus_pm_ops = {
 	.restore = asus_hotk_restore,
 	.resume = asus_hotk_resume,
 	.prepare = asus_hotk_prepare,
-	.complete = asus_hotk_complete,
 };
 
 /* Registration ***************************************************************/
