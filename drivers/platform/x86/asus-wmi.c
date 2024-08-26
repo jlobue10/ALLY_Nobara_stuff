@@ -17,7 +17,6 @@
 #include "linux/printk.h"
 
 #include <linux/acpi.h>
-#include <linux/acpi_bus.h>
 #include <linux/backlight.h>
 #include <linux/debugfs.h>
 #include <linux/delay.h>
