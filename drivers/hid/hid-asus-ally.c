@@ -5,7 +5,6 @@
  *  Copyright (c) 2023 Luke Jones <luke@ljones.dev>
  */
 
-#include <linux/acpi.h>
 #include "linux/delay.h"
 #include "linux/device.h"
 #include "linux/err.h"
@@ -37,8 +36,6 @@
 
 #define FEATURE_KBD_LED_REPORT_ID1 0x5d
 #define FEATURE_KBD_LED_REPORT_ID2 0x5e
-
-static int recover_count = 0;
 
 enum ROG_ALLY_TYPE {
 	ROG_ALLY_TYPE,
@@ -771,20 +768,14 @@ static int __gamepad_check_ready(struct hid_device *hdev)
 
 		ret = hidbuf[2] == xpad_cmd_check_ready;
 		if (ret)
-		{
-			recover_count = 0;
 			break;
-		}
 		usleep_range(
 			1000,
 			2000); /* don't spam the entire loop in less than USB response time */
 	}
 
 	if (count == READY_MAX_TRIES)
-	{
 		hid_warn(hdev, "ROG Ally never responded with a ready\n");
-		ally_recover_device();
-	}
 
 	kfree(hidbuf);
 	return ret;
@@ -2257,20 +2248,6 @@ err_close:
 err_stop:
 	hid_hw_stop(hdev);
 	return ret;
-}
-
-static void ally_recover_device()
-{
-	recover_count++;
-	if(recover_count > 3)
-		hid_info(hdev, "Maximum device recovery attempts has been reached. Exiting...\n");
-		return;
-	else {
-		hid_info(hdev, "Attempting to recover USB device for ROG ALLY...\n");
-		acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB7);
-		msleep(1000);
-		acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8);
-	}
 }
 
 static void ally_remove(struct hid_device *hdev)
