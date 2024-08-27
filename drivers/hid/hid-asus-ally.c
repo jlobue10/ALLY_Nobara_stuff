@@ -14,7 +14,6 @@
 #include "linux/stddef.h"
 #include "linux/sysfs.h"
 #include <linux/hid.h>
-#include <linux/module.h>
 #include <linux/types.h>
 #include <linux/usb.h>
 #include <linux/leds.h>
@@ -37,9 +36,6 @@
 
 #define FEATURE_KBD_LED_REPORT_ID1 0x5d
 #define FEATURE_KBD_LED_REPORT_ID2 0x5e
-
-static int recover_count = 0;
-static int ally_reset_usb_root_hub(void);
 
 enum ROG_ALLY_TYPE {
 	ROG_ALLY_TYPE,
@@ -771,19 +767,15 @@ static int __gamepad_check_ready(struct hid_device *hdev)
 			hid_dbg(hdev, "ROG Ally check failed get report: %d\n", ret);
 
 		ret = hidbuf[2] == xpad_cmd_check_ready;
-		if (ret) {
-			recover_count = 0;
- 			break;
-		}
+		if (ret)
+			break;
 		usleep_range(
 			1000,
 			2000); /* don't spam the entire loop in less than USB response time */
 	}
 
-	if (count == READY_MAX_TRIES) {
- 		hid_warn(hdev, "ROG Ally never responded with a ready\n");
-		ally_reset_usb_root_hub(); //Reset USB Root Hub #1 in an attempt to recover lost dev
-	}
+	if (count == READY_MAX_TRIES)
+		hid_warn(hdev, "ROG Ally never responded with a ready\n");
 
 	kfree(hidbuf);
 	return ret;
@@ -2256,39 +2248,6 @@ err_close:
 err_stop:
 	hid_hw_stop(hdev);
 	return ret;
-}
-
-static int ally_reset_usb_root_hub(void)
-{
-    struct usb_device *udev;
-    struct usb_hcd *hcd;
-    int ret = 0;
-    recover_count++;
-    if (recover_count > 3) {
-        printk(KERN_INFO "Maximum device recovery attempts reached. Exiting...\n");
-        return 1;
-    }
-    // Iterate over all USB devices
-    usb_for_each_dev(udev) {
-        // Check if this is the root hub for bus 1
-        if (udev->bus->busnum == 1 && udev->parent == NULL) {
-            hcd = bus_to_hcd(udev->bus);
-            if (hcd && hcd->driver->reset) {
-                ret = hcd->driver->reset(hcd);
-                if (ret) {
-                    printk(KERN_ERR "Failed to reset USB root hub on bus %d: %d\n", udev->bus->busnum, ret);
-                } else {
-                    printk(KERN_INFO "Successfully reset USB root hub on bus %d\n", udev->bus->busnum);
-                    msleep(300); //Give adequate time for USB root hub to reset
-                }
-            } else {
-                printk(KERN_ERR "No reset function available for USB root hub on bus %d\n", udev->bus->busnum);
-            }
-            break;
-        }
-    }
-
-    return ret;
 }
 
 static void ally_remove(struct hid_device *hdev)
