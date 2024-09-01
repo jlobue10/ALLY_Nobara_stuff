@@ -11,10 +11,7 @@
  * Copyright (C) 2005 Dmitry Torokhov <dtor@mail.ru>
  */
 
-#include "linux/usb/ch9.h"
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-
-#include "linux/printk.h"
 
 #include <linux/acpi.h>
 #include <linux/backlight.h>
@@ -146,7 +143,10 @@ module_param(fnlock_default, bool, 0444);
 #define ASUS_MINI_LED_2024_STRONG	0x01
 #define ASUS_MINI_LED_2024_OFF		0x02
 
+/* Controls the power state of the USB0 hub on ROG Ally which input is on */
 #define ASUS_USB0_PWR_EC0_CSEE "\\_SB.PCI0.SBRG.EC0.CSEE"
+/* 300ms so far seems to produce a reliable result on AC and battery */
+#define ASUS_USB0_PWR_EC0_CSEE_WAIT 1500
 
 static const char * const ashs_ids[] = { "ATK4001", "ATK4002", NULL };
 
@@ -320,7 +320,6 @@ struct asus_wmi {
 };
 
 static bool ally_mcu_usb_switch;
-static int ally_suspended_power_state;
 
 #if IS_ENABLED(CONFIG_ASUS_WMI_BIOS)
 static void asus_wmi_show_deprecated(void)
@@ -3810,6 +3809,7 @@ static int throttle_thermal_policy_switch_next(struct asus_wmi *asus)
 	return 0;
 }
 
+#if IS_ENABLED(CONFIG_ASUS_WMI_BIOS)
 static ssize_t throttle_thermal_policy_show(struct device *dev,
 				   struct device_attribute *attr, char *buf)
 {
@@ -3853,6 +3853,7 @@ static ssize_t throttle_thermal_policy_store(struct device *dev,
  * Throttle thermal policy: 0 - default, 1 - overboost, 2 - silent
  */
 static DEVICE_ATTR_RW(throttle_thermal_policy);
+#endif
 
 /* Platform profile ***********************************************************/
 static int asus_wmi_platform_profile_to_vivo(struct asus_wmi *asus, int mode)
@@ -4496,7 +4497,6 @@ static struct attribute *platform_attributes[] = {
 	&dev_attr_lid_resume.attr,
 	&dev_attr_als_enable.attr,
 	&dev_attr_fan_boost_mode.attr,
-	&dev_attr_throttle_thermal_policy.attr,
 	#if IS_ENABLED(CONFIG_ASUS_WMI_BIOS)
 		&dev_attr_charge_mode.attr,
 		&dev_attr_egpu_enable.attr,
@@ -4515,9 +4515,24 @@ static struct attribute *platform_attributes[] = {
 		&dev_attr_panel_od.attr,
 		&dev_attr_mini_led_mode.attr,
 		&dev_attr_available_mini_led_mode.attr,
+		&dev_attr_throttle_thermal_policy.attr,
 	#endif
 	NULL
 };
+
+bool asus_ally_has_quirk(unsigned long quirk)
+{
+	const struct dmi_system_id *dmi_id;
+	unsigned long quirks;
+
+	dmi_id = dmi_first_match(asus_ally_mcu_quirk);
+	if (!dmi_id)
+		return false;
+
+	quirks = (unsigned long)dmi_id->driver_data;
+	return quirks & quirk;
+}
+EXPORT_SYMBOL_GPL(asus_ally_has_quirk);
 
 static umode_t asus_sysfs_is_visible(struct kobject *kobj,
 				    struct attribute *attr, int idx)
@@ -4569,7 +4584,9 @@ static umode_t asus_sysfs_is_visible(struct kobject *kobj,
 		devid = ASUS_WMI_DEVID_NV_DYN_BOOST;
 	else if (attr == &dev_attr_nv_temp_target.attr)
 		devid = ASUS_WMI_DEVID_NV_THERM_TARGET;
-	else if (attr == &dev_attr_mcu_powersave.attr)
+	else if (attr == &dev_attr_mcu_powersave.attr &&
+			!asus_ally_has_quirk(ASUS_ROG_ALLY_NO_POWERSAVE))
+		/* Show only for Ally X +, as Ally 1 needs it forced off */
 		devid = ASUS_WMI_DEVID_MCU_POWERSAVE;
 	else if (attr == &dev_attr_boot_sound.attr)
 		devid = ASUS_WMI_DEVID_BOOT_SOUND;
@@ -4820,6 +4837,21 @@ static int asus_wmi_add(struct platform_device *pdev)
 		goto fail_platform;
 
 	ally_mcu_usb_switch = dmi_check_system(asus_ally_mcu_quirk);
+	if (ally_mcu_usb_switch) {
+		/*
+		 * These steps ensure the device is in a valid good state, this is
+		 * especially important for the Ally 1 after a reboot.
+		 */
+		acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8);
+		msleep(500);
+		platform_suspend_screen_on();
+	}
+	if (asus_ally_has_quirk(ASUS_ROG_ALLY_NO_POWERSAVE)) {
+		err = asus_wmi_set_devstate(ASUS_WMI_DEVID_MCU_POWERSAVE, 0, &result);
+		if (err)
+			pr_warn("Failed to force MCU powersave off for RC71L: %d\n", err);
+	}
+
 	/* ensure defaults for tunables */
 	#if IS_ENABLED(CONFIG_ASUS_WMI_BIOS)
 	asus->ppt_pl2_sppt = 5;
@@ -4833,6 +4865,8 @@ static int asus_wmi_add(struct platform_device *pdev)
 	asus->egpu_enable_available = asus_wmi_dev_is_present(asus, ASUS_WMI_DEVID_EGPU);
 	asus->dgpu_disable_available = asus_wmi_dev_is_present(asus, ASUS_WMI_DEVID_DGPU);
 	asus->kbd_rgb_state_available = asus_wmi_dev_is_present(asus, ASUS_WMI_DEVID_TUF_RGB_STATE);
+	asus->ally_mcu_usb_switch = acpi_has_method(NULL, ASUS_USB0_PWR_EC0_CSEE)
+						&& dmi_match(DMI_BOARD_NAME, "RC71L");
 
 	if (asus_wmi_dev_is_present(asus, ASUS_WMI_DEVID_MINI_LED_MODE))
 		asus->mini_led_dev_id = ASUS_WMI_DEVID_MINI_LED_MODE;
@@ -4844,11 +4878,11 @@ static int asus_wmi_add(struct platform_device *pdev)
 	else if (asus_wmi_dev_is_present(asus, ASUS_WMI_DEVID_GPU_MUX_VIVO))
 		asus->gpu_mux_dev = ASUS_WMI_DEVID_GPU_MUX_VIVO;
 
+	#endif /* CONFIG_ASUS_WMI_BIOS */
 	if (asus_wmi_dev_is_present(asus, ASUS_WMI_DEVID_THROTTLE_THERMAL_POLICY))
 		asus->throttle_thermal_policy_dev = ASUS_WMI_DEVID_THROTTLE_THERMAL_POLICY;
 	else if (asus_wmi_dev_is_present(asus, ASUS_WMI_DEVID_THROTTLE_THERMAL_POLICY_VIVO))
 		asus->throttle_thermal_policy_dev = ASUS_WMI_DEVID_THROTTLE_THERMAL_POLICY_VIVO;
-	#endif /* CONFIG_ASUS_WMI_BIOS */
 
 	if (asus_wmi_dev_is_present(asus, ASUS_WMI_DEVID_TUF_RGB_MODE))
 		asus->kbd_rgb_dev = ASUS_WMI_DEVID_TUF_RGB_MODE;
@@ -5064,70 +5098,45 @@ static int asus_hotk_restore(struct device *device)
 	return 0;
 }
 
-static void asus_ally_s2idle_restore(void)
+/* Check if, and run the ACPI CSEE function with selected arg */
+static void asus_ally_maybe_powersave(int cmd)
 {
 	int powersave = 0;
-	int power_state;
-
-	if (ally_mcu_usb_switch) {
-		/* Call here so it is as early as possible */
-		platform_suspend_screen_on();
-
-		power_state = power_supply_is_system_supplied();
+	/* Ally X requires this if powersave is enabled */
+	if (!asus_ally_has_quirk(ASUS_ROG_ALLY_NO_POWERSAVE)) {
 		asus_wmi_get_devstate_dsts(ASUS_WMI_DEVID_MCU_POWERSAVE, &powersave);
-		/* These are the only states we need to do this for */
-		if (powersave && (!power_state || ally_suspended_power_state != power_state))
-			if (ACPI_FAILURE(acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB8)))
-				pr_err("ROG Ally MCU failed to connect USB dev\n");
+		if (powersave)
+			acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, cmd);
 	}
 }
 
-static void asus_ally_s2idle_check(void)
+static void asus_ally_s2idle_restore(void)
 {
-	int powersave = 0;
-	int power_state;
-
 	if (ally_mcu_usb_switch) {
-		power_state = power_supply_is_system_supplied();
-		asus_wmi_get_devstate_dsts(ASUS_WMI_DEVID_MCU_POWERSAVE, &powersave);
-
-		/* Wake the device fully if AC plugged in. Prevents many issues */
-		if (power_state > 0 && ally_suspended_power_state != power_state) {
-			pm_system_wakeup();
-			return;
-		}
-
-		/*
-		 * Required to ensure device is in good state on proper resume. The device
-		 * does a partial wake on AC unplug and this can leave an Ally X in bad state.
-		 */
-		if (ally_suspended_power_state != power_state) {
-			acpi_execute_simple_method(NULL, ASUS_USB0_PWR_EC0_CSEE, 0xB7);
-			msleep(500);
-		}
+		asus_ally_maybe_powersave(ASUS_USB0_PWR_EC0_CSEE_ON);
+		platform_suspend_screen_on();
+		msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
 	}
 }
 
 static int asus_hotk_prepare(struct device *device)
 {
-	int powersave = 0;
-	int power_state;
-
 	if (ally_mcu_usb_switch) {
+		asus_ally_maybe_powersave(ASUS_USB0_PWR_EC0_CSEE_OFF);
 		platform_suspend_screen_off();
-
-		ally_suspended_power_state = power_state = power_supply_is_system_supplied();
-		asus_wmi_get_devstate_dsts(ASUS_WMI_DEVID_MCU_POWERSAVE, &powersave);
-		/* Certain operations in firmware appear to be slow when powersave is on */
-		if (powersave)
-			msleep(2000);
+		/*
+		 * Time here greatly impacts the wake behaviour
+		 * Too little and device never appears, too much and disconnect events occur
+		 */
+		msleep(ASUS_USB0_PWR_EC0_CSEE_WAIT);
 	}
 	return 0;
 }
 
 static struct acpi_s2idle_dev_ops asus_ally_s2idle_dev_ops = {
 	.restore = asus_ally_s2idle_restore,
-	.check = asus_ally_s2idle_check,
+	/* Requirement for at least Ally X to prevent powersave issues */
+	.wake_on_ac = true,
 };
 
 static const struct dev_pm_ops asus_pm_ops = {
