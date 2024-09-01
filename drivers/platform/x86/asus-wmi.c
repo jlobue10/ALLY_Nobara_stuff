@@ -143,10 +143,11 @@ module_param(fnlock_default, bool, 0444);
 #define ASUS_MINI_LED_2024_STRONG	0x01
 #define ASUS_MINI_LED_2024_OFF		0x02
 
-/* Controls the power state of the USB0 hub on ROG Ally which input is on */
 #define ASUS_USB0_PWR_EC0_CSEE "\\_SB.PCI0.SBRG.EC0.CSEE"
-/* 300ms so far seems to produce a reliable result on AC and battery */
-#define ASUS_USB0_PWR_EC0_CSEE_WAIT 1500
+/* The period required to wait after screen off/on/s2idle.check in MS */
+#define ASUS_USB0_PWR_EC0_CSEE_WAIT	300
+#define ASUS_USB0_PWR_EC0_CSEE_ON	0xB8
+#define ASUS_USB0_PWR_EC0_CSEE_OFF	0xB7
 
 static const char * const ashs_ids[] = { "ATK4001", "ATK4002", NULL };
 
