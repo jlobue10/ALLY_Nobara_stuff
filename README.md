@@ -2,13 +2,6 @@
 
 Most everything has been baked in to stock Nobara for quite some time now (as of June 2024). Many thanks to GloriousEggroll for the fantastic distro (Nobara) and many others such as Matt Schwartz, NeroReflex, Luke Jones, ChimeraOS devs, Bazzite devs, CachyOS devs and anybody else who may have contributed to the very good Linux experience on the ASUS ROG ALLY. This repo is now mainly maintained for historical purposes and providing Zen4 LTO compiled kernels that are as close to Nobara stock kernels as possible while trying to also have relevant up-to-date patches from Luke Jones (and any other relevant patch sources).
 
-# ALLY_Nobara_fixes
-Compilation of fixes for the ROG ALLY when using Nobara (side buttons, volume buttons and audio).
-
-All credit should go to the original authors and developers. Many of these original fixes were done by ChimeraOS devs. I'm mainly recreating the same fixes that the ChimeraOS devs have done for ChimeraOS and Arch, but for Nobara (Fedora) and packaging them together in one place.
-
-Rogue-enemy or Handheld Daemon will give you a virtual Playstation controller with gyro support.
-
 ## **Custom kernel script Installation (please use RPMs instead... left online for my own testing...)**
 
 An automated kernel installer has been added. As is, it downloads the latest source kernel from Nobara copr, unpacks it, adds the ROG ALLY patches and compiles the kernel, the kernel modules and installs them (both kernel and modules).
