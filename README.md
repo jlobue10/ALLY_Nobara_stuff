@@ -46,6 +46,11 @@ RPM uninstall example:
 sudo dnf remove kernel-6.5.9-200.fsync.ally.fc38.x86_64 kernel-core-6.5.9-200.fsync.ally.fc38.x86_64 kernel-devel-6.5.9-200.fsync.ally.fc38.x86_64 kernel-modules-6.5.9-200.fsync.ally.fc38.x86_64 kernel-modules-core-6.5.9-200.fsync.ally.fc38.x86_64 kernel-modules-extra-6.5.9-200.fsync.ally.fc38.x86_64
 ```
 
+## Linux kernel upstream contributions ##
+
+[For ROG ALLY/ ALLY X bmi323 gyro driver loading](https://lore.kernel.org/all/CAF6rpDwZaCJOpLEYayVW8_aXQwKdpcLCDSRjbTNk1rr43EPriQ@mail.gmail.com/)
+[ROG ALLY X audio amplifier driver loading properly](https://lore.kernel.org/lkml/87cymedlrt.wl-tiwai@suse.de/T/#m627fc2a7dd1030c65412a38212828571ba22e1fc)
+
 ## **References**
 
 [ACPI patch info for audio](https://asus-linux.org/wiki/cirrus-amps/)
